@@ -1,0 +1,119 @@
+function onload()
+    hiddenTexture = 'http://cloud-3.steamusercontent.com/ugc/771734893749845381/3F74E429C36D51E1BF2F201D33D5734F1F8C69DC/'
+    visibleTexture = 'http://cloud-3.steamusercontent.com/ugc/771734893749836363/A9B68730371DBBF6B53D60A502CEB631833479BC/'
+
+    self.createButton({
+        label="Swap Hidden Textures", click_function="TestTextures", function_owner=self,
+        position={0,0.5,1}, rotation={0,180,0}, height=450, width=2500,
+        font_size=250,-- color={0,0,0}, font_color={1,1,1}
+    })
+end
+
+function TestTextures()
+    AllObjects = getAllObjects()
+    hiddenObjects = {}
+    visibleObjects = {}
+
+    for _, obj in pairs (AllObjects) do
+        if obj.getCustomObject().diffuse == hiddenTexture then
+            table.insert(hiddenObjects, obj)
+        elseif obj.getCustomObject().diffuse == visibleTexture then
+            table.insert(visibleObjects, obj)
+        end
+    end
+
+    printToAll('\nScene Contains', 'White')
+    printToAll('    '..#hiddenObjects..' : Hidden', 'White')
+    printToAll('    '..#visibleObjects..' : Visible', 'White')
+
+    if #hiddenObjects > 0 or #visibleObjects == 0 and #hiddenObjects != 0 and #visibleObjects > 0 or #visibleObjects != 0 and #hiddenObjects > 0 then
+        SwapTexture('Hidden2Visible')
+    else
+        SwapTexture('Visible2Hidden')
+    end
+end
+
+function SwapTexture(cmd)
+
+    if cmd == 'Hidden2Visible' then
+        newTexture = visibleTexture
+        objs2Change = hiddenObjects
+        str = 'OPAQUE Object set as Visible'
+    elseif cmd == 'Visible2Hidden' then
+        newTexture = hiddenTexture
+        objs2Change = visibleObjects
+        str = 'TRANSPARENT Object set as Hidden'
+    end
+
+    local PrintOutPut = {}
+
+    for _, obj in pairs (objs2Change) do
+
+        if obj.getName() ~= '' then
+            strMod = str..' ( '..obj.getName()..' )'
+        else strMod = str end
+        --strMod = str..' ( '..obj.getName()..' )'
+        table.insert(PrintOutPut, strMod)
+
+        local objPram = {}
+        objPram.diffuse = newTexture
+        obj.setCustomObject(objPram)
+        obj.reload()
+    end
+
+    print('\n Swapping Textures')
+    for k, s in pairs (PrintOutPut) do
+        printToAll('    '..k..' : '..s, 'White')
+    end
+end
+
+
+--[[
+
+function swapper(newTexture)
+    local hidden = 'https://drive.google.com/uc?export=download&id=0Bxv7nhmMwdKtcUs3RXJQNm55NHM'
+    local coloured = 'https://drive.google.com/uc?export=download&id=1UhAhsKL88jF9eMb2BrAm1Fc3HZ4anwM0'
+    local count = {0,'nil'}
+
+    for _, obj in pairs (getAllObjects()) do
+        if obj.getCustomObject().diffuse == hidden or obj.getCustomObject().diffuse == coloured then
+            count[1] = count[1] + 1
+            if SetHidden then count[2] = 'OPAQUE' else count[2] = 'TRANSPARENT' end
+            local objPram = {}
+            objPram.diffuse = newTexture
+            obj.setCustomObject(objPram)
+            obj.reload()
+            if SetHidden then print('OPAQUE : '..obj.getName()) else print('TRANSPARENT : '..obj.getName()) end
+       end
+    end
+    if count[2] ~= 'nil' then print('--== Set '..count[1]..' objects : '..count[2]..' ==--')
+    else print('--== There are not valid objects found to texture swap ==--') end
+end
+]]
+--[[
+function revealHIDDEN()
+    local hidden = 'https://drive.google.com/uc?export=download&id=0Bxv7nhmMwdKtcUs3RXJQNm55NHM'
+    local coloured = 'https://drive.google.com/uc?export=download&id=1UhAhsKL88jF9eMb2BrAm1Fc3HZ4anwM0'
+    local count = {0,'nil'}
+    for _, obj in pairs (getAllObjects()) do
+        if obj.getCustomObject().diffuse == hidden then
+            count[1] = count[1] + 1
+            count[2] = 'OPAQUE'
+            local objPram = {}
+            objPram.diffuse = coloured
+            obj.setCustomObject(objPram)
+            obj.reload()
+            print('OPAQUE : '..obj.getName())
+         elseif obj.getCustomObject().diffuse == coloured then
+             count[1] = count[1] + 1
+             count[2] = 'TRANSPARENT'
+            local objPram = {}
+                objPram.diffuse = hidden
+            obj.setCustomObject(objPram)
+            obj.reload()
+            print('TRANSPARENT : '..obj.getName())
+        end
+    end
+    if count[2] ~= 'nil' then print('--== Set '..count[1]..' objects : '..count[2]..' ==--')
+    else print('--== There are not valid objects found to texture swap ==--') end
+end]]
