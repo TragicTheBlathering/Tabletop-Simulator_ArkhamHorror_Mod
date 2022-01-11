@@ -1,0 +1,26 @@
+@echo off
+y:
+cd\Tabletop Simulator Projects\ArkhamHorror
+
+del "Y:\Tabletop Simulator Projects\ArkhamHorror\*.json" /q
+del "Y:\Tabletop Simulator Projects\ArkhamHorror\temp\*.*" /q
+
+
+set "source=D:\Archive\_Documents\My Games\Tabletop Simulator\Saves\Arkham"
+set "dest=Y:\Tabletop Simulator Projects\ArkhamHorror"
+
+pushd "%source%" ||(
+   echo.Source does not exist&pause&goto EOF)
+
+for /f "tokens=*" %%f in (
+   'dir /A-D /OD /B') Do set "file=%%f"
+
+popd
+
+xcopy /d /i "%source%\%file%" "%dest%\"
+copy "C:\Users\itisme\AppData\Local\Temp\TabletopSimulator\Tabletop Simulator Lua\" "Y:\Tabletop Simulator Projects\ArkhamHorror\temp\"
+
+
+::git add *
+::git commit -a -m "%1"
+::git push
