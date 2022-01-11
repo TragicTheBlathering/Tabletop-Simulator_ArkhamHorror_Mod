@@ -3,6 +3,7 @@ function onLoad()
     setGlobalVariables()
     FixHandZones()
     MegaFreeze('TableOnly') -- '' TableOnly
+    print('THIS IS A BIG TEST')
 end
 
 function setGlobalVariables()
