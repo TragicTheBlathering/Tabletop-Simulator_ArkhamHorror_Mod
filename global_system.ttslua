@@ -1,0 +1,69 @@
+function onLoad()
+    local AllObjects = getAllObjects()
+    setGlobalVariables()
+    FixHandZones()
+    MegaFreeze('TableOnly') -- '' TableOnly
+end
+
+function setGlobalVariables()
+    SetUpZone = getObjectFromGUID('d4e5c2').getObjects()
+    GlobalVariables = returnSetUpObj('__(Variables) - Global') -- getObjectFromGUID('b1c381') --
+    CastZone = returnSetUpObj('__(Script) - CastZone')
+end
+
+
+function returnSetUpObj(findme)
+    --print('__inFIND')
+    for _, obj in pairs(SetUpZone) do
+        if obj.getName() == findme then
+            return obj
+        end
+    end
+end
+
+-- Make Sure Hand Zones are always at correct in the Y
+function FixHandZones()
+    local Y = 3.6
+    local playerList = Player.getAvailableColors()
+    for _, colour in ipairs(playerList) do
+        local pramsOLD = Player[colour].getHandTransform()
+        pramsNew = {position={pramsOLD.position.x, Y, pramsOLD.position.z}
+                   ,rotation={0,180,0}
+                   ,scale={15.50, 5.40, 0.82}
+                   }
+        Player[colour].setHandTransform(pramsNew, 1)
+    end
+end
+
+function MegaFreeze(switch)
+    -- Freeze Objects Tag with MegaFreeze
+    for _, obj in pairs(getObjectsWithTag('MegaFreeze')) do
+        if switch == 'TableOnly' then
+            if obj.getDescription() == 'Set' then
+                obj.interactable = false
+            end
+        else
+            obj.interactable = false
+        end
+    end
+
+    -- Freeze Objects in SetupZone
+    for k,o in pairs(SetUpZone) do
+        o.interactable = false
+    end
+end
+
+--[[function MegaFreeze(AllObjects)
+    for k,o in pairs(AllObjects) do
+        if o.getName() == 'MegaFreeze' or o.getDescription() == 'MegaFreeze' or o.getGMNotes() == 'MegaFreeze' then
+            o.interactable = false
+        end
+
+        if o.getName() == 'RemoveBoxCollider' or o.getDescription() == 'RemoveBoxCollider' or o.getGMNotes() == 'RemoveBoxCollider' then
+            local boxCollider = o.getComponent("BoxCollider")
+            boxCollider.set("enabled", false)
+        end
+    end
+
+
+end]]
