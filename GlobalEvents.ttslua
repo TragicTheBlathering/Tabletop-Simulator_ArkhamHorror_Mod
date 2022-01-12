@@ -1,0 +1,29 @@
+local tool = {}
+      tool.DropIntoBox=require("/_libs/SingleFunctions/waitDelay")
+      tool.TrashCan=require("/_libs/TrashCan/TrashCan")
+
+local GlobalEvents = {}
+--------------------------------------------------------------------------------
+--- onObjectEnter : CONTAINER --------------------------------------------------
+function onObjectEnterContainer(bag, obj)
+    if string.find(string.lower(obj.getDescription()), string.lower(bag.getGMNotes()), 1, true) then
+        tool.DropIntoBox(bag, obj, shuffleContainer)
+    elseif string.find(string.lower(bag.getGMNotes()), 'trashcan', 1, true) then
+        tool.DropIntoBox(bag, obj, TrashFunction)
+    end
+end
+--------------------------------------------------------------------------------
+--- SHUFFLE FUNCTION -----------------------------------------------------------
+function shuffleContainer(bag)
+    printToAll('Shuffling : '..bag.getName()..' Bag', 'Yellow')
+    bag.shuffle()
+end
+--------------------------------------------------------------------------------
+--- TRASH FUNCTION -------------------------------------------------------------
+function TrashFunction(Trashcan)
+    tool.TrashCan.test(Trashcan)
+end
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+return GlobalEvents
