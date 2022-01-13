@@ -1,7 +1,7 @@
 {
-  "SaveName": "events",
-  "EpochTime": 1642026660,
-  "Date": "1/13/2022 9:31:00 AM",
+  "SaveName": "T02",
+  "EpochTime": 1642048148,
+  "Date": "1/13/2022 3:29:08 PM",
   "VersionNumber": "v13.1.1",
   "GameMode": "LoveCraft Town W.I.P",
   "GameType": "Game",
@@ -482,7 +482,7 @@
     }
   ],
   "DecalPallet": [],
-  "LuaScript": "-- Bundled by luabundle {\"version\":\"1.6.0\"}\nlocal __bundle_require, __bundle_loaded, __bundle_register, __bundle_modules = (function(superRequire)\n\tlocal loadingPlaceholder = {[{}] = true}\n\n\tlocal register\n\tlocal modules = {}\n\n\tlocal require\n\tlocal loaded = {}\n\n\tregister = function(name, body)\n\t\tif not modules[name] then\n\t\t\tmodules[name] = body\n\t\tend\n\tend\n\n\trequire = function(name)\n\t\tlocal loadedModule = loaded[name]\n\n\t\tif loadedModule then\n\t\t\tif loadedModule == loadingPlaceholder then\n\t\t\t\treturn nil\n\t\t\tend\n\t\telse\n\t\t\tif not modules[name] then\n\t\t\t\tif not superRequire then\n\t\t\t\t\tlocal identifier = type(name) == 'string' and '\\\"' .. name .. '\\\"' or tostring(name)\n\t\t\t\t\terror('Tried to require ' .. identifier .. ', but no such module has been registered')\n\t\t\t\telse\n\t\t\t\t\treturn superRequire(name)\n\t\t\t\tend\n\t\t\tend\n\n\t\t\tloaded[name] = loadingPlaceholder\n\t\t\tloadedModule = modules[name](require, loaded, register, modules)\n\t\t\tloaded[name] = loadedModule\n\t\tend\n\n\t\treturn loadedModule\n\tend\n\n\treturn require, loaded, register, modules\nend)(nil)\n__bundle_register(\"__root\", function(require, _LOADED, __bundle_register, __bundle_modules)\n----#include /ArkhamHorror/GlobalSystem\nfunction onLoad()\r\n    AllObjects = getAllObjects()\r\n    SetUpZone = getObjectFromGUID('d4e5c2').getObjects()\r\n\r\n    local onModLoad=require(\"/_libs/onModLoad\")\r\n          onModLoad.MegaFreeze('d4e5c2','TableOnly')\r\n          onModLoad.FixHandZones(10)\r\n\r\n    local GlobalEvents=require(\"/ArkhamHorror/GlobalEvents\")\r\nend\r\n\r\nfunction setGlobalVariables()\r\n    --GlobalVariables = returnSetUpObj('__(Variables) - Global') -- getObjectFromGUID('b1c381') --\r\n    --CastZone = returnSetUpObj('__(Script) - CastZone')\r\nend\r\n\n----#include /ArkhamHorror/GlobalSystem\nend)\n__bundle_register(\"/ArkhamHorror/GlobalEvents\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal tool = {}\r\n      tool.DropIntoBox=require(\"/_libs/SingleFunctions/waitDelay\")\r\n      tool.TrashCan=require(\"/_libs/TrashCan/TrashCan\")\r\n\r\nlocal GlobalEvents = {}\r\n--------------------------------------------------------------------------------\r\n--- onObjectEnter : CONTAINER --------------------------------------------------\r\nfunction onObjectEnterContainer(bag, obj)\r\n    if string.find(string.lower(obj.getDescription()), string.lower(bag.getGMNotes()), 1, true) then\r\n        tool.DropIntoBox(bag, obj, shuffleContainer)\r\n    elseif string.find(string.lower(bag.getGMNotes()), 'trashcan', 1, true) then\r\n        tool.DropIntoBox(bag, obj, TrashFunction)\r\n    end\r\nend\r\n--------------------------------------------------------------------------------\r\n--- SHUFFLE FUNCTION -----------------------------------------------------------\r\nfunction shuffleContainer(bag)\r\n    printToAll('Shuffling : '..bag.getName()..' Bag', 'Yellow')\r\n    bag.shuffle()\r\nend\r\n--------------------------------------------------------------------------------\r\n--- TRASH FUNCTION -------------------------------------------------------------\r\nfunction TrashFunction(Trashcan)\r\n    tool.TrashCan.test(Trashcan)\r\nend\r\n\r\n--------------------------------------------------------------------------------\r\n--------------------------------------------------------------------------------\r\nreturn GlobalEvents\r\n\nend)\n__bundle_register(\"/_libs/TrashCan/TrashCan\", function(require, _LOADED, __bundle_register, __bundle_modules)\n---TrashCan\r\nlocal TrashCan = {}\r\n\r\nfunction TrashCan.test(Trashcan)\r\n    printToAll('Running : '..Trashcan.getName(), 'Yellow')\r\nend\r\n\r\nreturn TrashCan\r\n\nend)\n__bundle_register(\"/_libs/SingleFunctions/waitDelay\", function(require, _LOADED, __bundle_register, __bundle_modules)\n--Wait Function to do stuff after drop is complete.\r\nlocal wait_ids ={}\r\nreturn function(bag, obj, func)\r\n    if wait_ids[bag] then Wait.stop(wait_ids[bag]) end\r\n    wait_ids[bag] = Wait.time(function() func(bag) end, 0.8)\r\nend\r\n--return function(bag, obj, func, callback)\r\n--wait_ids[bag] = Wait.time(function() callback(func(bag)) end, 0.8)\r\n\nend)\n__bundle_register(\"/_libs/onModLoad\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal onModLoad = {}\r\n--------------------------------------------------------------------------------\r\n--- MEGA FREEZE -- (Freeze by tag \"MegaFreeze\", and Freeze by SetupZone) func('scriptzoneGUID', 'anyting')\r\n    function onModLoad.MegaFreeze(guid, switch)\r\n        -- Freeze Objects Tag with MegaFreeze\r\n        for _, obj in pairs(getObjectsWithTag('MegaFreeze')) do\r\n            if switch then\r\n                if obj.getDescription() == 'Set' then\r\n                    obj.interactable = false\r\n                end\r\n            else\r\n                obj.interactable = false\r\n            end\r\n        end\r\n\r\n        --Freeze Objects in SetUpZone\r\n        if not switch and guid then\r\n            for k,o in pairs(getObjectFromGUID(guid).getObjects()) do\r\n                o.interactable = false\r\n            end\r\n        end\r\n    end\r\n--------------------------------------------------------------------------------\r\n--- Fix Hand Zones - Fixe HandZone Height\r\n    function onModLoad.FixHandZones(yOffset)\r\n        local Y = yOffset\r\n        local playerList = Player.getAvailableColors()\r\n        for _, colour in ipairs(playerList) do\r\n            local pramsOLD = Player[colour].getHandTransform()\r\n            pramsNew = {position={pramsOLD.position.x, Y, pramsOLD.position.z}\r\n                       ,rotation={0,180,0}\r\n                       ,scale={15.50, 5.40, 0.82}\r\n                       }\r\n            Player[colour].setHandTransform(pramsNew, 1)\r\n        end\r\n    end\r\n--------------------------------------------------------------------------------\r\nreturn onModLoad\r\n\nend)\nreturn __bundle_require(\"__root\")",
+  "LuaScript": "-- Bundled by luabundle {\"version\":\"1.6.0\"}\nlocal __bundle_require, __bundle_loaded, __bundle_register, __bundle_modules = (function(superRequire)\n\tlocal loadingPlaceholder = {[{}] = true}\n\n\tlocal register\n\tlocal modules = {}\n\n\tlocal require\n\tlocal loaded = {}\n\n\tregister = function(name, body)\n\t\tif not modules[name] then\n\t\t\tmodules[name] = body\n\t\tend\n\tend\n\n\trequire = function(name)\n\t\tlocal loadedModule = loaded[name]\n\n\t\tif loadedModule then\n\t\t\tif loadedModule == loadingPlaceholder then\n\t\t\t\treturn nil\n\t\t\tend\n\t\telse\n\t\t\tif not modules[name] then\n\t\t\t\tif not superRequire then\n\t\t\t\t\tlocal identifier = type(name) == 'string' and '\\\"' .. name .. '\\\"' or tostring(name)\n\t\t\t\t\terror('Tried to require ' .. identifier .. ', but no such module has been registered')\n\t\t\t\telse\n\t\t\t\t\treturn superRequire(name)\n\t\t\t\tend\n\t\t\tend\n\n\t\t\tloaded[name] = loadingPlaceholder\n\t\t\tloadedModule = modules[name](require, loaded, register, modules)\n\t\t\tloaded[name] = loadedModule\n\t\tend\n\n\t\treturn loadedModule\n\tend\n\n\treturn require, loaded, register, modules\nend)(nil)\n__bundle_register(\"__root\", function(require, _LOADED, __bundle_register, __bundle_modules)\n----#include /ArkhamHorror/GlobalSystem\nfunction onLoad()\r\n    AllObjects = getAllObjects()\r\n    SetUpZone = getObjectFromGUID('d4e5c2').getObjects()\r\n\r\n    local onModLoad=require(\"/_libs/onModLoad\")\r\n          onModLoad.MegaFreeze('d4e5c2','TableOnly')\r\n          onModLoad.FixHandZones(10)\r\n\r\n    local GlobalEvents=require(\"/ArkhamHorror/GlobalEvents\")\r\nend\r\n\r\nfunction setGlobalVariables()\r\n    --GlobalVariables = returnSetUpObj('__(Variables) - Global') -- getObjectFromGUID('b1c381') --\r\n    --CastZone = returnSetUpObj('__(Script) - CastZone')\r\nend\r\n\n----#include /ArkhamHorror/GlobalSystem\nend)\n__bundle_register(\"/ArkhamHorror/GlobalEvents\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal tool = {}\r\n      tool.waitFor=require(\"/_libs/WaitUtils\")\r\n      tool.processTrash=require(\"/_libs/TrashCan/TrashCan\").process\r\n\r\nlocal dropTimer = 0.8\r\n\r\nlocal GlobalEvents = {}\r\n--------------------------------------------------------------------------------\r\n--- onObjectEnter : CONTAINER --------------------------------------------------\r\nfunction onObjectEnterContainer(bag, obj)\r\n    if string.find(string.lower(obj.getDescription()), string.lower(bag.getGMNotes()), 1, true) then\r\n        tool.waitFor.DropIntoBox(bag, obj, shuffleContainer, dropTimer)\r\n    elseif string.find(string.lower(bag.getGMNotes()), 'trashcan', 1, true) then\r\n        tool.waitFor.DropIntoBox(bag, obj, TrashFunction, dropTimer)\r\n    end\r\nend\r\n--------------------------------------------------------------------------------\r\n--- SHUFFLE FUNCTION -----------------------------------------------------------\r\nfunction shuffleContainer(bag)\r\n    printToAll('Shuffling : '..bag.getName()..' Bag', 'Yellow')\r\n    bag.shuffle()\r\nend\r\n--------------------------------------------------------------------------------\r\n--- TRASH FUNCTION -------------------------------------------------------------\r\nfunction TrashFunction(TrashBag)\r\n    tool.processTrash(TrashBag)\r\nend\r\n\r\n--------------------------------------------------------------------------------\r\n--------------------------------------------------------------------------------\r\nreturn GlobalEvents\r\n\nend)\n__bundle_register(\"/_libs/TrashCan/TrashCan\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal TrashCan = {}\r\n--------------------------------------------------------------------------------\r\n-- Global Variabels\r\nlocal zprint = require(\"/_libs/debug\").zprint\r\nlocal tool = {}\r\n      tool.place    = require(\"/_libs/PositionUtils\")\r\n      tool.waitFor  = require(\"/_libs/WaitUtils\")\r\n      tool.findOBJs = require(\"/_libs/findObjs\")\r\n      tool.string   = require(\"/_libs/StringUtils\")\r\n      tool.cast     = require(\"/_libs/TrashCan/TrashCast\")\r\n\r\nlocal TAGS = {Delete='Delete', Deck='Deck', Card='Card', Object='Object', ScriptZone='ScriptZone', SpecialCase = 'SpecialCase'}\r\n--------------------------------------------------------------------------------\r\n--- Function to Call from EVENT ------------------------------------------------\r\nfunction TrashCan.process(TrashBag)\r\n    ProcessBagContents(TrashBag)\r\nend\r\n--------------------------------------------------------------------------------\r\n--- ProcessBagContents(TrashBag)------------------------------------------------\r\nfunction ProcessBagContents(TrashBag)\r\n    local AllTrashContents = FindObjsInTrashBagFromData(TrashBag)\r\n    Wait.frames(function() StartCascade(Trashbag, AllTrashContents) end, 5) -- wait 5 frames to ensure deck spawn properly\r\nend\r\n--------------------------------------------------------------------------------\r\n--- StartCascade(Trashbag, AllTrashContents) -----------------------------------\r\nfunction StartCascade(Trashbag, AllTrashContents)\r\n    local ActionList = setActionList(AllTrashContents)\r\n    local UniqueCastLocations = setUniqueCastLocations(ActionList)\r\n    zprint(ActionList,'ActionList')\r\n    zprint(UniqueCastLocations,'UniqueCastLocations')\r\nend\r\n\r\n--------------------------------------------------------------------------------\r\n--- setUniqueCastLocations(ActionList) -----------------------------------------\r\nfunction setUniqueCastLocations(ActionList)\r\n    --TAGS = {Delete='Delete', Deck='Deck', Card='Card', Object='Object', ScriptZone='ScriptZone', SpecialCase = 'SpecialCase'}\r\n    local uniqueList = {} -- uniqueList\r\n    for k,v in pairs(ActionList) do\r\n        uniqueList[v.GMNotes] = v.type\r\n    end\r\n    return tool.cast.findContainer(uniqueList)\r\nend\r\n\r\n--- setActionList(DataList) ----------------------------------------------------\r\nfunction setActionList(DataList)\r\n    local ActionList = {}\r\n        for _, deck in pairs(DataList.Deck) do\r\n            for k,v in pairs(deck.getObjects()) do\r\n                ActionList[v.guid] = {type=TAGS.Card, action='move', container=deck, name=v.name, description=v.description, GMNotes=stripTrashGMNotes(v.gm_notes, TAGS.Card)}\r\n            end\r\n        end\r\n\r\n        for k,v in pairs(DataList.Card) do\r\n            ActionList[v.GUID] = {type=TAGS.Card, action='move', container=TrashBag, name=v.Nickname, description=v.Description, GMNotes=stripTrashGMNotes(v.GMNotes, TAGS.Card)}\r\n        end\r\n\r\n        for k,v in pairs(DataList.Object) do\r\n            ActionList[v.GUID] = {type=TAGS.Object, action='move', container=TrashBag, name=v.Nickname, description=v.Description, GMNotes=stripTrashGMNotes(v.GMNotes, TAGS.Object)}\r\n        end\r\n\r\n        for k,v in pairs(DataList.ScriptZone) do\r\n            ActionList[v.GUID] = {type=TAGS.ScriptZone, action='move', container=TrashBag, name=v.Nickname, description=v.Description, GMNotes=stripTrashGMNotes(v.GMNotes, TAGS.ScriptZone)}\r\n        end\r\n\r\n        for k,v in pairs(DataList.Delete) do\r\n            ActionList[v.GUID] = {type=TAGS.Delete, action='delete', container=TrashBag, name=v.Nickname, description=v.Description, GMNotes=stripTrashGMNotes(v.GMNotes, TAGS.Delete)}\r\n        end\r\n\r\n        for k,v in pairs(DataList.SpecialCase) do\r\n            ActionList[v.GUID] = {type=TAGS.SpecialCase, action='special', container=TrashBag, name=v.Nickname, description=v.Description, GMNotes=stripTrashGMNotes(v.GMNotes, TAGS.SpecialCase)}\r\n        end\r\n    return ActionList\r\nend\r\n\r\nfunction stripTrashGMNotes(GMNotes, Tag)\r\n    local key = nil\r\n    if Tag == TAGS.Delete      then key = 'Delete'  elseif\r\n       Tag == TAGS.Card        then key = 'D.Name_' elseif\r\n       Tag == TAGS.Object      then key = 'D.Bag_'  elseif\r\n       Tag == TAGS.ScriptZone  then key = 'D.Zone_' elseif\r\n       Tag == TAGS.SpecialCase then key = 'D.Special_'\r\n    end\r\n\r\n    local lines = tool.string.splitString(GMNotes)\r\n    for k, line in pairs(lines) do\r\n        if string.find(string.lower(line), string.lower(key), 1, true) then\r\n            key = line\r\n        end\r\n    end\r\n    return key\r\nend\r\n\r\n--------------------------------------------------------------------------------\r\n--- FindObjsInTrashBagFromData(TrashBag) ---------------------------------------\r\nfunction FindObjsInTrashBagFromData(TrashBag)\r\n    local z = {}\r\n        local tags = TAGS\r\n        local data_trashContentsALL = TrashBag.getData().ContainedObjects\r\n\r\n        local delete_ObjList       = {}\r\n        local explode_DeckList     = {}\r\n        local move_CardList        = {}\r\n        local move_ObjList         = {}\r\n        local move_ScrtipZoneList  = {}\r\n        local move_SpecialCaseList = {}\r\n\r\n        if not data_trashContentsALL then\r\n            printToAll('Error : '..TrashBag.getGUID()..' : TRASH EMPTY!!', 'RED') --getData() returned nothing, this should never happen!\r\n        else\r\n            delete_ObjList         = tool.findOBJs.viaGMNote(data_trashContentsALL, tags.Delete)\r\n            move_ScrtipZoneList    = tool.findOBJs.viaGMNote(data_trashContentsALL, modifyKey(tags.ScriptZone))\r\n            move_SpecialCaseList   = tool.findOBJs.viaGMNote(data_trashContentsALL, modifyKey(tags.SpecialCase))\r\n            explode_DeckList       = explodeDecks(TrashBag, tool.findOBJs.viaType_FromData(data_trashContentsALL, 'Deck'))\r\n            move_CardList          = tool.findOBJs.viaType_FromData(data_trashContentsALL, 'Card')\r\n            move_ObjList           = tool.findOBJs.viaGMNote(data_trashContentsALL, modifyKey(tags.Object))\r\n        end\r\n\r\n        z[tags.Delete]       = delete_ObjList\r\n        z[tags.Deck]         = explode_DeckList\r\n        z[tags.Card]         = move_CardList\r\n        z[tags.Object]       = move_ObjList\r\n        z[tags.ScriptZone]   = move_ScrtipZoneList\r\n        z[tags.SpecialCase]  = move_SpecialCaseList\r\n        --zprint(z, 'Z : TrashCanCode')\r\n    return z\r\nend\r\n\r\n--- explodeDecks(TrashBag, deckList) -------------------------------------------\r\nfunction explodeDecks(TrashBag, deckList)\r\n    local explodeList = {}\r\n    for k,v in pairs(deckList) do\r\n        local o = TrashBag.takeObject({guid=v.GUID})\r\n        o.setPosition(tool.place.TopOrBot_ofObject(TrashBag,'top')+Vector(20,0,0))\r\n        o.setRotation(Vector(0,180,180))\r\n        o.setLock(true)\r\n        table.insert(explodeList, o)\r\n    end\r\n    return explodeList\r\nend\r\n\r\nfunction modifyKey(key)\r\n    --print(key)\r\n    if key == TAGS.Object      then key = 'D.Bag_'     elseif\r\n       key == TAGS.SpecialCase then key = 'D.Special_' elseif\r\n       key == TAGS.ScriptZone  then key = 'D.Zone_'\r\n    end\r\n    return key\r\nend\r\n--------------------------------------------------------------------------------\r\n--------------------------------------------------------------------------------\r\nreturn TrashCan\r\n\nend)\n__bundle_register(\"/_libs/TrashCan/TrashCast\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal TrashCast = {}\r\n--------------------------------------------------------------------------------\r\n-- Global Variabels\r\nlocal ShowCast = true -- cast debug visial\r\nlocal zprint = require(\"/_libs/debug\").zprint\r\nlocal DiscardPlatforms = nil\r\n--local ustring = require(\"/_libs/StringUtils\")\r\n--------------------------------------------------------------------------------\r\n--- Main Function to Call ------------------------------------------------------\r\nfunction TrashCast.findContainer(data)\r\n    setVariables()\r\n    --CastByString(data)\r\n    return CastByString(data)\r\nend\r\n\r\nfunction setVariables()\r\n    if not DiscardPlatforms then\r\n        DiscardPlatforms = {}\r\n        DiscardPlatforms.Discard_Bag               = {size=Vector(3,3,3), posOffset=Vector(0, 0, 0), platforms=getObjectsWithTag('Discard_Bag')}\r\n        DiscardPlatforms.Discard_Platform_Small    = {size=Vector(2.5,1,4), posOffset=Vector(0, 0, 0), platforms=getObjectsWithTag('Discard_Platform_Small')}\r\n        DiscardPlatforms.Discard_Platform_Large    = {size=Vector(3,1,5), posOffset=Vector(0, 0, 0), platforms=getObjectsWithTag('Discard_Platform_Large')}\r\n    end\r\n\r\nend\r\n\r\n--------------------------------------------------------------------------------\r\n--- Cast Code ------------------------------------------------------------------\r\nfunction CastByString(uniqueObjTypeList)\r\n    for platformType, objType in pairs(DiscardPlatforms) do\r\n        for _, platform in pairs(DiscardPlatforms[platformType].platforms) do\r\n            local targetType = platform.getGMNotes()\r\n            for objType, _ in pairs(uniqueObjTypeList) do\r\n                if string.find(string.lower(targetType), string.lower(objType), 1, true) then\r\n                    --print(targetType..' : '..platform.getName()..' : '..platformType..' : '..objType)\r\n                    uniqueObjTypeList[targetType] = cast(platform, platformType)\r\n                end\r\n            end\r\n        end\r\n    end\r\n    --zprint(uniqueObjTypeList, 'uniqueObjTypeList')\r\n    return uniqueObjTypeList\r\nend\r\n\r\nfunction cast(platform, platformType)\r\n    --zprint(DiscardPlatforms,'DiscardPlatforms')\r\n    local z = {}\r\n    local zone = Physics.cast({\r\n                    origin=platform.getPosition() + DiscardPlatforms[platformType].posOffset,\r\n                    direction={0,1,0},\r\n                    type=3,\r\n                    max_distance=0,\r\n                    size=DiscardPlatforms[platformType].size,\r\n                    debug=ShowCast,\r\n                })\r\n    z = ProcessCast(platform, zone)\r\n    return z\r\nend\r\n\r\nfunction ProcessCast(platform, zone)\r\n    local z = {}\r\n    for k, found in pairs(zone) do\r\n        local obj = found.hit_object\r\n        if obj.type == 'Card' or obj.type == 'Deck' or obj.type == 'Bag' then\r\n            z.target = obj\r\n        end\r\n        if obj == platform then\r\n            z.platform = obj\r\n        end\r\n    end\r\n    return z\r\nend\r\n\r\nreturn TrashCast\r\n\nend)\n__bundle_register(\"/_libs/debug\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal debug = {}\r\n\r\nfunction debug.zprint(var,title)\r\n    if (type(var) == \"table\") then\r\n        if title then\r\n            print(logString(var,'\\n-- '..title..' --'))\r\n        else\r\n            print(logString(var))\r\n        end\r\n    else\r\n        if title then print('-- '..title..' --') end\r\n        print(var)\r\n    end\r\nend\r\n\r\nreturn debug\r\n\nend)\n__bundle_register(\"/_libs/StringUtils\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal StringUtils = {}\r\n\r\nfunction StringUtils.splitString(str, b1, b2)\r\n    local z = {}\r\n        if not str then\r\n            printToAll('splitString(str, sep, b1, b2) : Must Provide a string (at least)', 'Red')\r\n        else\r\n            -- split at NEW LINE\r\n            if not b1 and not b2 then\r\n                for s in str:gmatch(\"[^\\r\\n]+\") do\r\n                    table.insert(z, s)\r\n                end\r\n            else\r\n            -- split at SEPERATOR\r\n                if b1 and not b2 then\r\n                    if b1 == '' then b1 = ' ' end\r\n                    for s in string.gmatch(str, \"([^\"..'%'..b1..\"]+)\") do\r\n                        table.insert(z, s)\r\n                    end\r\n            -- split Between\r\n                elseif b1 and b2 then\r\n                    for s in string.gmatch(str, '%'..b1..'(.-)%'..b2) do\r\n                        table.insert(z, s)\r\n                    end\r\n                end\r\n            end\r\n        end\r\n    return z\r\nend\r\n\r\n--- Test Function\r\nfunction StringUtils.test()\r\n    printToAll('----=== StringUtils IS WORKING ===----', 'Green')\r\nend\r\n\r\n\r\nreturn StringUtils\r\n\nend)\n__bundle_register(\"/_libs/findObjs\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal findObjs = {}\r\nlocal ustring = require(\"/_libs/StringUtils\")\r\nlocal zprint = require(\"/_libs/debug\").zprint\r\n--------------------------------------------------------------------------------\r\n--- find_ByType_FromData(objData, key) -'Card'-'Deck'-etc \".Name\" field--MUST USE getData()\r\nfunction findObjs.viaType_FromData(objData, key)\r\n    local z = {}\r\n    for _, obj in pairs(objData) do\r\n        if obj.Name == key then\r\n            table.insert(z, obj)\r\n        end\r\n    end\r\n    return z\r\nend\r\n\r\nfunction findObjs.viaGMNote(trashContents, key)\r\n --local gmnotes = 'GMNotes' -- Set GMNotes for getData() else gm_notes for getObjects()\r\n    local gmnotes = 'GMNotes'\r\n    if not trashContents[1].GUID then\r\n        gmnotes = 'gm_notes'\r\n    else gmnotes = 'GMNotes' end\r\n\r\n    local z = {}\r\n    for _, trashObj in pairs(trashContents) do\r\n        local gmList = ustring.splitString(trashObj[gmnotes])\r\n        for _,type in pairs(gmList) do\r\n            if string.find(string.lower(type), string.lower(key), 1, true) then\r\n                table.insert(z,trashObj)\r\n            end\r\n        end\r\n    end\r\n    return z\r\nend\r\n\r\n--- Test Function\r\nfunction findObjs.test()\r\n printToAll('----=== YES findObjs IS WORKING ===----', 'Green')\r\nend\r\n\r\n--------------------------------------------------------------------------------\r\n--------------------------------------------------------------------------------\r\nreturn findObjs\r\n\nend)\n__bundle_register(\"/_libs/WaitUtils\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal WaitUtils = {}\r\n\r\nlocal wait_ids ={}\r\n\r\nfunction WaitUtils.DropIntoBox(bag, obj, func, time) -- '0.8'\r\n    if wait_ids[bag] then Wait.stop(wait_ids[bag]) end\r\n    wait_ids[bag] = Wait.time(function() func(bag) end, time)\r\nend\r\n\r\nfunction WaitUtils.frames(func, time, ...)--(bag, obj, func, time) -- '0.8'\r\n    --if wait_ids[bag] then Wait.stop(wait_ids[bag]) end\r\n    --wait_ids[bag] = Wait.time(function() func(bag) end, time)\r\n    local args = {...}\r\n    Wait.frames(function() func(args) end, time)\r\nend\r\n\r\n--- Test Function\r\nfunction WaitUtils.test()\r\n    printToAll('----=== WaitUtils ===----', 'Orange')\r\nend\r\n\r\nreturn WaitUtils\r\n\nend)\n__bundle_register(\"/_libs/PositionUtils\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal PositionUtils = {}\r\n\r\n--- posFromObject(obj,switch) - 'top', 'bot'------------------------------------\r\nfunction PositionUtils.TopOrBot_ofObject(obj,switch)\r\n    if not switch then switch = 'top' end\r\n    if switch == 'top' then\r\n        return obj.getPosition() + Vector(0, obj.getBounds().size.y+1, 0)\r\n    elseif switch =='bot' then\r\n        return obj.getPosition() + Vector(0, -obj.getBounds().size.y-1, 0)\r\n    else\r\n        return Vector(0, 10, 0)\r\n    end\r\nend\r\n\r\n--- Test Function\r\nfunction PositionUtils.test()\r\n    printToAll('----=== PositionUtils ===----', 'Orange')\r\nend\r\n\r\nreturn PositionUtils\r\n\nend)\n__bundle_register(\"/_libs/onModLoad\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal onModLoad = {}\r\n--------------------------------------------------------------------------------\r\n--- MEGA FREEZE -- (Freeze by tag \"MegaFreeze\", and Freeze by SetupZone) func('scriptzoneGUID', 'anyting')\r\n    function onModLoad.MegaFreeze(guid, switch)\r\n        -- Freeze Objects Tag with MegaFreeze\r\n        for _, obj in pairs(getObjectsWithTag('MegaFreeze')) do\r\n            if switch then\r\n                if obj.getDescription() == 'Set' then\r\n                    obj.interactable = false\r\n                end\r\n            else\r\n                obj.interactable = false\r\n            end\r\n        end\r\n\r\n        --Freeze Objects in SetUpZone\r\n        if not switch and guid then\r\n            for k,o in pairs(getObjectFromGUID(guid).getObjects()) do\r\n                o.interactable = false\r\n            end\r\n        end\r\n    end\r\n--------------------------------------------------------------------------------\r\n--- Fix Hand Zones - Fixe HandZone Height\r\n    function onModLoad.FixHandZones(yOffset)\r\n        local Y = yOffset\r\n        local playerList = Player.getAvailableColors()\r\n        for _, colour in ipairs(playerList) do\r\n            local pramsOLD = Player[colour].getHandTransform()\r\n            pramsNew = {position={pramsOLD.position.x, Y, pramsOLD.position.z}\r\n                       ,rotation={0,180,0}\r\n                       ,scale={15.50, 5.40, 0.82}\r\n                       }\r\n            Player[colour].setHandTransform(pramsNew, 1)\r\n        end\r\n    end\r\n--------------------------------------------------------------------------------\r\nreturn onModLoad\r\n\nend)\nreturn __bundle_require(\"__root\")",
   "LuaScriptState": "",
   "XmlUI": "<!-- Xml UI. See documentation: https://api.tabletopsimulator.com/ui/introUI/ -->",
   "SnapPoints": [
@@ -821,7 +821,7 @@
         "posZ": 99.13288,
         "rotX": -2.4133813E-05,
         "rotY": 359.893219,
-        "rotZ": 6.30051636E-06,
+        "rotZ": 6.30052E-06,
         "scaleX": 1.2,
         "scaleY": 1.2,
         "scaleZ": 1.2
@@ -880,7 +880,7 @@
       "Description": "MegaFreeze",
       "GMNotes": "",
       "ColorDiffuse": {
-        "r": 0.265704453,
+        "r": 0.2657044,
         "g": 0.4622566,
         "b": 0.46542573
       },
@@ -1106,11 +1106,11 @@
       "Name": "Bag",
       "Transform": {
         "posX": -21.3299923,
-        "posY": 0.7136061,
+        "posY": 0.71360594,
         "posZ": 28.6900043,
-        "rotX": -7.602537E-07,
-        "rotY": -0.004697149,
-        "rotZ": 3.37677261E-06,
+        "rotX": -1.18712319E-06,
+        "rotY": -0.00469714263,
+        "rotZ": 3.800342E-06,
         "scaleX": 0.575001061,
         "scaleY": 0.575001061,
         "scaleZ": 0.575001061
@@ -1389,9 +1389,9 @@
         "posX": -21.3300362,
         "posY": 0.685850859,
         "posZ": 34.2800026,
-        "rotX": -9.022118E-07,
-        "rotY": 0.00275640166,
-        "rotZ": 3.32169134E-06,
+        "rotX": -4.736679E-07,
+        "rotY": 0.00275632157,
+        "rotZ": 3.7552586E-06,
         "scaleX": 0.725000858,
         "scaleY": 0.725000858,
         "scaleZ": 0.725000858
@@ -1400,7 +1400,7 @@
       "Description": "",
       "GMNotes": "Goo",
       "ColorDiffuse": {
-        "r": 0.185202,
+        "r": 0.185201943,
         "g": 1.0,
         "b": 0.0
       },
@@ -7054,11 +7054,11 @@
       "Name": "Bag",
       "Transform": {
         "posX": -28.7600079,
-        "posY": 0.7136054,
+        "posY": 0.7136062,
         "posZ": 34.28,
-        "rotX": -1.0399923E-06,
-        "rotY": 359.9872,
-        "rotZ": 4.87262923E-06,
+        "rotX": -1.84649693E-07,
+        "rotY": 359.987183,
+        "rotZ": 3.98040675E-06,
         "scaleX": 0.575001061,
         "scaleY": 0.575001061,
         "scaleZ": 0.575001061
@@ -7221,11 +7221,11 @@
       "Name": "Bag",
       "Transform": {
         "posX": -28.7600174,
-        "posY": 0.713605344,
+        "posY": 0.7136055,
         "posZ": 28.69,
-        "rotX": -8.00655357E-07,
-        "rotY": 0.007899,
-        "rotZ": 3.518426E-06,
+        "rotX": -1.230877E-06,
+        "rotY": 0.00789904,
+        "rotZ": 3.51506151E-06,
         "scaleX": 0.575001061,
         "scaleY": 0.575001061,
         "scaleZ": 0.575001061
@@ -8073,7 +8073,7 @@
       "Name": "Bag",
       "Transform": {
         "posX": -33.7700043,
-        "posY": 0.5696468,
+        "posY": 0.5696401,
         "posZ": 31.3464222,
         "rotX": -1.189277E-05,
         "rotY": -0.0008507987,
@@ -17749,7 +17749,7 @@
         "posY": -5.721769,
         "posZ": 174.6095,
         "rotX": 359.8968,
-        "rotY": 0.00179477874,
+        "rotY": 0.00179477793,
         "rotZ": -7.635158E-06,
         "scaleX": 3.44999743,
         "scaleY": 3.44999743,
@@ -17829,7 +17829,7 @@
         "posY": -5.721769,
         "posZ": 152.375061,
         "rotX": 359.8968,
-        "rotY": 0.00179477839,
+        "rotY": 0.00179477746,
         "rotZ": -7.635158E-06,
         "scaleX": 3.44999743,
         "scaleY": 3.44999743,
@@ -17906,7 +17906,7 @@
       "Name": "Bag",
       "Transform": {
         "posX": -37.3978424,
-        "posY": 0.662638247,
+        "posY": 0.6626373,
         "posZ": 30.7125015,
         "rotX": -8.47104559E-07,
         "rotY": 2.939516E-05,
@@ -17919,9 +17919,9 @@
       "Description": "",
       "GMNotes": "scriptCastZone\n[bag]\n{Discard_Investigator Graveyard}",
       "ColorDiffuse": {
-        "r": 0.42910856,
-        "g": 0.42910856,
-        "b": 0.42910856
+        "r": 0.4291085,
+        "g": 0.4291085,
+        "b": 0.4291085
       },
       "LayoutGroupSortIndex": 0,
       "Value": 0,
@@ -17965,7 +17965,7 @@
       "Description": "MegaFreeze",
       "GMNotes": "",
       "ColorDiffuse": {
-        "r": 0.2657124,
+        "r": 0.265712351,
         "g": 0.4622566,
         "b": 0.46542573
       },
@@ -18018,8 +18018,8 @@
       "GMNotes": "",
       "ColorDiffuse": {
         "r": 1.0,
-        "g": 0.343213856,
-        "b": 0.188593656
+        "g": 0.3432138,
+        "b": 0.1885936
       },
       "LayoutGroupSortIndex": 0,
       "Value": 0,
@@ -18069,7 +18069,7 @@
       "Description": "MegaFreeze",
       "GMNotes": "",
       "ColorDiffuse": {
-        "r": 0.09406262,
+        "r": 0.09406256,
         "g": 0.5921568,
         "b": 0.8
       },
@@ -18613,9 +18613,9 @@
         "posX": 30.83997,
         "posY": 0.8200042,
         "posZ": 33.507782,
-        "rotX": 2.53363351E-06,
+        "rotX": 2.53363532E-06,
         "rotY": 210.01,
-        "rotZ": -2.85655E-06,
+        "rotZ": -2.85654983E-06,
         "scaleX": 3.34999752,
         "scaleY": 3.34999752,
         "scaleZ": 3.34999752
@@ -19095,12 +19095,12 @@
       "GUID": "8684c1",
       "Name": "Die_8",
       "Transform": {
-        "posX": -26.2107754,
+        "posX": -26.2107773,
         "posY": -5.59107065,
         "posZ": 26.96969,
-        "rotX": 33.73619,
-        "rotY": 39.484993,
-        "rotZ": 89.99999,
+        "rotX": 33.7362022,
+        "rotY": 39.4850235,
+        "rotZ": 89.9999542,
         "scaleX": 1.84999931,
         "scaleY": 1.84999931,
         "scaleZ": 1.84999931
@@ -19204,10 +19204,10 @@
       "Transform": {
         "posX": -79.69631,
         "posY": 0.980007768,
-        "posZ": 5.6239,
-        "rotX": 3.26367285E-06,
-        "rotY": 178.495438,
-        "rotZ": -2.026724E-05,
+        "posZ": 5.62389946,
+        "rotX": 9.39774736E-07,
+        "rotY": 178.495422,
+        "rotZ": -1.72421423E-05,
         "scaleX": 0.7483102,
         "scaleY": 1.0,
         "scaleZ": 0.7483102
@@ -20285,7 +20285,7 @@
         "posY": 1.01999974,
         "posZ": 27.8501415,
         "rotX": 0.119319379,
-        "rotY": 1.56938113E-05,
+        "rotY": 1.5693864E-05,
         "rotZ": 0.07973546,
         "scaleX": 0.710175,
         "scaleY": 2.66637731,
@@ -21613,9 +21613,9 @@
         "posX": 78.75501,
         "posY": 2.076501,
         "posZ": 16.2468681,
-        "rotX": 8.032301E-08,
-        "rotY": 0.0107599413,
-        "rotZ": -1.4192112E-07,
+        "rotX": -2.624251E-07,
+        "rotY": 0.0107599217,
+        "rotZ": -8.177954E-07,
         "scaleX": 1.0,
         "scaleY": 1.0,
         "scaleZ": 1.0
@@ -21655,10 +21655,10 @@
       "Transform": {
         "posX": 74.25,
         "posY": 2.33535147,
-        "posZ": 3.25006318,
-        "rotX": 5.004936E-06,
+        "posZ": 3.25006437,
+        "rotX": 8.951718E-06,
         "rotY": 179.99939,
-        "rotZ": 1.15367368E-06,
+        "rotZ": 1.19589936E-06,
         "scaleX": 2.0,
         "scaleY": 2.0,
         "scaleZ": 2.0
@@ -21714,7 +21714,7 @@
         "posZ": 18.362278,
         "rotX": -9.989803E-06,
         "rotY": 180.014236,
-        "rotZ": -2.59186163E-05,
+        "rotZ": -2.59186236E-05,
         "scaleX": 0.336068362,
         "scaleY": 0.499330342,
         "scaleZ": 0.5182024
@@ -21771,9 +21771,9 @@
         "posX": 87.91374,
         "posY": 2.88434553,
         "posZ": -5.953996,
-        "rotX": 4.71054454E-06,
-        "rotY": 0.53548646,
-        "rotZ": 2.19705817E-06,
+        "rotX": 4.59078046E-06,
+        "rotY": 0.535487533,
+        "rotZ": 1.966079E-06,
         "scaleX": 2.99999833,
         "scaleY": 2.99999833,
         "scaleZ": 2.99999833
@@ -21811,9 +21811,9 @@
         "posX": 84.6830444,
         "posY": 2.884346,
         "posZ": -0.767374754,
-        "rotX": -3.23957E-06,
+        "rotX": -3.2505402E-06,
         "rotY": 2.432169,
-        "rotZ": 5.604712E-07,
+        "rotZ": 7.48192349E-07,
         "scaleX": 2.99999833,
         "scaleY": 2.99999833,
         "scaleZ": 2.99999833
@@ -21823,7 +21823,7 @@
       "GMNotes": "",
       "ColorDiffuse": {
         "r": 0.0,
-        "g": 0.1236755,
+        "g": 0.123675428,
         "b": 1.0
       },
       "LayoutGroupSortIndex": 0,
@@ -21851,9 +21851,9 @@
         "posX": 81.91212,
         "posY": 3.06734347,
         "posZ": -4.344756,
-        "rotX": -4.56262569E-06,
-        "rotY": 0.0457340479,
-        "rotZ": -3.30942584E-07,
+        "rotX": -5.78666277E-06,
+        "rotY": 0.04571132,
+        "rotZ": -7.296295E-07,
         "scaleX": 3.99999619,
         "scaleY": 3.99999619,
         "scaleZ": 3.99999619
@@ -21889,11 +21889,11 @@
       "Name": "go_game_piece_white",
       "Transform": {
         "posX": 67.64831,
-        "posY": 3.06734562,
+        "posY": 3.06734586,
         "posZ": 30.4693069,
-        "rotX": -5.025029E-06,
+        "rotX": -5.072367E-06,
         "rotY": 359.9623,
-        "rotZ": 3.307862E-07,
+        "rotZ": 4.010812E-08,
         "scaleX": 3.99999619,
         "scaleY": 3.99999619,
         "scaleZ": 3.99999619
@@ -21902,7 +21902,7 @@
       "Description": "",
       "GMNotes": "",
       "ColorDiffuse": {
-        "r": 0.118575387,
+        "r": 0.118575327,
         "g": 1.0,
         "b": 0.0
       },
@@ -21929,11 +21929,11 @@
       "Name": "Infinite_Bag",
       "Transform": {
         "posX": -94.99015,
-        "posY": 0.867678463,
+        "posY": 0.8676785,
         "posZ": 21.6325626,
-        "rotX": -3.34097854E-06,
+        "rotX": -3.44900286E-06,
         "rotY": 359.947174,
-        "rotZ": 2.0287971E-05,
+        "rotZ": 2.02515748E-05,
         "scaleX": 0.725000262,
         "scaleY": 0.725000262,
         "scaleZ": 0.725000262
@@ -22025,11 +22025,11 @@
       "Name": "Infinite_Bag",
       "Transform": {
         "posX": -94.99052,
-        "posY": 0.867678344,
+        "posY": 0.8676784,
         "posZ": 19.75051,
-        "rotX": -3.08915264E-06,
-        "rotY": -0.000817181368,
-        "rotZ": 2.0274023E-05,
+        "rotX": -3.49858E-06,
+        "rotY": -0.000817237655,
+        "rotZ": 2.02710235E-05,
         "scaleX": 0.725000262,
         "scaleY": 0.725000262,
         "scaleZ": 0.725000262
@@ -22121,11 +22121,11 @@
       "Name": "Infinite_Bag",
       "Transform": {
         "posX": -94.99052,
-        "posY": 0.8676782,
+        "posY": 0.867678344,
         "posZ": 17.8695183,
-        "rotX": -3.57761814E-06,
+        "rotX": -3.771592E-06,
         "rotY": 359.973969,
-        "rotZ": 1.96664259E-05,
+        "rotZ": 1.988463E-05,
         "scaleX": 0.725000262,
         "scaleY": 0.725000262,
         "scaleZ": 0.725000262
@@ -22217,9 +22217,9 @@
         "posX": -94.9905,
         "posY": 0.867678165,
         "posZ": 15.9885035,
-        "rotX": -3.4512168E-06,
-        "rotY": 0.0283202659,
-        "rotZ": 1.94778586E-05,
+        "rotX": -3.63362642E-06,
+        "rotY": 0.0283201989,
+        "rotZ": 1.988624E-05,
         "scaleX": 0.725000262,
         "scaleY": 0.725000262,
         "scaleZ": 0.725000262
@@ -22321,9 +22321,9 @@
         "posX": 93.05967,
         "posY": 2.88434553,
         "posZ": -5.93697453,
-        "rotX": -2.68670533E-06,
+        "rotX": -8.178597E-06,
         "rotY": 359.985474,
-        "rotZ": 5.53621362E-07,
+        "rotZ": 6.83144833E-07,
         "scaleX": 2.99999833,
         "scaleY": 2.99999833,
         "scaleZ": 2.99999833
@@ -22564,12 +22564,12 @@
       "GUID": "9c4d00",
       "Name": "Custom_Token",
       "Transform": {
-        "posX": -55.11804,
-        "posY": 1.02244031,
-        "posZ": 26.08992,
-        "rotX": 358.571533,
-        "rotY": 179.922928,
-        "rotZ": 177.176147,
+        "posX": -55.11806,
+        "posY": 1.022542,
+        "posZ": 26.0896931,
+        "rotX": 358.641937,
+        "rotY": 179.921478,
+        "rotZ": 177.163956,
         "scaleX": 0.61,
         "scaleY": 1.0,
         "scaleZ": 0.61
@@ -22616,12 +22616,12 @@
       "GUID": "edfd25",
       "Name": "go_game_piece_white",
       "Transform": {
-        "posX": -69.00675,
-        "posY": 1.56624472,
-        "posZ": 2.08021951,
-        "rotX": 359.971222,
-        "rotY": 357.206573,
-        "rotZ": 37.3246651,
+        "posX": -69.0066,
+        "posY": 1.5661025,
+        "posZ": 2.08050656,
+        "rotX": 359.973663,
+        "rotY": 357.18576,
+        "rotZ": 37.3025742,
         "scaleX": 1.69999814,
         "scaleY": 1.69999814,
         "scaleZ": 1.69999814
@@ -22656,12 +22656,12 @@
       "GUID": "523013",
       "Name": "go_game_piece_white",
       "Transform": {
-        "posX": -71.1384,
-        "posY": 1.81322455,
-        "posZ": 4.808568,
-        "rotX": 0.00126378424,
-        "rotY": 355.755646,
-        "rotZ": -0.00245148246,
+        "posX": -71.13874,
+        "posY": 1.8132273,
+        "posZ": 4.808581,
+        "rotX": 0.003599472,
+        "rotY": 355.76062,
+        "rotZ": 0.009198834,
         "scaleX": 1.69999814,
         "scaleY": 1.69999814,
         "scaleZ": 1.69999814
@@ -22699,9 +22699,9 @@
         "posX": -70.5797043,
         "posY": 1.19110775,
         "posZ": 8.22061348,
-        "rotX": -3.12720476E-06,
+        "rotX": -3.54475333E-06,
         "rotY": 359.931244,
-        "rotZ": 1.97098871E-05,
+        "rotZ": 1.97188547E-05,
         "scaleX": 1.69999814,
         "scaleY": 1.69999814,
         "scaleZ": 1.69999814
@@ -22739,9 +22739,9 @@
         "posX": -72.48802,
         "posY": 1.19110715,
         "posZ": 8.162575,
-        "rotX": -2.36553478E-06,
+        "rotX": -2.325523E-06,
         "rotY": 356.801727,
-        "rotZ": 2.017707E-05,
+        "rotZ": 2.02850078E-05,
         "scaleX": 1.69999814,
         "scaleY": 1.69999814,
         "scaleZ": 1.69999814
@@ -22777,11 +22777,11 @@
       "Name": "go_game_piece_white",
       "Transform": {
         "posX": -71.6934,
-        "posY": 1.19107151,
-        "posZ": 2.39892364,
-        "rotX": -0.00223241257,
-        "rotY": 0.07756788,
-        "rotZ": -0.005194038,
+        "posY": 1.19107676,
+        "posZ": 2.398935,
+        "rotX": 0.00123568624,
+        "rotY": 0.0782195851,
+        "rotZ": -0.0015668947,
         "scaleX": 1.69999814,
         "scaleY": 1.69999814,
         "scaleZ": 1.69999814
@@ -22816,12 +22816,12 @@
       "GUID": "0aba92",
       "Name": "go_game_piece_white",
       "Transform": {
-        "posX": -70.16724,
-        "posY": 1.19103813,
-        "posZ": 6.75784063,
-        "rotX": 0.02432106,
-        "rotY": 359.0036,
-        "rotZ": 0.0215789955,
+        "posX": -70.16758,
+        "posY": 1.19104874,
+        "posZ": 6.75779,
+        "rotX": 0.0260238852,
+        "rotY": 358.99057,
+        "rotZ": 0.0208453089,
         "scaleX": 1.69999814,
         "scaleY": 1.69999814,
         "scaleZ": 1.69999814
@@ -22856,12 +22856,12 @@
       "GUID": "e1f540",
       "Name": "go_game_piece_white",
       "Transform": {
-        "posX": -67.9033051,
-        "posY": 1.19109213,
-        "posZ": 4.719685,
-        "rotX": 359.991821,
-        "rotY": 0.3353718,
-        "rotZ": 359.971069,
+        "posX": -67.9031143,
+        "posY": 1.19110179,
+        "posZ": 4.71979475,
+        "rotX": 359.989166,
+        "rotY": 0.342605323,
+        "rotZ": 359.975647,
         "scaleX": 1.69999814,
         "scaleY": 1.69999814,
         "scaleZ": 1.69999814
@@ -22896,12 +22896,12 @@
       "GUID": "b53b63",
       "Name": "go_game_piece_white",
       "Transform": {
-        "posX": -72.20825,
-        "posY": 1.81325471,
-        "posZ": 6.365642,
-        "rotX": -0.00302339043,
-        "rotY": 2.970787,
-        "rotZ": -0.00290675322,
+        "posX": -72.20824,
+        "posY": 1.81325459,
+        "posZ": 6.365609,
+        "rotX": -0.00302407215,
+        "rotY": 2.97076249,
+        "rotZ": -0.00290731131,
         "scaleX": 1.69999814,
         "scaleY": 1.69999814,
         "scaleZ": 1.69999814
@@ -22939,9 +22939,9 @@
         "posX": -65.13124,
         "posY": 1.19110942,
         "posZ": 2.42203522,
-        "rotX": -3.949669E-06,
+        "rotX": -4.11157771E-06,
         "rotY": 359.974884,
-        "rotZ": 1.98383786E-05,
+        "rotZ": 2.00758332E-05,
         "scaleX": 1.69999814,
         "scaleY": 1.69999814,
         "scaleZ": 1.69999814
@@ -22976,12 +22976,12 @@
       "GUID": "e6d6eb",
       "Name": "go_game_piece_white",
       "Transform": {
-        "posX": -70.05025,
-        "posY": 1.61709762,
-        "posZ": 2.91032338,
-        "rotX": 4.479902,
-        "rotY": 347.910919,
-        "rotZ": 36.69769,
+        "posX": -70.05042,
+        "posY": 1.61702108,
+        "posZ": 2.910083,
+        "rotX": 4.476437,
+        "rotY": 347.932953,
+        "rotZ": 36.6960373,
         "scaleX": 1.69999814,
         "scaleY": 1.69999814,
         "scaleZ": 1.69999814
@@ -22990,7 +22990,7 @@
       "Description": "Institution",
       "GMNotes": "[ScriptZone_Green]",
       "ColorDiffuse": {
-        "r": 0.33221373,
+        "r": 0.33221367,
         "g": 1.0,
         "b": 0.0
       },
@@ -23016,12 +23016,12 @@
       "GUID": "c01f28",
       "Name": "go_game_piece_white",
       "Transform": {
-        "posX": -69.32926,
-        "posY": 1.71840882,
-        "posZ": 5.29567051,
-        "rotX": 353.596161,
-        "rotY": 4.582718,
-        "rotZ": 308.087769,
+        "posX": -69.32898,
+        "posY": 1.71826947,
+        "posZ": 5.29600239,
+        "rotX": 353.618,
+        "rotY": 4.59311533,
+        "rotZ": 308.077362,
         "scaleX": 1.69999814,
         "scaleY": 1.69999814,
         "scaleZ": 1.69999814
@@ -23030,7 +23030,7 @@
       "Description": "Institution",
       "GMNotes": "[ScriptZone_Green]",
       "ColorDiffuse": {
-        "r": 0.33221373,
+        "r": 0.33221367,
         "g": 1.0,
         "b": 0.0
       },
@@ -23057,11 +23057,11 @@
       "Name": "go_game_piece_white",
       "Transform": {
         "posX": -72.26796,
-        "posY": 1.191106,
-        "posZ": 6.676873,
-        "rotX": -7.082282E-05,
-        "rotY": 356.5355,
-        "rotZ": -0.00022051789,
+        "posY": 1.19110584,
+        "posZ": 6.67687225,
+        "rotX": -7.07360159E-05,
+        "rotY": 356.535828,
+        "rotZ": -0.000220819478,
         "scaleX": 1.69999814,
         "scaleY": 1.69999814,
         "scaleZ": 1.69999814
@@ -23070,7 +23070,7 @@
       "Description": "Institution",
       "GMNotes": "[ScriptZone_Green]",
       "ColorDiffuse": {
-        "r": 0.33221373,
+        "r": 0.33221367,
         "g": 1.0,
         "b": 0.0
       },
@@ -23096,12 +23096,12 @@
       "GUID": "a3fcd1",
       "Name": "go_game_piece_white",
       "Transform": {
-        "posX": -67.56654,
-        "posY": 1.52570474,
-        "posZ": 2.772608,
-        "rotX": 0.0225798581,
-        "rotY": 356.2103,
-        "rotZ": 328.190369,
+        "posX": -67.56668,
+        "posY": 1.5254513,
+        "posZ": 2.77267075,
+        "rotX": 0.0221906453,
+        "rotY": 356.223541,
+        "rotZ": 328.2276,
         "scaleX": 1.69999814,
         "scaleY": 1.69999814,
         "scaleZ": 1.69999814
@@ -23110,7 +23110,7 @@
       "Description": "Institution",
       "GMNotes": "[ScriptZone_Green]",
       "ColorDiffuse": {
-        "r": 0.33221373,
+        "r": 0.33221367,
         "g": 1.0,
         "b": 0.0
       },
@@ -23136,12 +23136,12 @@
       "GUID": "e4ec4e",
       "Name": "go_game_piece_white",
       "Transform": {
-        "posX": -70.41526,
-        "posY": 1.19108438,
-        "posZ": 4.92044926,
-        "rotX": 0.007305091,
-        "rotY": 356.9742,
-        "rotZ": 0.00640247343,
+        "posX": -70.41534,
+        "posY": 1.19108963,
+        "posZ": 4.92043161,
+        "rotX": 0.00777529832,
+        "rotY": 356.970978,
+        "rotZ": 0.00452074967,
         "scaleX": 1.69999814,
         "scaleY": 1.69999814,
         "scaleZ": 1.69999814
@@ -23150,7 +23150,7 @@
       "Description": "Institution",
       "GMNotes": "[ScriptZone_Green]",
       "ColorDiffuse": {
-        "r": 0.33221373,
+        "r": 0.33221367,
         "g": 1.0,
         "b": 0.0
       },
@@ -23176,12 +23176,12 @@
       "GUID": "eb17ee",
       "Name": "go_game_piece_white",
       "Transform": {
-        "posX": -68.8547745,
-        "posY": 2.2416482,
-        "posZ": 5.0278554,
-        "rotX": 359.935974,
-        "rotY": 5.99375963,
-        "rotZ": 313.536316,
+        "posX": -68.8550339,
+        "posY": 2.24146581,
+        "posZ": 5.02873755,
+        "rotX": 359.951752,
+        "rotY": 6.04827356,
+        "rotZ": 313.6029,
         "scaleX": 1.69999814,
         "scaleY": 1.69999814,
         "scaleZ": 1.69999814
@@ -23190,7 +23190,7 @@
       "Description": "Institution",
       "GMNotes": "[ScriptZone_Green]",
       "ColorDiffuse": {
-        "r": 0.33221373,
+        "r": 0.33221367,
         "g": 1.0,
         "b": 0.0
       },
@@ -23216,12 +23216,12 @@
       "GUID": "ddef4a",
       "Name": "go_game_piece_white",
       "Transform": {
-        "posX": -71.8879852,
-        "posY": 1.19107723,
-        "posZ": 4.45216274,
-        "rotX": 0.00308309076,
-        "rotY": 355.474121,
-        "rotZ": 0.00261632935,
+        "posX": -71.88809,
+        "posY": 1.19106531,
+        "posZ": 4.452128,
+        "rotX": 0.00428742263,
+        "rotY": 355.4709,
+        "rotZ": 0.00234763557,
         "scaleX": 1.69999814,
         "scaleY": 1.69999814,
         "scaleZ": 1.69999814
@@ -23230,7 +23230,7 @@
       "Description": "Institution",
       "GMNotes": "[ScriptZone_Green]",
       "ColorDiffuse": {
-        "r": 0.33221373,
+        "r": 0.33221367,
         "g": 1.0,
         "b": 0.0
       },
@@ -23259,9 +23259,9 @@
         "posX": -73.897316,
         "posY": 1.19110668,
         "posZ": 6.76901,
-        "rotX": -1.44927265E-06,
+        "rotX": -1.5372367E-06,
         "rotY": 354.246674,
-        "rotZ": 2.04873268E-05,
+        "rotZ": 2.04229145E-05,
         "scaleX": 1.69999814,
         "scaleY": 1.69999814,
         "scaleZ": 1.69999814
@@ -23270,7 +23270,7 @@
       "Description": "Institution",
       "GMNotes": "[ScriptZone_Green]",
       "ColorDiffuse": {
-        "r": 0.33221373,
+        "r": 0.33221367,
         "g": 1.0,
         "b": 0.0
       },
@@ -23296,12 +23296,12 @@
       "GUID": "c8e3bb",
       "Name": "go_game_piece_white",
       "Transform": {
-        "posX": -71.3814,
-        "posY": 1.86610854,
-        "posZ": 3.32260466,
-        "rotX": -0.00450855168,
-        "rotY": 356.837341,
-        "rotZ": 4.26474047,
+        "posX": -71.38147,
+        "posY": 1.86603749,
+        "posZ": 3.32276869,
+        "rotX": 0.000903399254,
+        "rotY": 356.824,
+        "rotZ": 4.25077,
         "scaleX": 1.69999814,
         "scaleY": 1.69999814,
         "scaleZ": 1.69999814
@@ -23310,7 +23310,7 @@
       "Description": "Institution",
       "GMNotes": "[ScriptZone_Green]",
       "ColorDiffuse": {
-        "r": 0.33221373,
+        "r": 0.33221367,
         "g": 1.0,
         "b": 0.0
       },
@@ -23337,11 +23337,11 @@
       "Name": "go_game_piece_white",
       "Transform": {
         "posX": -73.74365,
-        "posY": 1.19110644,
+        "posY": 1.19110656,
         "posZ": 4.657481,
-        "rotX": -2.80307722E-06,
+        "rotX": -2.83807231E-06,
         "rotY": 357.550079,
-        "rotZ": 2.02017691E-05,
+        "rotZ": 2.04073658E-05,
         "scaleX": 1.69999814,
         "scaleY": 1.69999814,
         "scaleZ": 1.69999814
@@ -23350,7 +23350,7 @@
       "Description": "Institution",
       "GMNotes": "[ScriptZone_Green]",
       "ColorDiffuse": {
-        "r": 0.33221373,
+        "r": 0.33221367,
         "g": 1.0,
         "b": 0.0
       },
@@ -23392,7 +23392,7 @@
       "ColorDiffuse": {
         "r": 1.0,
         "g": 0.560566366,
-        "b": 0.305875242
+        "b": 0.305875182
       },
       "LayoutGroupSortIndex": 0,
       "Value": 0,
@@ -23467,11 +23467,11 @@
       "Name": "Infinite_Bag",
       "Transform": {
         "posX": -94.32453,
-        "posY": 0.863004,
+        "posY": 0.863003969,
         "posZ": 26.5580177,
-        "rotX": -3.42387352E-06,
+        "rotX": -3.00335569E-06,
         "rotY": 359.9422,
-        "rotZ": 2.00617342E-05,
+        "rotZ": 1.96837063E-05,
         "scaleX": 1.0,
         "scaleY": 1.0,
         "scaleZ": 1.0
@@ -57368,7 +57368,7 @@
         "posY": 1.15020084,
         "posZ": 33.3377,
         "rotX": 90.0,
-        "rotY": 0.0005774435,
+        "rotY": 0.000584407651,
         "rotZ": 0.0,
         "scaleX": 1.0,
         "scaleY": 1.0,
@@ -57626,9 +57626,9 @@
             "z": 1.97561359
           },
           "Rotation": {
-            "x": 0.000216872519,
+            "x": 0.000216872548,
             "y": 359.976868,
-            "z": 5.59582477E-05
+            "z": 5.59582622E-05
           }
         },
         {
@@ -57638,7 +57638,7 @@
             "z": 1.96346533
           },
           "Rotation": {
-            "x": 0.000213461317,
+            "x": 0.000213461346,
             "y": 359.975861,
             "z": 7.20330645E-05
           }
@@ -57674,9 +57674,9 @@
             "z": 2.71305776
           },
           "Rotation": {
-            "x": -0.000100740494,
+            "x": -0.000100740508,
             "y": 359.969818,
-            "z": 2.17131146E-05
+            "z": 2.17131073E-05
           }
         },
         {
@@ -57698,7 +57698,7 @@
             "z": 2.71154737
           },
           "Rotation": {
-            "x": -0.000118691773,
+            "x": -0.0001186918,
             "y": 359.973877,
             "z": -6.724213E-05
           }
@@ -57712,7 +57712,7 @@
           "Rotation": {
             "x": -0.000130601155,
             "y": 359.973938,
-            "z": 0.000114090886
+            "z": 0.000114090908
           }
         },
         {
@@ -57887,9 +57887,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430836827,
-        "g": 0.164629608,
-        "b": 0.4312921
+        "r": 0.043083638,
+        "g": 0.164629549,
+        "b": 0.431292027
       },
       "Tags": [
         "Draw_Target",
@@ -57951,9 +57951,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430836827,
-        "g": 0.164629608,
-        "b": 0.4312921
+        "r": 0.043083638,
+        "g": 0.164629549,
+        "b": 0.431292027
       },
       "Tags": [
         "MegaFreeze"
@@ -58014,9 +58014,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.04308366,
-        "g": 0.164629579,
-        "b": 0.431292057
+        "r": 0.04308361,
+        "g": 0.164629519,
+        "b": 0.431292
       },
       "Tags": [
         "MegaFreeze"
@@ -58077,9 +58077,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430836976,
-        "g": 0.164629638,
-        "b": 0.431292117
+        "r": 0.04308366,
+        "g": 0.164629579,
+        "b": 0.431292057
       },
       "Tags": [
         "MegaFreeze"
@@ -58117,7 +58117,7 @@
           "Rotation": {
             "x": 1.65742058E-05,
             "y": 359.986359,
-            "z": -2.43031063E-05
+            "z": -2.430311E-05
           }
         }
       ]
@@ -58129,7 +58129,7 @@
         "posX": -58.77396,
         "posY": 1.1016959,
         "posZ": 66.05325,
-        "rotX": 0.05370606,
+        "rotX": 0.05370604,
         "rotY": 179.9999,
         "rotZ": 359.9328,
         "scaleX": 0.16,
@@ -58140,9 +58140,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.04308372,
-        "g": 0.164629668,
-        "b": 0.431292146
+        "r": 0.0430836827,
+        "g": 0.164629608,
+        "b": 0.4312921
       },
       "Tags": [
         "MegaFreeze"
@@ -58203,9 +58203,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.04308366,
-        "g": 0.164629579,
-        "b": 0.431292057
+        "r": 0.04308361,
+        "g": 0.164629519,
+        "b": 0.431292
       },
       "Tags": [
         "Draw_Target",
@@ -58267,9 +58267,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430836827,
-        "g": 0.164629608,
-        "b": 0.4312921
+        "r": 0.043083638,
+        "g": 0.164629549,
+        "b": 0.431292027
       },
       "Tags": [
         "Draw_Target",
@@ -58331,9 +58331,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430835262,
-        "g": 0.1646294,
-        "b": 0.431291848
+        "r": 0.04308349,
+        "g": 0.16462934,
+        "b": 0.4312918
       },
       "Tags": [
         "Draw_Target",
@@ -58370,7 +58370,7 @@
             "z": -0.00351506122
           },
           "Rotation": {
-            "x": 1.31831493E-05,
+            "x": 1.31831512E-05,
             "y": 359.9346,
             "z": 180.0
           }
@@ -58395,9 +58395,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430836827,
-        "g": 0.164629608,
-        "b": 0.4312921
+        "r": 0.043083638,
+        "g": 0.164629549,
+        "b": 0.431292027
       },
       "Tags": [
         "Draw_Target",
@@ -58448,7 +58448,7 @@
         "posX": -54.5933151,
         "posY": 1.12002742,
         "posZ": 76.0046844,
-        "rotX": 0.0537107922,
+        "rotX": 0.0537107661,
         "rotY": 179.999939,
         "rotZ": 359.9328,
         "scaleX": 0.16,
@@ -58459,9 +58459,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430836827,
-        "g": 0.164629608,
-        "b": 0.4312921
+        "r": 0.043083638,
+        "g": 0.164629549,
+        "b": 0.431292027
       },
       "Tags": [
         "MegaFreeze"
@@ -58508,9 +58508,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.04308372,
-        "g": 0.164629668,
-        "b": 0.431292146
+        "r": 0.0430836827,
+        "g": 0.164629608,
+        "b": 0.4312921
       },
       "Tags": [
         "MegaFreeze"
@@ -58571,9 +58571,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430836827,
-        "g": 0.164629608,
-        "b": 0.4312921
+        "r": 0.043083638,
+        "g": 0.164629549,
+        "b": 0.431292027
       },
       "Tags": [
         "Draw_Target",
@@ -58624,7 +58624,7 @@
         "posX": -50.0936432,
         "posY": 1.12530446,
         "posZ": 76.00456,
-        "rotX": 0.0537046678,
+        "rotX": 0.0537046455,
         "rotY": 179.9999,
         "rotZ": 359.9328,
         "scaleX": 0.16,
@@ -58635,9 +58635,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430836827,
-        "g": 0.164629608,
-        "b": 0.4312921
+        "r": 0.043083638,
+        "g": 0.164629549,
+        "b": 0.431292027
       },
       "Tags": [
         "MegaFreeze"
@@ -58684,9 +58684,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.04308372,
-        "g": 0.164629668,
-        "b": 0.431292146
+        "r": 0.0430836827,
+        "g": 0.164629608,
+        "b": 0.4312921
       },
       "Tags": [
         "MegaFreeze"
@@ -58747,9 +58747,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430836827,
-        "g": 0.164629608,
-        "b": 0.4312921
+        "r": 0.043083638,
+        "g": 0.164629549,
+        "b": 0.431292027
       },
       "Tags": [
         "Draw_Target",
@@ -58786,8 +58786,8 @@
             "z": -7.14347159E-09
           },
           "Rotation": {
-            "x": 1.14099648E-05,
-            "y": 0.0310915224,
+            "x": 1.14099666E-05,
+            "y": 0.031091528,
             "z": 180.0
           }
         }
@@ -58800,7 +58800,7 @@
         "posX": -40.77887,
         "posY": 1.1227982,
         "posZ": 66.0510254,
-        "rotX": 0.0537083559,
+        "rotX": 0.05370833,
         "rotY": 179.9999,
         "rotZ": 359.9328,
         "scaleX": 0.16,
@@ -58811,9 +58811,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430837423,
-        "g": 0.1646297,
-        "b": 0.431292176
+        "r": 0.0430836976,
+        "g": 0.164629638,
+        "b": 0.431292117
       },
       "Tags": [
         "MegaFreeze"
@@ -58850,7 +58850,7 @@
           },
           "Rotation": {
             "x": 1.69245122E-05,
-            "y": 0.0298831556,
+            "y": 0.0298831612,
             "z": -7.07923937E-06
           }
         }
@@ -58863,7 +58863,7 @@
         "posX": -45.2797432,
         "posY": 1.11751616,
         "posZ": 66.04729,
-        "rotX": 0.05370945,
+        "rotX": 0.053709425,
         "rotY": 179.9999,
         "rotZ": 359.9328,
         "scaleX": 0.16,
@@ -58874,9 +58874,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.04308372,
-        "g": 0.164629668,
-        "b": 0.431292146
+        "r": 0.0430836827,
+        "g": 0.164629608,
+        "b": 0.4312921
       },
       "Tags": [
         "MegaFreeze"
@@ -58912,7 +58912,7 @@
             "z": -0.00066336937
           },
           "Rotation": {
-            "x": 1.18155149E-05,
+            "x": 1.18155167E-05,
             "y": 359.975037,
             "z": -1.85686361E-06
           }
@@ -58937,9 +58937,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430836827,
-        "g": 0.164629608,
-        "b": 0.4312921
+        "r": 0.043083638,
+        "g": 0.164629549,
+        "b": 0.431292027
       },
       "Tags": [
         "MegaFreeze"
@@ -58975,7 +58975,7 @@
         "posX": -45.5936279,
         "posY": 1.13058209,
         "posZ": 76.00457,
-        "rotX": 0.053710565,
+        "rotX": 0.05371054,
         "rotY": 179.9999,
         "rotZ": 359.9328,
         "scaleX": 0.16,
@@ -58986,9 +58986,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430836827,
-        "g": 0.164629608,
-        "b": 0.4312921
+        "r": 0.043083638,
+        "g": 0.164629549,
+        "b": 0.431292027
       },
       "Tags": [
         "MegaFreeze"
@@ -59035,9 +59035,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.04308366,
-        "g": 0.164629579,
-        "b": 0.431292057
+        "r": 0.04308361,
+        "g": 0.164629519,
+        "b": 0.431292
       },
       "Tags": [
         "Draw_Target",
@@ -59099,9 +59099,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.04308372,
-        "g": 0.164629668,
-        "b": 0.431292146
+        "r": 0.0430836827,
+        "g": 0.164629608,
+        "b": 0.4312921
       },
       "Tags": [
         "Draw_Target",
@@ -59163,9 +59163,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.04308372,
-        "g": 0.164629668,
-        "b": 0.431292146
+        "r": 0.0430836827,
+        "g": 0.164629608,
+        "b": 0.4312921
       },
       "Tags": [
         "Draw_Target",
@@ -59227,9 +59227,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.0430837572,
-        "g": 0.164629728,
-        "b": 0.4312922
+        "r": 0.04308372,
+        "g": 0.164629668,
+        "b": 0.431292146
       },
       "Tags": [
         "Draw_Target",
@@ -59291,9 +59291,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.04308372,
-        "g": 0.164629668,
-        "b": 0.431292146
+        "r": 0.0430836827,
+        "g": 0.164629608,
+        "b": 0.4312921
       },
       "Tags": [
         "Draw_Target",
@@ -59330,7 +59330,7 @@
             "z": 0.000347266236
           },
           "Rotation": {
-            "x": 1.70768926E-05,
+            "x": 1.70768853E-05,
             "y": 0.03452461,
             "z": 7.864218E-09
           }
@@ -59355,9 +59355,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.0430837423,
-        "g": 0.1646297,
-        "b": 0.431292176
+        "r": 0.0430836976,
+        "g": 0.164629638,
+        "b": 0.431292117
       },
       "Tags": [
         "Draw_Target",
@@ -59419,9 +59419,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.0430837423,
-        "g": 0.1646297,
-        "b": 0.431292176
+        "r": 0.0430836976,
+        "g": 0.164629638,
+        "b": 0.431292117
       },
       "Tags": [
         "Draw_Target",
@@ -59483,9 +59483,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.0430837423,
-        "g": 0.1646297,
-        "b": 0.431292176
+        "r": 0.0430836976,
+        "g": 0.164629638,
+        "b": 0.431292117
       },
       "Tags": [
         "Draw_Target",
@@ -59547,9 +59547,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.0430837423,
-        "g": 0.1646297,
-        "b": 0.431292176
+        "r": 0.0430836976,
+        "g": 0.164629638,
+        "b": 0.431292117
       },
       "Tags": [
         "Draw_Target",
@@ -59611,9 +59611,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.04308372,
-        "g": 0.164629668,
-        "b": 0.431292146
+        "r": 0.0430836827,
+        "g": 0.164629608,
+        "b": 0.4312921
       },
       "Tags": [
         "Draw_Target",
@@ -59675,9 +59675,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.04308372,
-        "g": 0.164629668,
-        "b": 0.431292146
+        "r": 0.0430836827,
+        "g": 0.164629608,
+        "b": 0.4312921
       },
       "Tags": [
         "Draw_Target",
@@ -59739,9 +59739,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.0430836827,
-        "g": 0.164629608,
-        "b": 0.4312921
+        "r": 0.043083638,
+        "g": 0.164629549,
+        "b": 0.431292027
       },
       "Tags": [
         "Draw_Target",
@@ -59803,8 +59803,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.149015784,
-        "g": 0.0745069161,
+        "r": 0.149015725,
+        "g": 0.07450689,
         "b": 0.0235294122
       },
       "Tags": [
@@ -59858,8 +59858,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.149015784,
-        "g": 0.0745069161,
+        "r": 0.149015725,
+        "g": 0.07450689,
         "b": 0.0235294122
       },
       "Tags": [
@@ -59913,8 +59913,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.149015784,
-        "g": 0.0745069161,
+        "r": 0.149015725,
+        "g": 0.07450689,
         "b": 0.0235294122
       },
       "Tags": [
@@ -59968,8 +59968,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.149015784,
-        "g": 0.0745069161,
+        "r": 0.149015725,
+        "g": 0.07450689,
         "b": 0.0235294122
       },
       "Tags": [
@@ -60023,8 +60023,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.149015784,
-        "g": 0.0745069161,
+        "r": 0.149015725,
+        "g": 0.07450689,
         "b": 0.0235294122
       },
       "Tags": [
@@ -60078,8 +60078,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.149015784,
-        "g": 0.0745069161,
+        "r": 0.149015725,
+        "g": 0.07450689,
         "b": 0.0235294122
       },
       "Tags": [
@@ -60133,8 +60133,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.149015784,
-        "g": 0.0745069161,
+        "r": 0.149015725,
+        "g": 0.07450689,
         "b": 0.0235294122
       },
       "Tags": [
@@ -60188,8 +60188,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.149015784,
-        "g": 0.0745069161,
+        "r": 0.149015725,
+        "g": 0.07450689,
         "b": 0.0235294122
       },
       "Tags": [
@@ -60232,7 +60232,7 @@
         "posX": -72.19457,
         "posY": -0.00208260538,
         "posZ": 52.04165,
-        "rotX": 0.103203505,
+        "rotX": 0.103203535,
         "rotY": 179.9856,
         "rotZ": -2.994322E-05,
         "scaleX": 8.22,
@@ -60243,8 +60243,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.149015784,
-        "g": 0.0745069161,
+        "r": 0.149015725,
+        "g": 0.07450689,
         "b": 0.0235294122
       },
       "Tags": [
@@ -60298,8 +60298,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.149015784,
-        "g": 0.0745069161,
+        "r": 0.149015725,
+        "g": 0.07450689,
         "b": 0.0235294122
       },
       "Tags": [
@@ -60353,8 +60353,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.149015784,
-        "g": 0.0745069161,
+        "r": 0.149015725,
+        "g": 0.07450689,
         "b": 0.0235294122
       },
       "Tags": [
@@ -60408,8 +60408,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.149015784,
-        "g": 0.0745069161,
+        "r": 0.149015725,
+        "g": 0.07450689,
         "b": 0.0235294122
       },
       "Tags": [
@@ -60463,8 +60463,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.149015784,
-        "g": 0.0745069161,
+        "r": 0.149015725,
+        "g": 0.07450689,
         "b": 0.0235294122
       },
       "Tags": [
@@ -60518,9 +60518,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249995977,
-        "g": 0.249995977,
-        "b": 0.249995977
+        "r": 0.249995917,
+        "g": 0.249995917,
+        "b": 0.249995917
       },
       "Tags": [
         "MegaFreeze"
@@ -60573,9 +60573,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249995977,
-        "g": 0.249995977,
-        "b": 0.249995977
+        "r": 0.249995917,
+        "g": 0.249995917,
+        "b": 0.249995917
       },
       "Tags": [
         "MegaFreeze"
@@ -60628,9 +60628,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249995977,
-        "g": 0.249995977,
-        "b": 0.249995977
+        "r": 0.249995917,
+        "g": 0.249995917,
+        "b": 0.249995917
       },
       "Tags": [
         "MegaFreeze"
@@ -60683,9 +60683,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249995977,
-        "g": 0.249995977,
-        "b": 0.249995977
+        "r": 0.249995917,
+        "g": 0.249995917,
+        "b": 0.249995917
       },
       "Tags": [
         "MegaFreeze"
@@ -60738,9 +60738,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249995977,
-        "g": 0.249995977,
-        "b": 0.249995977
+        "r": 0.249995917,
+        "g": 0.249995917,
+        "b": 0.249995917
       },
       "Tags": [
         "MegaFreeze"
@@ -60793,9 +60793,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249995977,
-        "g": 0.249995977,
-        "b": 0.249995977
+        "r": 0.249995917,
+        "g": 0.249995917,
+        "b": 0.249995917
       },
       "Tags": [
         "MegaFreeze"
@@ -60848,9 +60848,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249995977,
-        "g": 0.249995977,
-        "b": 0.249995977
+        "r": 0.249995917,
+        "g": 0.249995917,
+        "b": 0.249995917
       },
       "Tags": [
         "MegaFreeze"
@@ -61121,9 +61121,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249995977,
-        "g": 0.249995977,
-        "b": 0.249995977
+        "r": 0.249995917,
+        "g": 0.249995917,
+        "b": 0.249995917
       },
       "Tags": [
         "MegaFreeze"
@@ -61165,7 +61165,7 @@
             "z": -0.441030085
           },
           "Rotation": {
-            "x": -1.6763961E-06,
+            "x": -1.67639632E-06,
             "y": 0.0160372835,
             "z": -1.07153149E-08
           }
@@ -61190,7 +61190,7 @@
           },
           "Rotation": {
             "x": -9.786796E-06,
-            "y": 0.028414201,
+            "y": 0.0284142084,
             "z": -5.20418268E-07
           }
         },
@@ -61201,7 +61201,7 @@
             "z": -0.441037327
           },
           "Rotation": {
-            "x": -1.19734468E-05,
+            "x": -1.19734486E-05,
             "y": 0.01408385,
             "z": 2.409008E-09
           }
@@ -61275,7 +61275,7 @@
           "Rotation": {
             "x": -1.02474394E-06,
             "y": 359.98526,
-            "z": -2.7281942E-08
+            "z": -2.728195E-08
           }
         }
       ]
@@ -61287,7 +61287,7 @@
         "posX": -72.16457,
         "posY": 1.000004,
         "posZ": 52.04165,
-        "rotX": 0.103203528,
+        "rotX": 0.103203557,
         "rotY": 180.02005,
         "rotZ": 3.21593143E-05,
         "scaleX": 7.46,
@@ -61298,9 +61298,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249995977,
-        "g": 0.249995977,
-        "b": 0.249995977
+        "r": 0.249995917,
+        "g": 0.249995917,
+        "b": 0.249995917
       },
       "Tags": [
         "MegaFreeze"
@@ -61354,9 +61354,9 @@
             "z": -0.441347778
           },
           "Rotation": {
-            "x": -3.567552E-06,
+            "x": -3.56755277E-06,
             "y": 359.9729,
-            "z": 1.50950132E-06
+            "z": 1.50950154E-06
           }
         },
         {
@@ -61404,7 +61404,7 @@
           "Rotation": {
             "x": -5.669995E-06,
             "y": 0.0101496438,
-            "z": 2.06421774E-07
+            "z": 2.064218E-07
           }
         }
       ]
@@ -61427,9 +61427,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249995977,
-        "g": 0.249995977,
-        "b": 0.249995977
+        "r": 0.249995917,
+        "g": 0.249995917,
+        "b": 0.249995917
       },
       "Tags": [
         "MegaFreeze"
@@ -61473,7 +61473,7 @@
           "Rotation": {
             "x": 2.45910155E-06,
             "y": 0.0273480881,
-            "z": 1.68814279E-06
+            "z": 1.688143E-06
           }
         },
         {
@@ -61508,7 +61508,7 @@
           },
           "Rotation": {
             "x": 1.85304125E-05,
-            "y": 0.02850979,
+            "y": 0.0285097975,
             "z": 5.982497E-07
           }
         },
@@ -61544,9 +61544,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249995977,
-        "g": 0.249995977,
-        "b": 0.249995977
+        "r": 0.249995917,
+        "g": 0.249995917,
+        "b": 0.249995917
       },
       "Tags": [
         "MegaFreeze"
@@ -61637,9 +61637,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249995977,
-        "g": 0.249995977,
-        "b": 0.249995977
+        "r": 0.249995917,
+        "g": 0.249995917,
+        "b": 0.249995917
       },
       "Tags": [
         "MegaFreeze"
@@ -61742,9 +61742,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249995977,
-        "g": 0.249995977,
-        "b": 0.249995977
+        "r": 0.249995917,
+        "g": 0.249995917,
+        "b": 0.249995917
       },
       "Tags": [
         "MegaFreeze"
@@ -61822,7 +61822,7 @@
             "z": 0.444871366
           },
           "Rotation": {
-            "x": -1.28584088E-05,
+            "x": -1.28584106E-05,
             "y": 359.9674,
             "z": -8.94592045E-09
           }
@@ -61892,9 +61892,9 @@
         "posX": -73.3477,
         "posY": 1.19110644,
         "posZ": 3.148884,
-        "rotX": -4.0711875E-06,
-        "rotY": 2.07857966,
-        "rotZ": 1.98293637E-05,
+        "rotX": -4.295084E-06,
+        "rotY": 2.07858062,
+        "rotZ": 1.99844853E-05,
         "scaleX": 1.69999814,
         "scaleY": 1.69999814,
         "scaleZ": 1.69999814
@@ -61930,11 +61930,11 @@
       "Name": "Custom_Model",
       "Transform": {
         "posX": -86.74648,
-        "posY": 0.8800068,
+        "posY": 0.880006731,
         "posZ": 30.1031,
-        "rotX": 3.437292E-06,
+        "rotX": 3.37396227E-06,
         "rotY": 180.002151,
-        "rotZ": -1.98369471E-05,
+        "rotZ": -1.98382459E-05,
         "scaleX": 1.1,
         "scaleY": 3.0,
         "scaleZ": 1.1
@@ -61992,9 +61992,9 @@
         "posX": -53.9206657,
         "posY": 1.13109553,
         "posZ": 30.5831032,
-        "rotX": -1.17569073E-06,
-        "rotY": 0.02321543,
-        "rotZ": 4.71502153E-06,
+        "rotX": -1.46272373E-06,
+        "rotY": 0.0232163481,
+        "rotZ": 4.80475728E-06,
         "scaleX": 1.69999814,
         "scaleY": 1.69999814,
         "scaleZ": 1.69999814
@@ -62032,9 +62032,9 @@
         "posX": -90.6586456,
         "posY": 0.88000536,
         "posZ": 30.09189,
-        "rotX": 3.34763058E-06,
+        "rotX": 3.49546531E-06,
         "rotY": 179.921967,
-        "rotZ": -1.97305581E-05,
+        "rotZ": -1.98367634E-05,
         "scaleX": 1.1,
         "scaleY": 3.0,
         "scaleZ": 1.1
@@ -62092,9 +62092,9 @@
         "posX": -83.9706,
         "posY": 0.9851819,
         "posZ": 21.6443481,
-        "rotX": 3.24585017E-06,
+        "rotX": 3.3330557E-06,
         "rotY": 179.972839,
-        "rotZ": -1.95462562E-05,
+        "rotZ": -1.97413265E-05,
         "scaleX": 0.725001633,
         "scaleY": 1.75291157,
         "scaleZ": 0.725001633
@@ -62152,9 +62152,9 @@
         "posX": -84.821106,
         "posY": 0.8800071,
         "posZ": 24.4480228,
-        "rotX": 3.33928438E-06,
+        "rotX": 3.33744356E-06,
         "rotY": 180.019562,
-        "rotZ": -1.968076E-05,
+        "rotZ": -1.9684272E-05,
         "scaleX": 0.6,
         "scaleY": 1.0,
         "scaleZ": 0.601098061
@@ -62163,7 +62163,7 @@
       "Description": "",
       "GMNotes": "[Delete]",
       "ColorDiffuse": {
-        "r": 0.0941001251,
+        "r": 0.0941000655,
         "g": 0.5921568,
         "b": 0.8
       },
@@ -62215,9 +62215,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "D.Name_Ally",
       "ColorDiffuse": {
-        "r": 0.0430835634,
-        "g": 0.164629459,
-        "b": 0.431291938
+        "r": 0.0430835262,
+        "g": 0.1646294,
+        "b": 0.431291848
       },
       "Tags": [
         "Discard_Platform_Small",
@@ -62279,9 +62279,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "D.Name_Spell",
       "ColorDiffuse": {
-        "r": 0.0430835858,
-        "g": 0.164629489,
-        "b": 0.431291968
+        "r": 0.04308355,
+        "g": 0.16462943,
+        "b": 0.431291878
       },
       "Tags": [
         "Discard_Platform_Small",
@@ -62343,9 +62343,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "D.Name_Skill",
       "ColorDiffuse": {
-        "r": 0.0430835634,
-        "g": 0.164629459,
-        "b": 0.431291938
+        "r": 0.0430835262,
+        "g": 0.1646294,
+        "b": 0.431291848
       },
       "Tags": [
         "Discard_Platform_Small",
@@ -62407,9 +62407,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "D.Name_Unique.Item",
       "ColorDiffuse": {
-        "r": 0.0430835858,
-        "g": 0.164629489,
-        "b": 0.431291968
+        "r": 0.04308355,
+        "g": 0.16462943,
+        "b": 0.431291878
       },
       "Tags": [
         "Discard_Platform_Small",
@@ -62471,9 +62471,9 @@
       "Description": "",
       "GMNotes": "D.Name_Common.Item",
       "ColorDiffuse": {
-        "r": 0.0430835858,
-        "g": 0.164629489,
-        "b": 0.431291968
+        "r": 0.04308355,
+        "g": 0.16462943,
+        "b": 0.431291878
       },
       "Tags": [
         "Discard_Platform_Small",
@@ -62535,9 +62535,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "platform_small",
       "ColorDiffuse": {
-        "r": 0.04308355,
-        "g": 0.16462943,
-        "b": 0.431291878
+        "r": 0.0430835038,
+        "g": 0.16462937,
+        "b": 0.431291819
       },
       "Tags": [
         "MegaFreeze"
@@ -62573,7 +62573,7 @@
             "z": -0.00278994767
           },
           "Rotation": {
-            "x": 1.48473482E-05,
+            "x": 1.48473446E-05,
             "y": 359.963867,
             "z": 180.0
           }
@@ -62598,9 +62598,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "platform_small",
       "ColorDiffuse": {
-        "r": 0.0430835858,
-        "g": 0.164629489,
-        "b": 0.431291968
+        "r": 0.04308355,
+        "g": 0.16462943,
+        "b": 0.431291878
       },
       "Tags": [
         "MegaFreeze"
@@ -62636,7 +62636,7 @@
             "z": -0.000733109657
           },
           "Rotation": {
-            "x": -2.36243213E-05,
+            "x": -2.3624325E-05,
             "y": 359.9488,
             "z": -1.73038279E-06
           }
@@ -62661,9 +62661,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "platform_small",
       "ColorDiffuse": {
-        "r": 0.04308361,
-        "g": 0.164629519,
-        "b": 0.431292
+        "r": 0.0430835634,
+        "g": 0.164629459,
+        "b": 0.431291938
       },
       "Tags": [
         "MegaFreeze"
@@ -62724,9 +62724,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.0430836976,
-        "g": 0.164629638,
-        "b": 0.431292117
+        "r": 0.04308366,
+        "g": 0.164629579,
+        "b": 0.431292057
       },
       "Tags": [
         "MegaFreeze"
@@ -62787,9 +62787,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.0430837572,
-        "g": 0.164629728,
-        "b": 0.4312922
+        "r": 0.04308372,
+        "g": 0.164629668,
+        "b": 0.431292146
       },
       "Tags": [
         "MegaFreeze"
@@ -62850,9 +62850,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.04308372,
-        "g": 0.164629668,
-        "b": 0.431292146
+        "r": 0.0430836827,
+        "g": 0.164629608,
+        "b": 0.4312921
       },
       "Tags": [
         "MegaFreeze"
@@ -62913,9 +62913,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.04308372,
-        "g": 0.164629668,
-        "b": 0.431292146
+        "r": 0.0430836827,
+        "g": 0.164629608,
+        "b": 0.4312921
       },
       "Tags": [
         "MegaFreeze"
@@ -62965,9 +62965,9 @@
         "posX": -45.71155,
         "posY": 0.898066163,
         "posZ": 17.83365,
-        "rotX": 6.349458E-06,
+        "rotX": 6.34946E-06,
         "rotY": 179.987991,
-        "rotZ": -3.713838E-06,
+        "rotZ": -3.71383953E-06,
         "scaleX": 0.2,
         "scaleY": 0.43,
         "scaleZ": 0.44
@@ -62976,9 +62976,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "D.Name_Miskatonic.University",
       "ColorDiffuse": {
-        "r": 0.0430837423,
-        "g": 0.1646297,
-        "b": 0.431292176
+        "r": 0.0430836976,
+        "g": 0.164629638,
+        "b": 0.431292117
       },
       "Tags": [
         "Discard_Platform_Large",
@@ -63029,7 +63029,7 @@
         "posX": -32.1728859,
         "posY": 0.89806366,
         "posZ": 17.3870239,
-        "rotX": -2.44175862E-05,
+        "rotX": -2.44175935E-05,
         "rotY": 180.016937,
         "rotZ": -7.744757E-06,
         "scaleX": 0.2,
@@ -63040,9 +63040,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "D.Name_French.Hill",
       "ColorDiffuse": {
-        "r": 0.0430837423,
-        "g": 0.1646297,
-        "b": 0.431292176
+        "r": 0.0430836976,
+        "g": 0.164629638,
+        "b": 0.431292117
       },
       "Tags": [
         "Discard_Platform_Large",
@@ -63104,9 +63104,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "D.Name_Rivertown",
       "ColorDiffuse": {
-        "r": 0.0430837423,
-        "g": 0.1646297,
-        "b": 0.431292176
+        "r": 0.0430836976,
+        "g": 0.164629638,
+        "b": 0.431292117
       },
       "Tags": [
         "Discard_Platform_Large",
@@ -63168,9 +63168,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.0430837423,
-        "g": 0.1646297,
-        "b": 0.431292176
+        "r": 0.0430836976,
+        "g": 0.164629638,
+        "b": 0.431292117
       },
       "Tags": [
         "MegaFreeze"
@@ -63231,9 +63231,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.04308372,
-        "g": 0.164629668,
-        "b": 0.431292146
+        "r": 0.0430836827,
+        "g": 0.164629608,
+        "b": 0.4312921
       },
       "Tags": [
         "MegaFreeze"
@@ -63294,9 +63294,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.04308372,
-        "g": 0.164629668,
-        "b": 0.431292146
+        "r": 0.0430836827,
+        "g": 0.164629608,
+        "b": 0.4312921
       },
       "Tags": [
         "MegaFreeze"
@@ -63357,9 +63357,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.04308372,
-        "g": 0.164629668,
-        "b": 0.431292146
+        "r": 0.0430836827,
+        "g": 0.164629608,
+        "b": 0.4312921
       },
       "Tags": [
         "MegaFreeze"
@@ -63626,12 +63626,12 @@
       "GUID": "0f37e8",
       "Name": "go_game_piece_white",
       "Transform": {
-        "posX": -53.9671555,
-        "posY": 1.131079,
-        "posZ": 28.677227,
-        "rotX": 0.00170132972,
-        "rotY": 359.97644,
-        "rotZ": -0.000477958441,
+        "posX": -53.967186,
+        "posY": 1.131074,
+        "posZ": 28.67722,
+        "rotX": 0.00115857169,
+        "rotY": 359.975525,
+        "rotZ": 0.000234590028,
         "scaleX": 1.69999814,
         "scaleY": 1.69999814,
         "scaleZ": 1.69999814
@@ -63640,7 +63640,7 @@
       "Description": "Institution",
       "GMNotes": "D.Zone_Test1",
       "ColorDiffuse": {
-        "r": 0.33221364,
+        "r": 0.332213581,
         "g": 1.0,
         "b": 0.0
       },
@@ -63666,12 +63666,12 @@
       "GUID": "02f8eb",
       "Name": "Custom_Model",
       "Transform": {
-        "posX": -58.37336,
-        "posY": 0.859988034,
-        "posZ": 29.1756363,
-        "rotX": 0.0006927731,
-        "rotY": -0.00367452088,
-        "rotZ": 180.000717,
+        "posX": -58.37334,
+        "posY": 0.8599854,
+        "posZ": 29.17568,
+        "rotX": 0.00189929327,
+        "rotY": -0.00189838745,
+        "rotZ": 180.000916,
         "scaleX": 0.25,
         "scaleY": 0.4,
         "scaleZ": 0.25
@@ -63717,11 +63717,11 @@
       "Name": "Custom_Token",
       "Transform": {
         "posX": -57.9909134,
-        "posY": 0.9704163,
-        "posZ": 26.1036663,
-        "rotX": -0.00024515175,
-        "rotY": 180.013779,
-        "rotZ": 180.0,
+        "posY": 0.9704231,
+        "posZ": 26.1036644,
+        "rotX": 0.0005608335,
+        "rotY": 180.013763,
+        "rotZ": 179.999786,
         "scaleX": 0.61,
         "scaleY": 1.0,
         "scaleZ": 0.61
@@ -63771,9 +63771,9 @@
         "posX": -55.8245735,
         "posY": 0.8199986,
         "posZ": 29.5537548,
-        "rotX": -4.56298E-07,
+        "rotX": -4.70781629E-07,
         "rotY": 180.001175,
-        "rotZ": -5.440129E-06,
+        "rotZ": -1.86297859E-06,
         "scaleX": 0.6,
         "scaleY": 1.0,
         "scaleZ": 0.6
@@ -63783,8 +63783,8 @@
       "GMNotes": "Delete\nCunt\nFuck\nWhat\nGoAway\nWhy",
       "ColorDiffuse": {
         "r": 1.0,
-        "g": 0.343252629,
-        "b": 0.1886304
+        "g": 0.343252569,
+        "b": 0.188630342
       },
       "LayoutGroupSortIndex": 0,
       "Value": 0,
@@ -63823,7 +63823,7 @@
         "posX": -45.3696136,
         "posY": 1.47550452,
         "posZ": 48.75061,
-        "rotX": -1.08205E-05,
+        "rotX": -1.10570663E-05,
         "rotY": 180.027786,
         "rotZ": 179.999985,
         "scaleX": 1.85,
@@ -64797,7 +64797,7 @@
         "posX": -40.8692169,
         "posY": 1.4369936,
         "posZ": 48.75061,
-        "rotX": 1.39443155E-05,
+        "rotX": 1.33239055E-05,
         "rotY": 179.996063,
         "rotZ": 179.999985,
         "scaleX": 1.85,
@@ -65339,7 +65339,7 @@
         "posX": -49.87,
         "posY": 1.57178378,
         "posZ": 48.75061,
-        "rotX": -6.74847433E-06,
+        "rotX": -6.752933E-06,
         "rotY": 179.972229,
         "rotZ": 179.999985,
         "scaleX": 1.85,
@@ -67402,7 +67402,7 @@
         "posX": -54.3655052,
         "posY": 1.57659638,
         "posZ": 48.7501373,
-        "rotX": -1.43706147E-05,
+        "rotX": -1.30345852E-05,
         "rotY": 180.020981,
         "rotZ": 179.999985,
         "scaleX": 1.85,
@@ -69510,7 +69510,7 @@
         "posX": -58.8707771,
         "posY": 1.55733871,
         "posZ": 48.75061,
-        "rotX": 1.48477538E-05,
+        "rotX": 1.53595174E-05,
         "rotY": 179.9996,
         "rotZ": 179.999985,
         "scaleX": 1.85,
@@ -71408,11 +71408,11 @@
       "GUID": "f03062",
       "Name": "Deck",
       "Transform": {
-        "posX": -67.78338,
+        "posX": -67.78412,
         "posY": 0.9298301,
-        "posZ": 22.6234531,
-        "rotX": 1.981279E-06,
-        "rotY": 179.995468,
+        "posZ": 22.6229553,
+        "rotX": 2.278974E-06,
+        "rotY": 179.9951,
         "rotZ": 179.999908,
         "scaleX": 2.24,
         "scaleY": 1.0,
@@ -71791,7 +71791,7 @@
         "posX": -66.67837,
         "posY": 0.9250136,
         "posZ": 15.0643559,
-        "rotX": 3.27073758E-06,
+        "rotX": 3.270708E-06,
         "rotY": 179.999985,
         "rotZ": 179.999985,
         "scaleX": 2.24,
@@ -72117,7 +72117,7 @@
         "posX": -61.8074226,
         "posY": 0.929829538,
         "posZ": 18.7559566,
-        "rotX": 3.292288E-06,
+        "rotX": 3.30679768E-06,
         "rotY": 179.9998,
         "rotZ": 179.999985,
         "scaleX": 2.24,
@@ -72497,9 +72497,9 @@
         "posX": -54.3470879,
         "posY": 1.38633657,
         "posZ": 55.25211,
-        "rotX": -3.2024177E-06,
+        "rotX": -3.16331852E-06,
         "rotY": 179.997482,
-        "rotZ": -1.581468E-05,
+        "rotZ": -1.58628482E-05,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -72550,9 +72550,9 @@
         "posX": -45.34631,
         "posY": 1.386339,
         "posZ": 55.2521,
-        "rotX": -2.16251848E-07,
+        "rotX": -2.53116241E-07,
         "rotY": 180.000122,
-        "rotZ": -1.994866E-05,
+        "rotZ": -1.98805119E-05,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -72600,12 +72600,12 @@
       "GUID": "fb4445",
       "Name": "Card",
       "Transform": {
-        "posX": -58.02625,
-        "posY": 0.8336945,
-        "posZ": 35.1364861,
-        "rotX": -0.0004000183,
-        "rotY": 180.013458,
-        "rotZ": 179.996384,
+        "posX": -58.0263,
+        "posY": 0.8336747,
+        "posZ": 35.13655,
+        "rotX": -0.0003080718,
+        "rotY": 180.013748,
+        "rotZ": 179.997162,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -72653,12 +72653,12 @@
       "GUID": "919cfe",
       "Name": "Card",
       "Transform": {
-        "posX": -56.8643074,
-        "posY": 0.880657554,
-        "posZ": 35.4924927,
-        "rotX": 0.0574711673,
-        "rotY": 180.022369,
-        "rotZ": 180.123871,
+        "posX": -56.8647423,
+        "posY": 0.8808337,
+        "posZ": 35.49273,
+        "rotX": 0.0643125847,
+        "rotY": 180.033127,
+        "rotZ": 180.112488,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -72706,12 +72706,12 @@
       "GUID": "9d1983",
       "Name": "Deck",
       "Transform": {
-        "posX": -46.1687126,
-        "posY": 0.911399961,
-        "posZ": 35.6094246,
-        "rotX": -0.00022586128,
-        "rotY": 180.042923,
-        "rotZ": 1.969977,
+        "posX": -46.1691055,
+        "posY": 0.911422431,
+        "posZ": 35.60941,
+        "rotX": -0.000229042344,
+        "rotY": 180.048019,
+        "rotZ": 1.97071147,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -72870,12 +72870,12 @@
       "GUID": "4c5248",
       "Name": "Custom_Model",
       "Transform": {
-        "posX": -57.87268,
-        "posY": 1.01550174,
-        "posZ": 28.0616035,
-        "rotX": 353.9708,
-        "rotY": 180.034927,
-        "rotZ": -0.000200088354,
+        "posX": -57.8726234,
+        "posY": 1.01379037,
+        "posZ": 28.0930786,
+        "rotX": 354.0596,
+        "rotY": 180.035049,
+        "rotZ": -0.000158981726,
         "scaleX": 1.1,
         "scaleY": 3.0,
         "scaleZ": 1.1
@@ -72930,12 +72930,12 @@
       "GUID": "259d0f",
       "Name": "Custom_Model",
       "Transform": {
-        "posX": -58.1044846,
-        "posY": 0.859536648,
-        "posZ": 31.6707821,
-        "rotX": 2.05895281,
-        "rotY": 180.022537,
-        "rotZ": 0.0003661724,
+        "posX": -58.10449,
+        "posY": 0.85884583,
+        "posZ": 31.6601677,
+        "rotX": 2.0229187,
+        "rotY": 180.022354,
+        "rotZ": 0.0005834998,
         "scaleX": 1.1,
         "scaleY": 3.0,
         "scaleZ": 1.1
@@ -72990,12 +72990,12 @@
       "GUID": "0975ec",
       "Name": "Custom_Model",
       "Transform": {
-        "posX": -54.9557571,
-        "posY": 1.32135713,
-        "posZ": 27.082859,
-        "rotX": 7.07263136,
-        "rotY": 177.455948,
-        "rotZ": 357.203,
+        "posX": -54.9689,
+        "posY": 1.318536,
+        "posZ": 27.0453949,
+        "rotX": 6.911087,
+        "rotY": 177.462967,
+        "rotZ": 357.186279,
         "scaleX": 1.1,
         "scaleY": 3.0,
         "scaleZ": 1.1
@@ -73050,12 +73050,12 @@
       "GUID": "6363c3",
       "Name": "Custom_Model",
       "Transform": {
-        "posX": -54.4014244,
-        "posY": 0.863143,
-        "posZ": 32.4196053,
-        "rotX": 0.0014051313,
-        "rotY": 179.679382,
-        "rotZ": 2.24656439,
+        "posX": -54.3899879,
+        "posY": 0.861869752,
+        "posZ": 32.4196434,
+        "rotX": 0.00205391552,
+        "rotY": 179.679031,
+        "rotZ": 2.18034816,
         "scaleX": 1.1,
         "scaleY": 3.0,
         "scaleZ": 1.1
@@ -73113,8 +73113,8 @@
         "posX": -76.82497,
         "posY": 0.893579364,
         "posZ": 34.2732048,
-        "rotX": 0.0008054264,
-        "rotY": 179.999832,
+        "rotX": 0.000805776159,
+        "rotY": 179.999954,
         "rotZ": 180.000153,
         "scaleX": 1.85,
         "scaleY": 1.0,
@@ -73163,11 +73163,11 @@
       "GUID": "916552",
       "Name": "Card",
       "Transform": {
-        "posX": -75.37668,
-        "posY": 0.9183811,
-        "posZ": 31.6674366,
-        "rotX": 0.0112309856,
-        "rotY": 179.980743,
+        "posX": -75.37665,
+        "posY": 0.918381155,
+        "posZ": 31.6674328,
+        "rotX": 0.0112293242,
+        "rotY": 179.980652,
         "rotZ": 180.047729,
         "scaleX": 1.85,
         "scaleY": 1.0,
@@ -73217,11 +73217,11 @@
       "Name": "Card",
       "Transform": {
         "posX": -77.83463,
-        "posY": 0.93352735,
+        "posY": 0.9335268,
         "posZ": 30.0081863,
-        "rotX": 0.08649521,
-        "rotY": 179.985229,
-        "rotZ": 178.846588,
+        "rotX": 0.08650033,
+        "rotY": 179.98526,
+        "rotZ": 178.8466,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -73269,11 +73269,11 @@
       "GUID": "54362f",
       "Name": "Card",
       "Transform": {
-        "posX": -74.24959,
-        "posY": 0.9452343,
+        "posX": -74.24956,
+        "posY": 0.945234239,
         "posZ": 34.39538,
-        "rotX": 0.009022176,
-        "rotY": 179.932068,
+        "rotX": 0.009020823,
+        "rotY": 179.931961,
         "rotZ": 180.0463,
         "scaleX": 1.85,
         "scaleY": 1.0,
@@ -73323,11 +73323,11 @@
       "Name": "Card",
       "Transform": {
         "posX": -78.530426,
-        "posY": 0.9229613,
+        "posY": 0.922961533,
         "posZ": 36.0475235,
         "rotX": 359.938477,
-        "rotY": 180.000381,
-        "rotZ": 179.063934,
+        "rotY": 180.000473,
+        "rotZ": 179.06395,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -73378,9 +73378,9 @@
         "posX": -58.8707771,
         "posY": 1.403289,
         "posZ": 55.2521133,
-        "rotX": 5.798061E-06,
+        "rotX": 9.666751E-06,
         "rotY": 180.000076,
-        "rotZ": -1.17827622E-05,
+        "rotZ": -1.18982716E-05,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -73539,12 +73539,12 @@
       "GUID": "8c62b8",
       "Name": "Card",
       "Transform": {
-        "posX": -66.65977,
-        "posY": 0.9931299,
-        "posZ": 24.5222015,
-        "rotX": -0.00139822369,
-        "rotY": 179.994049,
-        "rotZ": 0.00210591475,
+        "posX": -66.66087,
+        "posY": 0.993129969,
+        "posZ": 24.5214882,
+        "rotX": -0.00139729865,
+        "rotY": 179.9936,
+        "rotZ": 0.002104843,
         "scaleX": 2.24,
         "scaleY": 1.0,
         "scaleZ": 2.24
@@ -73595,9 +73595,9 @@
         "posX": -45.711544,
         "posY": 1.16633546,
         "posZ": 17.833643,
-        "rotX": 2.22679082E-05,
+        "rotX": 2.383399E-05,
         "rotY": 179.999878,
-        "rotZ": -3.56936653E-06,
+        "rotZ": -3.853037E-06,
         "scaleX": 2.24,
         "scaleY": 1.0,
         "scaleZ": 2.24
@@ -73648,9 +73648,9 @@
         "posX": -32.17769,
         "posY": 1.18328679,
         "posZ": 17.3873043,
-        "rotX": -3.16943442E-05,
+        "rotX": -3.162612E-05,
         "rotY": 180.0297,
-        "rotZ": -7.823978E-06,
+        "rotZ": -7.754585E-06,
         "scaleX": 2.24,
         "scaleY": 1.0,
         "scaleZ": 2.24
@@ -73809,12 +73809,12 @@
       "GUID": "bfc687",
       "Name": "Card",
       "Transform": {
-        "posX": -54.60721,
-        "posY": 0.889291644,
-        "posZ": 36.47715,
-        "rotX": 0.0405201577,
-        "rotY": 179.963531,
-        "rotZ": 181.737823,
+        "posX": -54.6070251,
+        "posY": 0.8923172,
+        "posZ": 36.4772034,
+        "rotX": 0.03405283,
+        "rotY": 179.963257,
+        "rotZ": 181.846115,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -73863,11 +73863,11 @@
       "Name": "go_game_piece_white",
       "Transform": {
         "posX": -121.236549,
-        "posY": 1.25514042,
+        "posY": 1.25514054,
         "posZ": 16.6499462,
-        "rotX": -3.64667881E-06,
+        "rotX": -3.4402965E-06,
         "rotY": 359.979156,
-        "rotZ": 2.00256673E-05,
+        "rotZ": 2.016942E-05,
         "scaleX": 2.04999876,
         "scaleY": 2.04999876,
         "scaleZ": 2.04999876
@@ -73901,12 +73901,12 @@
       "GUID": "a3ab59",
       "Name": "Card",
       "Transform": {
-        "posX": -48.9641151,
-        "posY": 0.8333626,
-        "posZ": 35.3466644,
-        "rotX": 0.00126173883,
-        "rotY": 179.992722,
-        "rotZ": 359.9902,
+        "posX": -48.96406,
+        "posY": 0.833362,
+        "posZ": 35.3466873,
+        "rotX": 0.00126441184,
+        "rotY": 179.992142,
+        "rotZ": 359.990173,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -73954,12 +73954,12 @@
       "GUID": "37ea78",
       "Name": "Card",
       "Transform": {
-        "posX": -48.34177,
-        "posY": 0.8825425,
-        "posZ": 33.5930367,
+        "posX": -48.34139,
+        "posY": 0.882540345,
+        "posZ": 33.5930443,
         "rotX": 359.989532,
-        "rotY": 180.023987,
-        "rotZ": 0.0519404635,
+        "rotY": 180.02739,
+        "rotZ": 0.0522105172,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -74010,9 +74010,9 @@
         "posX": -53.57911,
         "posY": 1.61759853,
         "posZ": 18.3508224,
-        "rotX": 2.22324616E-05,
+        "rotX": 2.11152073E-05,
         "rotY": 359.980927,
-        "rotZ": 2.64632818E-05,
+        "rotZ": 2.63898364E-05,
         "scaleX": 2.299998,
         "scaleY": 2.299998,
         "scaleZ": 2.299998
