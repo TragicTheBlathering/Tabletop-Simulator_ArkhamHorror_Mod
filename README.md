@@ -9,5 +9,5 @@ This mod uses my growing Library of tools and code snippets extensively. As I am
 
 This is very much work in progress and will be going through a lot of changes... I'm not a programmer but self-taught as I learned modding.. so I get that it is a total mess and could be a real pain for others to read and cause actual pain to people that know what they are doing. Still, it is what it is!
 
-Have Fun and ROLL SIGNS
+Have Fun and ROLL SIGNS<br>
 --Tragic
