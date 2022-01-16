@@ -1,34 +1,86 @@
 function onload()
+    zprint = require("/_libs/debug").zprint
     self.setScale({2.30,2.30,2.30})
     setGlobalVariables()
     makeButtons()
+
+    --addHotkey("dBug_PrintTags",hot_PrintTags , false)
+
 end
+
+--[[function onObjectHover(player_color, object)
+    local target = object and object.guid or "Nothing"
+    print(player_color .. " hovered over " .. target)
+end]]
+
 function setGlobalVariables()
     TopLabel = 'Top Button Name' -- Name of Top Button
     BotLabel = 'Bottom Button Name' -- Name of Top Button
     MinButtonLength = 2500
 end
-local droptest=require("/_libs/SingleFunctions/waitDelay")
+--local droptest=require("/_libs/SingleFunctions/waitDelay")
 
 --------------------------------------------------------------------------------
 -- Place Demo Code in Here -----------------------------------------------------
+
+
+
 function Top_Left_Click(obj, color, alt_click)
-    local function produce() return 13 end
-    local function consume(data) print('Got ' .. data) end
-    droptest(produce, obj, consume)
+    --[[
+    function onPlayerAction(player, action, targets)
+    if action == Player.Action.Delete and player.color ~= "Black" then
+        local yOffset = 0
+        for _, target in ipairs(targets) do
+            target.setPosition(target.getPosition() + Vector(0, defautlTrash_pos.y, 0))
+            target.setPositionSmooth(defautlTrash_pos + Vector(0, yOffset, 0))
+            yOffset = yOffset + 0.6
+            Wait.condition(function() Wait_Put2DefaultTrash(target) end, function() return not target.isSmoothMoving() end)
+        end
+        return false
+    end
+
+    return true
+end
+    ]]
+
 end
 
+function Bot_Left_Click(obj, color, alt_click)
+    local table1 = {'cat','dog','bunny','horse','pig','cow','rat'} -- List A
+    local table2 = {'cat','bunny','horse','crow','cow','mudskipper'} -- List B
+    local searchList = {'cow','mudskipper','horse'}
+
+    local t = table2
+    local to_find = searchList
+
+    local counts = { }
+    for i, _ in ipairs(t) do
+        if counts[_] then
+            counts[_] = counts[_] + 1
+        else
+            counts[_] = 1
+        end
+    end
+
+    local found_all = true
+    for i, _ in ipairs(to_find) do
+        if not counts[_] or counts[_] == 0 then
+            found_all = false
+            break
+        end
+        counts[_] = counts[_] - 1
+    end
+
+    print('\nFinal Return : '..tostring(found_all))
+end
+--------------------------------------------------------------------------------
+-- Place Demo Code in Here -----------------------------------------------------
 function Top_Right_Click(obj, color, alt_click)
     function ThisIsATest()
         print('PASSED FUNCTION 02')
     end
     local trash = getObjectFromGUID('3808fc')
     droptest(ThisIsATest, trash)
-end
---------------------------------------------------------------------------------
--- Place Demo Code in Here -----------------------------------------------------
-function Bot_Left_Click(obj, color, alt_click)
-    print('Bottom Function : Left Click')
 end
 
 function Bot_Right_Click(obj, color, alt_click)

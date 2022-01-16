@@ -9,7 +9,7 @@ local GlobalEvents = {}
 --- onObjectEnter : CONTAINER --------------------------------------------------
 function onObjectEnterContainer(bag, obj)
     if string.find(string.lower(obj.getDescription()), string.lower(bag.getGMNotes()), 1, true) then
-        tool.waitFor.DropIntoBox(bag, obj, shuffleContainer, dropTimer)
+        --tool.waitFor.DropIntoBox(bag, obj, shuffleContainer, dropTimer)
     elseif string.find(string.lower(bag.getGMNotes()), 'trashcan', 1, true) then
         tool.waitFor.DropIntoBox(bag, obj, TrashFunction, dropTimer)
     end

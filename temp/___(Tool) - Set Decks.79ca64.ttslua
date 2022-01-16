@@ -23,87 +23,101 @@ function ChangeStuff(c)
         c.setName('Southside Locations')
         str = string.gsub(c.getName(), " Locations", "")
         c.setDescription('')
-        c.setGMNotes('D.Name_'..string.gsub(str, " ", "."))
+        c.setGMNotes('')
+        c.setTags({'ID_Southside','DiscardMe_Large'})
 
     elseif string.find(name, 'Uptown') then
         c.setName('Uptown Locations')
         str = string.gsub(c.getName(), " Locations", "")
         c.setDescription('')
-        c.setGMNotes('D.Name_'..string.gsub(str, " ", "."))
+        c.setGMNotes('')
+        c.setTags({'ID_Uptown','DiscardMe_Large'})
 
     elseif string.find(name, 'French') then
         c.setName('French Hill Locations')
         str = string.gsub(c.getName(), " Locations", "")
         c.setDescription('')
-        c.setGMNotes('D.Name_'..string.gsub(str, " ", "."))
+        c.setGMNotes('')
+        c.setTags({'ID_FrenchHill','DiscardMe_Large'})
 
     elseif string.find(name, 'Miskatonic University') then
         c.setName('Miskatonic University Locations')
         str = string.gsub(c.getName(), " Locations", "")
         c.setDescription('')
-        c.setGMNotes('D.Name_'..string.gsub(str, " ", "."))
+        c.setGMNotes('')
+        c.setTags({'ID_MiskatonicUniversity','DiscardMe_Large'})
 
     elseif string.find(name, 'Rivertown') then
         c.setName('Rivertown Locations')
         str = string.gsub(c.getName(), " Locations", "")
         c.setDescription('')
-        c.setGMNotes('D.Name_'..string.gsub(str, " ", "."))
+        c.setGMNotes('')
+        c.setTags({'ID_Rivertown','DiscardMe_Large'})
 
     elseif string.find(name, 'Merchant District') then
         c.setName('Merchant District Locations')
         str = string.gsub(c.getName(), " Locations", "")
         c.setDescription('')
-        c.setGMNotes('D.Name_'..string.gsub(str, " ", "."))
+        c.setGMNotes('')
+        c.setTags({'ID_MerchantDistrict','DiscardMe_Large'})
 
     elseif string.find(name, 'Easttown') then
         c.setName('Easttown Locations')
         str = string.gsub(c.getName(), " Locations", "")
         c.setDescription('')
-        c.setGMNotes('D.Name_'..string.gsub(str, " ", "."))
+        c.setGMNotes('')
+        c.setTags({'ID_Easttown','DiscardMe_Large'})
 
     elseif string.find(name, 'Downtown') then
         c.setName('Downtown Locations')
         str = string.gsub(c.getName(), " Locations", "")
         c.setDescription('')
-        c.setGMNotes('D.Name_'..string.gsub(str, " ", "."))
+        c.setGMNotes('')
+        c.setTags({'ID_Downtown','DiscardMe_Large'})
 
     elseif string.find(name, 'Northside') then
         c.setName('Northside Locations')
         str = string.gsub(c.getName(), " Locations", "")
         c.setDescription('')
-        c.setGMNotes('D.Name_'..string.gsub(str, " ", "."))
+        c.setGMNotes('')
+        c.setTags({'ID_Northside','DiscardMe_Large'})
 
 -- START SMALL CARDS -----------------------------------------------------------
     elseif string.find(description, 'Common') then
         n = string.gsub(name, '_', ' ')
         c.setName(n)
         c.setDescription('')
-        c.setGMNotes('D.Name_Common.Item')
+        c.setGMNotes('')
+        c.setTags({'ID_CommonItem','DiscardMe_Small'})
 
     elseif string.find(description, 'Spell') then
         n = string.gsub(name, '_', ' ')
         c.setName(n)
         c.setDescription('')
-        c.setGMNotes('D.Name_Spell')
+        c.setGMNotes('')
+        c.setTags({'ID_Spell','DiscardMe_Small'})
 
     elseif string.find(description, 'Unique') then
         n = string.gsub(name, '_', ' ')
         c.setName(n)
         c.setDescription('')
-        c.setGMNotes('D.Name_Unique.Item')
+        c.setGMNotes('')
+        c.setTags({'ID_UniqueItem','DiscardMe_Small'})
 
     elseif string.find(description, 'Skill') then
         n = string.gsub(name, '_', ' ')
         c.setName(n)
         c.setDescription('')
-        c.setGMNotes('D.Name_Skill')
+        c.setGMNotes('')
+        c.setTags({'ID_Skill','DiscardMe_Small'})
 
     elseif string.find(description, 'Ally') then
         n = string.gsub(name, "_%(Allies%)", "")
         --c.addTag('Trash_')
         c.setName(n..' (Ally)')
         c.setDescription('')
-        c.setGMNotes('D.Name_Ally')
+        c.setGMNotes('')
+        c.setTags({'ID_Ally','DiscardMe_Small'})
     end---END EDIT IF STATMENT
 end
 
