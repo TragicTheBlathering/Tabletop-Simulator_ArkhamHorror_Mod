@@ -1,6 +1,6 @@
 function onload()
     makeButtons()
-    TagsTo_Add = {'DiscardMe_SpecialCase'}
+    TagsTo_Add = {'DiscardTarget'}
 end
 
 function setTagsToAdd()
