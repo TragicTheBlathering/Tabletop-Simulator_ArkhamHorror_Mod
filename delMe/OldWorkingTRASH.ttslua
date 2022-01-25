@@ -1,0 +1,167 @@
+function onLoad(saved_data)
+    setGlobalVariables()
+end
+
+function setGlobalVariables()
+    showDebug = 'debug'
+    CastZone = Global.getVar('CastZone')
+    --deleteList = {'Clues', 'Dollars', 'Activity', 'Explored', 'Closed', 'Stamina', 'Sanity', 'Custom Dice', 'Doom Token', 'Elder Sign'}
+
+    RUNTRASH = true
+    wait_ids = {}
+end
+
+--******************************************************************************
+--***** Process Trash Bag ******************************************************
+--******************************************************************************
+
+function ProcessBagContents(TrashBag)
+    Wait.time(function() DelayTest = checkDelete(TrashBag, 'Delete') end, 0.1)
+    Wait.time(function() DelayTest = checkCards(TrashBag, 'Cards') end, 0.5)
+    Wait.time(function() DelayTest = explodeDecks(TrashBag, 'Decks') end, 4)
+end
+
+-- explodeDecks ----------------------------------------------------------------
+function explodeDecks(TrashBag, type)
+    local AllObjectsInTrashBag = FindObjsInTrashBagFromData(TrashBag.getData().ContainedObjects, type, TrashBag.getGUID()) -- Find All Decks using getData()
+    --print(logString(AllObjectsInTrashBag))
+    for k,v in pairs (AllObjectsInTrashBag[type]) do
+        --print(v.guid)
+        local deck = TrashBag.takeObject({guid = v.guid})
+        --deck.setPosition(TrashBag.getPosition() + Vector(0-10, TrashBag.getBounds().size.y+10, 0))
+        deck.setPosition(TrashBag.getPosition() + Vector(0, TrashBag.getBounds().size.y-20, 0))
+        deck.setLock(true)
+        Wait.frames(function()
+            for q, w in pairs(deck.getObjects()) do
+                local c = deck.takeObject()
+                --getObjectFromGUID('c4e041').putObject(c)
+                TrashBag.putObject(c)
+            end
+        end, 5)
+        --trashBag.putObject(deck)
+    end
+    return DelayTest
+end
+
+-- checkDelete -----------------------------------------------------------------
+function checkDelete(TrashBag, type)
+    local AllObjectsInTrashBag = FindObjsInTrashBagFromData(TrashBag.getData().ContainedObjects, type, TrashBag.getGUID()) -- Find All Decks using getData()
+    for _, obj in ipairs(AllObjectsInTrashBag[type]) do
+        local o = TrashBag.takeObject({guid = obj.guid})
+        destroyObject(o)
+    end
+end
+
+-- checkCards ------------------------------------------------------------------
+function checkCards(TrashBag, type)
+    local AllObjectsInTrashBag = FindObjsInTrashBagFromData(TrashBag.getData().ContainedObjects, type, TrashBag.getGUID()) -- Find All Decks using getData()
+
+    local uniqueCastLocations ={} -- find unique cast locations for discard
+    local foundObjects = {}  -- find Objects in Trash Matching "type"
+
+    for k,v in pairs(AllObjectsInTrashBag[type]) do
+        foundObjects[v.guid] = v.type
+        uniqueCastLocations[v.type] = v.type
+    end
+
+    local CurrentDiscardObject = {} -- Find any existing Objects in discard locations
+    for _, key in pairs(uniqueCastLocations) do
+        CurrentDiscardObject[key] = CastZone.call('cast', {key, type, showDebug})
+        CurrentDiscardObject[key].YOffset = 0
+    end
+
+    --[[print(logString(foundObjects,': foundObjects :'))
+    print('')
+    print(logString(uniqueCastLocations,': uniqueCastLocations :'))
+    print('')
+    print(logString(CurrentDiscardObject,': CurrentDiscardObject :'))
+    print('')
+    print(logString(AllObjectsInTrashBag,': AllObjectsInTrashBag :'))
+    print('-------------------------------------------------------------------')]]
+
+    for trashObjGUID, key in pairs(foundObjects) do
+        --print(key..', '..trashObjGUID)
+        local discardTargetObj = CurrentDiscardObject[key].obj
+        local YOffset = CurrentDiscardObject[key].YOffset
+        local discardZonePos = nil
+
+        if discardTargetObj ~= nil then
+            discardZonePos = discardTargetObj.getPosition() + Vector(0, discardTargetObj.getBounds().size.y+0.1, 0)
+        else
+            discardZonePos = CurrentDiscardObject[key].platform.getPosition() + Vector(0, CurrentDiscardObject[key].platform.getBounds().size.y+0.1, 0)
+        end
+
+        --print(logString(discardZonePos,': discardZonePos :'))
+
+        local card = TrashBag.takeObject({guid = trashObjGUID})
+        card.setPosition(TrashBag.getPosition() + Vector(0, TrashBag.getBounds().size.y+0.1, 0))
+        card.setPositionSmooth(discardZonePos+Vector(0,YOffset,0))
+        CurrentDiscardObject[key].YOffset = CurrentDiscardObject[key].YOffset + 0.6
+
+        Wait.condition(function() CurrentDiscardObject[key].obj = Wait_AddCardtoDeck(key, card, discardZonePos, discardTargetObj) end, function() return not card.isSmoothMoving() end)
+    end
+    --RUNTRASH = true
+end
+
+function Wait_AddCardtoDeck(key, card, discardZonePos, targetObj)
+    local discardPile = targetObj --CurrentDiscardObject[key].obj
+    if discardPile then
+		discardPile = discardPile.putObject(card)
+	else
+		card.setPosition(discardZonePos)
+		discardPile = card
+	end
+    --CurrentDiscardObject[key].obj = discardPile
+    return discardPile
+end
+
+--******************************************************************************
+--***** Find Objects using getData() *******************************************
+--******************************************************************************
+function FindObjsInTrashBagFromData(objectsInTrash, TYPE, GUID)
+    local z = {}
+        local deleteMeList   = {}
+        local moveDeckList   = {}
+        local moveCardList   = {}
+        local moveObjectList = {}
+        --print('=== '..GUID..' : '..TYPE..' ================================================')
+        --print(logString(objectsInTrash, 'objectsInTrash'))
+
+        if objectsInTrash == nil then
+            --print(GUID..' : NOTHING IN TRASH : '..TYPE)
+        else
+            for _, obj in ipairs(objectsInTrash) do --- START : Search .getData() for matching objects to keywords (keys)
+                local key = obj.GMNotes:match("%[(.-)%]") -- find key in GMNotes inside []
+             ---Find [delete] ------------------------------------------------------
+                if key == 'delete' then --[delete]
+                    local prams = {key = key, guid = obj.GUID}
+                    table.insert(deleteMeList, prams)
+             ---Find Decks -- obj.Name ---------------------------------------------
+                elseif obj.Name == 'Deck' then
+                    local prams = {type = 'Deck', guid = obj.GUID}
+                    table.insert(moveDeckList, prams)
+             ---Find Cards -- obj.Name ---------------------------------------------
+                elseif obj.Name == 'Card' then
+                    local prams = {type = key, guid = obj.GUID}
+                    table.insert(moveCardList, prams)
+             ---Find Cards -- unClassifiedObj ---------------------------------------------
+                else
+                    local prams = {key = 'unClassifiedObj', guid = obj.GUID}
+                    table.insert(moveObjectList, prams)
+                end
+            end -- END : Search .getData()
+        end
+
+        z['Delete']  = deleteMeList
+        z['Decks']   = moveDeckList
+        z['Cards']   = moveCardList
+        z['Objects'] = moveObjectList
+    return z
+end
+
+--******************************************************************************
+--***** Function Call **********************************************************
+--******************************************************************************
+function functionCall_Process_TrashBag(bag)
+    ProcessBagContents(bag)
+end

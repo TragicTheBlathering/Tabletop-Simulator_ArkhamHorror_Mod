@@ -1,27 +1,68 @@
 function onload()
     makeButtons()
-    TagsTo_Add = {'DiscardTarget'}
+    TagsTo_Add    = {'DiscardTarget'}
+    TagsTo_Remove = {'Tags'}
+    TagsToReplace_ScritpZone = {}
+    TagsToReplace_ScritpZone.guid = '8a96a3'
+    TagsToReplace_ScritpZone.tags = {'DiscardTarget', 'ID_SZDiscardPink'}
+
 end
 
 function setTagsToAdd()
     local z = {}
         local gm = splitString(self.getGMNotes())
-        if gm[1] == nil then
-            z = TagsTo_Add
-        else
+        local addTagsFoundinGMnotes = false
+
+        for k, str in pairs(gm) do
+            if string.find(string.lower(str), 'add:', 1, true) then
+                addTagsFoundinGMnotes = true
+                break
+            end
+        end
+
+        if addTagsFoundinGMnotes then
             for k, str in pairs(gm) do
                 if string.find(string.lower(str), 'add:', 1, true) then
-                    local line = str:gsub("%add:", "")
+                    local line = str:sub(5) --str:gsub("%remove:", "")
                     table.insert(z, line)
                 end
             end
+        else
+            z = TagsTo_Remove
         end
+
     return z
 end
+
+function setTagsToRemove()
+    local z = {}
+        local gm = splitString(self.getGMNotes())
+        local removeTagsFoundinGMnotes = false
+
+        for k, str in pairs(gm) do
+            if string.find(string.lower(str), 'remove:', 1, true) then
+                removeTagsFoundinGMnotes = true
+                break
+            end
+        end
+
+        if removeTagsFoundinGMnotes then
+            for k, str in pairs(gm) do
+                if string.find(string.lower(str), 'remove:', 1, true) then
+                    local line = str:sub(8) --str:gsub("%remove:", "")
+                    table.insert(z, line)
+                end
+            end
+        else
+            z = TagsTo_Remove
+        end
+
+    return z
+end
+
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
-function f_Top(obj, color, alt_click)
-    --self.reload()
+function f_One(obj, color, alt_click)
     local tAdd = setTagsToAdd()
     if not alt_click then
         Wait.frames(function() addTags_ADD(tAdd) end, 5)
@@ -29,10 +70,30 @@ function f_Top(obj, color, alt_click)
     end
 end
 
-function f_Bot(obj, color, alt_click)
+function f_Two(obj, color, alt_click)
+    local tRemove = setTagsToRemove()
     if not alt_click then
         removeTags_ALL()
     else
+        Wait.frames(function() removeTags_NAME(tRemove) end, 5)
+    end
+end
+
+function f_Three(obj, color, alt_click)
+    if not alt_click then
+        local zone = getObjectFromGUID(TagsToReplace_ScritpZone.guid)
+        printToAll(zone.getName(), 'Orange')
+        printToAll('   Clearing Tags', 'Red')
+        zone.setTags({})
+
+        for k,tag in ipairs(TagsToReplace_ScritpZone.tags) do
+            printToAll('   Adding : '..tag, 'Yellow')
+            zone.addTag(tag)
+        end
+        --removeTags_ALL()
+    else
+        print('SCRCLICK')
+        --Wait.frames(function() removeTags_NAME(tRemove) end, 5)
     end
 end
 --------------------------------------------------------------------------------
@@ -82,9 +143,45 @@ function addTags_REPLACE(obj)
     print('NOTE WRITTEN')
 end
 
-function removeTags_NAME(obj)
-    print('NOTE WRITTEN')
-    --obj.removeTag(tag)
+function removeTags_NAME(tRemove)
+    local decks = {}
+    local allObjects = self.getData().ContainedObjects
+    for k,v in pairs(allObjects) do
+        local rot = Vector(v.Transform.rotX, v.Transform.rotY, v.Transform.rotZ)
+        local o = self.takeObject()
+        o.setLock(true)
+        o.setPosition(self.getPosition()+Vector(0,-10,0))
+        o.setRotation(rot)
+        if o.type == 'Deck' then
+            local deck = o
+            deck.setRotation({0, 180, 180})
+            for k,v in pairs(deck.getObjects()) do
+                local c = o.takeObject()
+                c.setLock(true)
+                c.setRotation(rot)
+                c.setPosition(self.getPosition()+Vector(0,-20,0))
+                Wait.frames(function()
+                    printToAll('CARD : '..c.getName(), 'Purple')
+                    for k, tag in pairs(tRemove) do
+                        printToAll('   Removing : '..tag, 'Red')
+                        c.removeTag(tag)
+                    end
+                    c.setLock(false)
+                    c.setPosition(self.getPosition()+Vector(0,10,0))
+                end, 5)
+            end
+        else
+            Wait.frames(function()
+                printToAll(o.getName(), 'Orange')
+                for k, tag in pairs(tRemove) do
+                    printToAll('   Removing : '..tag, 'Red')
+                    o.removeTag(tag)
+                end
+                o.setLock(false)
+                self.putObject(o)
+            end, 5)
+        end
+    end
 end
 
 function removeTags_ALL()
@@ -170,7 +267,7 @@ function makeButtons()
     local lable = nil
     local ButtonList = {}; local lable = 'Add Tags\n(Right Click : Replace All)'; local min = 2500
             local button = {}
-                    button.click_function = 'f_Top'
+                    button.click_function = 'f_One'
                     button.function_owner = self
                     button.position = {0,0.5,-2.2}
                     button.rotation = {0,180,0}
@@ -180,11 +277,22 @@ function makeButtons()
                     button.font_size = 250
             table.insert(ButtonList, button)
             button = {}; lable = 'Remove ALL Tags\n(Right Click : Remove Named Tags)'
-                    button.click_function = 'f_Bot'
+                    button.click_function = 'f_Two'
                     button.function_owner = self
                     button.label = lable
                     --button.tooltip = 'Blessing'
                     button.position = {0,0.5,-3.7}
+                    button.rotation = {0,180,0}
+                    button.width = setDynamicButtonSizes_Width(lable, min) --2500
+                    button.height = setDynamicButtonSizes_Hight(lable)
+                    button.font_size = 250
+            table.insert(ButtonList, button)
+            button = {}; lable = 'ReplaceTags on ScriptZones\n(OnlyUses Table in Code)'
+                    button.click_function = 'f_Three'
+                    button.function_owner = self
+                    button.label = lable
+                    --button.tooltip = 'Blessing'
+                    button.position = {5,0.5,0}
                     button.rotation = {0,180,0}
                     button.width = setDynamicButtonSizes_Width(lable, min) --2500
                     button.height = setDynamicButtonSizes_Hight(lable)
@@ -245,26 +353,3 @@ function setDynamicButtonSizes_Width(str, minWidth)
     end
     return Width
 end
-
---[[function setGlobalVariables()
-TagsTo_Add = {}
-TagsTo_Remove = {}
-local gm = splitString(self.getGMNotes())
-
-if gm == '' then
-print('Blacnk')
-TagsTo_Add = {'ID_CommonItem', 'DiscardType_Small'}
-TagsTo_Remove = {}
-else
-for k, str in pairs(gm) do
-if string.find(string.lower(str), 'add:', 1, true) then
-local line = str:gsub("%add:", "")
-table.insert(TagsTo_Add, line)
-
-elseif string.find(string.lower(str), 'remove:', 1, true) then
-local line = str:gsub("%remove:", "")
-table.insert(TagsTo_Remove, line)
-end
-end
-end
-end]]
