@@ -2,7 +2,7 @@ function onload()
     zprint = require("/_libs/debug").zprint
     tool = {}
         tool.strings = require("/_libs/StringUtils")
-    self.setScale({2.30,2.30,2.30})
+    self.setScale({1.4,1.4,1.4})
     setGlobalVariables()
     makeButtons()
 
@@ -16,7 +16,7 @@ end
 end]]
 
 function setGlobalVariables()
-    TopLabel = 'Top Button Name' -- Name of Top Button
+    TopLabel = 'Print ScriptZone Tags' -- Name of Top Button
     BotLabel = 'Bottom Button Name' -- Name of Top Button
     MinButtonLength = 2500
 end
