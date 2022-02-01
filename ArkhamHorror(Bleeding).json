@@ -1,7 +1,7 @@
 {
-  "SaveName": "ReDesignAGAIN",
-  "EpochTime": 1643682408,
-  "Date": "2/1/2022 1:26:48 PM",
+  "SaveName": "StartOnBags",
+  "EpochTime": 1643701704,
+  "Date": "2/1/2022 6:48:24 PM",
   "VersionNumber": "v13.1.1",
   "GameMode": "LoveCraft Town W.I.P",
   "GameType": "Game",
@@ -594,7 +594,7 @@
     }
   ],
   "DecalPallet": [],
-  "LuaScript": "-- Bundled by luabundle {\"version\":\"1.6.0\"}\nlocal __bundle_require, __bundle_loaded, __bundle_register, __bundle_modules = (function(superRequire)\n\tlocal loadingPlaceholder = {[{}] = true}\n\n\tlocal register\n\tlocal modules = {}\n\n\tlocal require\n\tlocal loaded = {}\n\n\tregister = function(name, body)\n\t\tif not modules[name] then\n\t\t\tmodules[name] = body\n\t\tend\n\tend\n\n\trequire = function(name)\n\t\tlocal loadedModule = loaded[name]\n\n\t\tif loadedModule then\n\t\t\tif loadedModule == loadingPlaceholder then\n\t\t\t\treturn nil\n\t\t\tend\n\t\telse\n\t\t\tif not modules[name] then\n\t\t\t\tif not superRequire then\n\t\t\t\t\tlocal identifier = type(name) == 'string' and '\\\"' .. name .. '\\\"' or tostring(name)\n\t\t\t\t\terror('Tried to require ' .. identifier .. ', but no such module has been registered')\n\t\t\t\telse\n\t\t\t\t\treturn superRequire(name)\n\t\t\t\tend\n\t\t\tend\n\n\t\t\tloaded[name] = loadingPlaceholder\n\t\t\tloadedModule = modules[name](require, loaded, register, modules)\n\t\t\tloaded[name] = loadedModule\n\t\tend\n\n\t\treturn loadedModule\n\tend\n\n\treturn require, loaded, register, modules\nend)(nil)\n__bundle_register(\"__root\", function(require, _LOADED, __bundle_register, __bundle_modules)\n----#include /ArkhamHorror/GlobalSystem\nlocal debug = require(\"/_libs/debug\")\r\n\r\nfunction onLoad()\r\n    debug.setDebugHotKeys()\r\n    \r\n    AllObjects = getAllObjects()\r\n    SetUpZone = getObjectFromGUID('d4e5c2').getObjects()\r\n    local onModLoad=require(\"/_libs/onModLoad\")\r\n          onModLoad.MegaFreeze('d4e5c2','TableOnly')\r\n          onModLoad.FixHandZones(10)\r\n\r\n    local GlobalEvents=require(\"/ArkhamHorror/GlobalEvents\")\r\nend\r\n\r\nfunction setGlobalVariables()\r\n    --GlobalVariables = returnSetUpObj('__(Variables) - Global') -- getObjectFromGUID('b1c381') --\r\n    --CastZone = returnSetUpObj('__(Script) - CastZone')\r\nend\r\n\n----#include /ArkhamHorror/GlobalSystem\nend)\n__bundle_register(\"/ArkhamHorror/GlobalEvents\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal tool = {}\r\n      tool.waitFor=require(\"/_libs/WaitUtils\")\r\n      tool.processTrash=require(\"/_libs/TrashCan/TrashCan\").process\r\n\r\nlocal dropTimer = 0.8\r\n\r\nlocal GlobalEvents = {}\r\n--------------------------------------------------------------------------------\r\n--- onObjectEnter : CONTAINER --------------------------------------------------\r\nfunction onObjectEnterContainer(bag, obj)\r\n    if string.find(string.lower(obj.getDescription()), string.lower(bag.getGMNotes()), 1, true) then\r\n        --tool.waitFor.DropIntoBox(bag, obj, shuffleContainer, dropTimer)\r\n    elseif string.find(string.lower(bag.getGMNotes()), 'trashcan', 1, true) then\r\n        tool.waitFor.DropIntoBox(bag, obj, TrashFunction, dropTimer)\r\n    end\r\nend\r\n--------------------------------------------------------------------------------\r\n--- SHUFFLE FUNCTION -----------------------------------------------------------\r\nfunction shuffleContainer(bag)\r\n    printToAll('Shuffling : '..bag.getName()..' Bag', 'Yellow')\r\n    bag.shuffle()\r\nend\r\n--------------------------------------------------------------------------------\r\n--- TRASH FUNCTION -------------------------------------------------------------\r\nfunction TrashFunction(TrashBag)\r\n    tool.processTrash(TrashBag)\r\nend\r\n\r\n--------------------------------------------------------------------------------\r\n--------------------------------------------------------------------------------\r\nreturn GlobalEvents\r\n\nend)\n__bundle_register(\"/_libs/TrashCan/TrashCan\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal TrashCan = {}\r\n--------------------------------------------------------------------------------\r\n-- Global Variabels\r\nlocal debug = require(\"/_libs/debug\")\r\nlocal zprint = debug.zprint\r\nlocal tool      = require(\"/_libs/TrashCan/TrashTools\")\r\n      tool.cast = require(\"/_libs/TrashCan/TrashCast\")\r\nlocal KIND = {Delete='Delete', SmallCard='Small', LargeCard='Large', Bag='Bag', ScriptZone='ScriptZone', SpecialCase='SpecialCase', Deck='Deck'}\r\n--------------------------------------------------------------------------------\r\n--- Function to Called by EVENT ------------------------------------------------\r\nfunction TrashCan.process(TrashBag)\r\n  runTrash(TrashBag)\r\nend\r\n--------------------------------------------------------------------------------\r\n--- ProcessBagContents(TrashBag)------------------------------------------------\r\nfunction runTrash(TrashBag)\r\n    local removedDeckList = removeDecksFormTrash(TrashBag, TrashBag.getData().ContainedObjects)\r\n    Wait.frames(function() ProcessBag(TrashBag, removedDeckList) end, 5) -- Wait a bit to ensure decks have spawned after being taken out of bag.\r\nend\r\n\r\nfunction ProcessBag(TrashBag, removedDeckList)\r\n    local uniqueCast = UniqueCastLocations(TrashBag, removedDeckList)\r\n    for _, kind in pairs(KIND) do\r\n        if kind ~= 'Deck' then\r\n            uniqueCast = ProcessKind(TrashBag, kind, uniqueCast, removedDeckList)\r\n        end\r\n        --uniqueCast = ProcessKind(TrashBag, KIND.SmallCard, uniqueCast, removedDeckList)\r\n    end\r\nend\r\n\r\nfunction ProcessKind(TrashBag, Kind, uniqueCast, removedDeckList)\r\n\r\n    local TrashContents = TrashBag.getObjects()\r\n    local idex = tool.takeObjects_reverseIndex(TrashContents)\r\n\r\n    for k,v in ipairs(idex) do\r\n        local obj = TrashContents[v+1]\r\n        if obj.tags[1] then\r\n            local id = tool.setIDs(obj.tags)\r\n            if (id.tag and id.kind) then\r\n                if id.kind == Kind then\r\n                    --print('RawIndex = '..obj.index..' : ReverseIndex = '..v..' : Tag = '..id.tag..' : '..obj.name)\r\n                    uniqueCast[id.tag].target = moveObject(TrashBag.takeObject({index = v}), id, uniqueCast[id.tag])\r\n                end\r\n            end\r\n        end\r\n    end\r\n\r\n    if (Kind == 'Small' or Kind == 'Large') then\r\n        for _, deck in ipairs(removedDeckList) do\r\n            local DeckContents = deck.getObjects()\r\n            local idex = tool.takeObjects_reverseIndex(DeckContents)\r\n            for k,v in ipairs(idex) do\r\n                local obj = DeckContents[v+1]\r\n                if obj.tags[1] then\r\n                    local id = tool.setIDs(obj.tags)\r\n                    if (id.tag and id.kind) then\r\n                        if id.kind == Kind then\r\n                            --print('RawIndex = '..obj.index..' : ReverseIndex = '..v..' : Tag = '..id.tag..' : '..obj.name)\r\n                            uniqueCast[id.tag].target = moveObject(deck.takeObject({index = v}), id, uniqueCast[id.tag])\r\n                        end\r\n                    end\r\n                end\r\n            end\r\n        end\r\n    end\r\n\r\n    return uniqueCast\r\nend\r\n\r\nfunction moveObject(obj, id, uc)--(card, discardZonePos, targetObj)\r\n    local discardPile = uc.target\r\n    if uc.target == uc.platform then\r\n        if (uc.kind == 'Small' or uc.kind == 'Large') then\r\n            obj.setRotation(Vector(0,180,0))\r\n        end\r\n        obj.setPosition(discardPile.getPosition()+Vector(0,1,0))\r\n        discardPile = obj\r\n    else\r\n        obj.setPosition(Vector(0,discardPile.getPosition().y,0) + Vector(0, discardPile.getBounds().size.y+1, 0))\r\n        discardPile = discardPile.putObject(obj)\r\n    end\r\n    return discardPile\r\nend\r\n--------------------------------------------------------------------------------\r\n--- removeDecksFormTrash(TrashBag) ---------------------------------------------\r\nfunction UniqueCastLocations(TrashBag, removedDeckList)\r\n    local z = {}\r\n        for k,obj in ipairs(TrashBag.getObjects()) do\r\n            if obj.tags[1] then\r\n                local id = tool.setIDs(obj.tags)\r\n                if (id.tag and id.kind) then\r\n                    z[id.tag] = id.kind\r\n                end\r\n            end\r\n        end\r\n\r\n        for _, deck in ipairs (removedDeckList) do\r\n            for _, card in ipairs(deck.getObjects()) do\r\n                if card.tags[1] then\r\n                    local id = tool.setIDs(card.tags)\r\n                    if (id.tag and id.kind) then\r\n                        z[id.tag] = id.kind\r\n                    end\r\n                end\r\n            end\r\n        end\r\n        z = tool.cast.findContainer(z)\r\n    return z\r\nend\r\n--------------------------------------------------------------------------------\r\n--- removeDecksFormTrash(TrashBag) ---------------------------------------------\r\nfunction removeDecksFormTrash(TrashBag, TrashBag_ContentData)\r\n    local z = {}\r\n        local indexesToRemove = tool.takeObjects_reverseIndex(TrashBag_ContentData, {Name='Deck'})\r\n\r\n        local X = -10\r\n        for _,indexToRemove in ipairs (indexesToRemove) do\r\n            local o = TrashBag.takeObject({ index = indexToRemove })\r\n            o.setPosition(tool.placeTopOrBot_ofObject(TrashBag,'top')+Vector(X,0,23))\r\n            o.setRotation(Vector(0,180,180))\r\n            o.setLock(true)\r\n            X = X + o.getBounds().size.x+0.2\r\n            table.insert(z, o)\r\n        end\r\n    if z[1] then return z else return {} end\r\nend\r\n--------------------------------------------------------------------------------\r\n--------------------------------------------------------------------------------\r\nreturn TrashCan\r\n\nend)\n__bundle_register(\"/_libs/TrashCan/TrashCast\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal TrashCast = {}\r\n--------------------------------------------------------------------------------\r\n-- Global Variabels\r\nlocal ShowCast = true -- cast debug visial\r\nlocal zprint = require(\"/_libs/debug\").zprint\r\nlocal DiscardPlatforms = nil\r\nlocal YOffset = 3\r\n--local ustring = require(\"/_libs/StringUtils\")\r\nfunction setVariables()\r\n    if not DiscardPlatforms then\r\n        DiscardPlatforms = {}\r\n        DiscardPlatforms.DiscardType_Zone  = {size=Vector{1,1,1},   posOffset=Vector(0, 0, 0)}--, platforms=getObjectsWithTag('Discard_Zone')}\r\n        DiscardPlatforms.DiscardType_Bag   = {size=Vector(3,3,3),   posOffset=Vector(0, 0, 0)}--, platforms=getObjectsWithTag('Discard_Bag')}\r\n        DiscardPlatforms.DiscardType_Small = {size=Vector(2.5,1,4), posOffset=Vector(0, 0, 0)}--, platforms=getObjectsWithTag('Discard_Platform_Small')}\r\n        DiscardPlatforms.DiscardType_Large = {size=Vector(3,1,5),   posOffset=Vector(0, 0, 0)}--, platforms=getObjectsWithTag('Discard_Platform_Large')}\r\n    end\r\nend\r\n\r\n--------------------------------------------------------------------------------\r\n--- Main Function to Call ------------------------------------------------------\r\nfunction TrashCast.findContainer(data)\r\n    setVariables()\r\n    return CastByString(data)\r\nend\r\n--------------------------------------------------------------------------------\r\n--- Cast Code ------------------------------------------------------------------\r\nfunction CastByString(TrashIDList)\r\n    for id,kind in pairs(TrashIDList) do\r\n        local target = getObjectsWithAllTags({'DiscardTarget', id})\r\n        if target[1] then target=target[1] end\r\n        TrashIDList[id] = cast(target, DiscardPlatforms['DiscardType_'..kind], kind)\r\n    end\r\n    return TrashIDList\r\nend\r\n\r\nfunction cast(target, platformType, kind)\r\n    local size = Vector(0,0,0)\r\n        if string.lower(kind) == 'zone' then\r\n            size = target.getScale()\r\n        else\r\n            size = platformType.size\r\n        end\r\n\r\n    local zone = Physics.cast({ origin=target.getPosition() + platformType.posOffset,\r\n                                direction={0,1,0},\r\n                                type=3,\r\n                                max_distance=0,\r\n                                size=size,\r\n                                debug=ShowCast})\r\n    return ProcessCast(target, zone, kind)\r\nend\r\n\r\nfunction ProcessCast(target, zone, kind)\r\n    local z = {}\r\n    local noCDB = true -- no card, deck or bag at cast location\r\n        for k,found in pairs(zone) do\r\n            local obj = found.hit_object\r\n            if (obj.type == 'Card' or obj.type == 'Deck' or obj.type == 'Bag') then\r\n                z.target = obj\r\n                noCDB = false\r\n            end\r\n            if obj == target then\r\n                z.platform = obj\r\n            end\r\n            if noCDB then\r\n                z.target = target\r\n            end\r\n        end\r\n        z.Y=YOffset\r\n        z.kind=kind\r\n    return z\r\nend\r\n\r\nreturn TrashCast\r\n\nend)\n__bundle_register(\"/_libs/debug\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal debug = {}\r\n\r\nfunction debug.setDebugHotKeys()\r\n    addHotkey(\"dBug_PrintTags\",hot_PrintTags , false)\r\nend\r\n\r\nfunction hot_PrintTags(playerColor, object, pointerPosition, isKeyUp)\r\n    local objString = tostring(object)\r\n    local nameString = object.getName()\r\n    print('\\n'..objString)\r\n    if nameString == '' then\r\n        print(logString(object.getTags(), ' Tags : <No Name>'))\r\n    else\r\n        print(logString(object.getTags(), ' Tags : '..nameString))\r\n    end\r\nend\r\n\r\nfunction debug.zprint(var,title)\r\n    if (type(var) == \"table\") then\r\n        if title then\r\n            print(logString(var,'\\n-- '..title..' --'))\r\n        else\r\n            print(logString(var))\r\n        end\r\n    else\r\n        if title then print('-- '..title..' --') end\r\n        print(var)\r\n    end\r\nend\r\n\r\nfunction debug.zpDATA(table,key,title)\r\n    if title then\r\n        print('\\n-- '..title..' --')\r\n    end\r\n    for _, tbl in pairs(table) do\r\n        for k,v in pairs(tbl) do\r\n            if k == key then\r\n                print('  '..tostring(k)..' : '..v)\r\n            end\r\n        end\r\n    end\r\nend\r\n\r\nreturn debug\r\n\nend)\n__bundle_register(\"/_libs/TrashCan/TrashTools\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal TrashTools = {}\r\nlocal debug = require(\"/_libs/debug\")\r\nlocal zprint = debug.zprint\r\n\r\n--- setID from obj.getTags -----------------------------------------------------\r\nfunction TrashTools.setIDs(tagList)\r\n    local id = {}\r\n    for k,tag in pairs(tagList) do\r\n        if string.find(tag, 'DiscardMe_', 1, true) then\r\n            id.kind = tag:gsub('DiscardMe_', '')\r\n        elseif string.find(tag, 'DeleteMe', 1, true) then\r\n            id.kind = tag\r\n        elseif string.find(tag, 'ID_', 1, true) then\r\n            id.tag = tag\r\n        end\r\n    end\r\n    return id\r\nend\r\n--- setTrashIDs ----------------------------------------------------------------\r\nfunction TrashTools.setTrashIDs(tagList, kind)\r\n    local id = {}\r\n        id.tag = TrashTools.findTagString(tagList, 'DiscardMe_'..kind):gsub('DiscardMe_', '')\r\n    return id\r\nend\r\n\r\n--- posFromObject(obj,switch) - 'top', 'bot'------------------------------------\r\nfunction TrashTools.placeTopOrBot_ofObject(obj,switch)\r\n    if not switch then switch = 'top' end\r\n    if switch == 'top' then\r\n        return obj.getPosition() + Vector(0, obj.getBounds().size.y+1, 0)\r\n    elseif switch =='bot' then\r\n        return obj.getPosition() + Vector(0, -obj.getBounds().size.y-1, 0)\r\n    else\r\n        return Vector(0, 10, 0)\r\n    end\r\nend\r\n--- ReverseIndex ---------------------------------------------------------------\r\nfunction TrashTools.takeObjects_reverseIndex(ContainedObjects, switch)\r\n    --zprint(ContainedObjects,'ContainedObjects')\r\n    local z = {}\r\n        if ContainedObjects[1] then\r\n            local getdata = false; if ContainedObjects[1].Nickname ~= nil then getdata = true end\r\n\r\n            for i, obj in ipairs(ContainedObjects) do\r\n                local index = i; if getdata then index = index-1 else index = obj.index end\r\n                if switch then\r\n                    for key,find in pairs(switch) do\r\n                        if obj[key] == find then\r\n                            table.insert(z, index)\r\n                        end\r\n                    end\r\n                else\r\n                    table.insert(z, index)\r\n                end\r\n            end\r\n            table.sort(z, function(a,b) return a>b end)\r\n        end\r\n    return z\r\nend\r\n--- TagFound --- ---------------------------------------------------------------\r\nfunction TrashTools.tagFound(tags, keys, useFind)\r\n    if useFind then\r\n        for _, tag in pairs(tags) do\r\n            for _, key in pairs(keys) do\r\n                if string.find(string.lower(tag), string.lower(key), 1, true) then\r\n                    return true\r\n                end\r\n            end\r\n        end\r\n    else\r\n        for _, tag in pairs(tags) do\r\n            for _, key in pairs(keys) do\r\n                if string.lower(tag) == string.lower(key) then\r\n                    return true\r\n                end\r\n            end\r\n        end\r\n    end\r\n    return false\r\nend\r\n--- find and return Tag via a string(substring search --------------------------\r\nfunction TrashTools.findTagString(tagTable, str)\r\n    for k, line in pairs(tagTable) do\r\n        if string.find(string.lower(line), string.lower(str), 1, true) then\r\n            return line\r\n        end\r\n    end\r\nend\r\n--- Test Function\r\nfunction TrashTools.test()\r\n    printToAll('----=== REQUIRE IS WORKING ===----', 'Green')\r\nend\r\n\r\nreturn TrashTools\r\n\nend)\n__bundle_register(\"/_libs/WaitUtils\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal WaitUtils = {}\r\n\r\nlocal wait_ids ={}\r\n\r\nfunction WaitUtils.DropIntoBox(bag, obj, func, time) -- '0.8'\r\n    if wait_ids[bag] then Wait.stop(wait_ids[bag]) end\r\n    wait_ids[bag] = Wait.time(function() func(bag) end, time)\r\nend\r\n\r\nfunction WaitUtils.frames(func, time, ...)--(bag, obj, func, time) -- '0.8'\r\n    --if wait_ids[bag] then Wait.stop(wait_ids[bag]) end\r\n    --wait_ids[bag] = Wait.time(function() func(bag) end, time)\r\n    local args = {...}\r\n    Wait.frames(function() func(args) end, time)\r\nend\r\n\r\n--- Test Function\r\nfunction WaitUtils.test()\r\n    printToAll('----=== WaitUtils ===----', 'Orange')\r\nend\r\n\r\nreturn WaitUtils\r\n\nend)\n__bundle_register(\"/_libs/onModLoad\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal onModLoad = {}\r\n--------------------------------------------------------------------------------\r\n--- MEGA FREEZE -- (Freeze by tag \"MegaFreeze\", and Freeze by SetupZone) func('scriptzoneGUID', 'anyting')\r\n    function onModLoad.MegaFreeze(guid, switch)\r\n        -- Freeze Objects Tag with MegaFreeze\r\n        for _, obj in pairs(getObjectsWithTag('MegaFreeze')) do\r\n            if switch then\r\n                if obj.getDescription() == 'Set' then\r\n                    obj.interactable = false\r\n                end\r\n            else\r\n                obj.interactable = false\r\n            end\r\n        end\r\n\r\n        --Freeze Objects in SetUpZone\r\n        if not switch and guid then\r\n            for k,o in pairs(getObjectFromGUID(guid).getObjects()) do\r\n                o.interactable = false\r\n            end\r\n        end\r\n    end\r\n--------------------------------------------------------------------------------\r\n--- Fix Hand Zones - Fixe HandZone Height\r\n    function onModLoad.FixHandZones(yOffset)\r\n        local Y = yOffset\r\n        local playerList = Player.getAvailableColors()\r\n        for _, colour in ipairs(playerList) do\r\n            local pramsOLD = Player[colour].getHandTransform()\r\n            pramsNew = {position={pramsOLD.position.x, Y, pramsOLD.position.z}\r\n                       ,rotation={0,180,0}\r\n                       ,scale={15.50, 5.40, 0.82}\r\n                       }\r\n            Player[colour].setHandTransform(pramsNew, 1)\r\n        end\r\n    end\r\n--------------------------------------------------------------------------------\r\nreturn onModLoad\r\n\nend)\nreturn __bundle_require(\"__root\")",
+  "LuaScript": "-- Bundled by luabundle {\"version\":\"1.6.0\"}\nlocal __bundle_require, __bundle_loaded, __bundle_register, __bundle_modules = (function(superRequire)\n\tlocal loadingPlaceholder = {[{}] = true}\n\n\tlocal register\n\tlocal modules = {}\n\n\tlocal require\n\tlocal loaded = {}\n\n\tregister = function(name, body)\n\t\tif not modules[name] then\n\t\t\tmodules[name] = body\n\t\tend\n\tend\n\n\trequire = function(name)\n\t\tlocal loadedModule = loaded[name]\n\n\t\tif loadedModule then\n\t\t\tif loadedModule == loadingPlaceholder then\n\t\t\t\treturn nil\n\t\t\tend\n\t\telse\n\t\t\tif not modules[name] then\n\t\t\t\tif not superRequire then\n\t\t\t\t\tlocal identifier = type(name) == 'string' and '\\\"' .. name .. '\\\"' or tostring(name)\n\t\t\t\t\terror('Tried to require ' .. identifier .. ', but no such module has been registered')\n\t\t\t\telse\n\t\t\t\t\treturn superRequire(name)\n\t\t\t\tend\n\t\t\tend\n\n\t\t\tloaded[name] = loadingPlaceholder\n\t\t\tloadedModule = modules[name](require, loaded, register, modules)\n\t\t\tloaded[name] = loadedModule\n\t\tend\n\n\t\treturn loadedModule\n\tend\n\n\treturn require, loaded, register, modules\nend)(nil)\n__bundle_register(\"__root\", function(require, _LOADED, __bundle_register, __bundle_modules)\n----#include /ArkhamHorror/GlobalSystem\nlocal debug = require(\"/_libs/debug\")\r\n\r\nfunction onLoad()\r\n    debug.setDebugHotKeys()\r\n    \r\n    AllObjects = getAllObjects()\r\n    SetUpZone = getObjectFromGUID('d4e5c2').getObjects()\r\n    local onModLoad=require(\"/_libs/onModLoad\")\r\n          onModLoad.MegaFreeze('d4e5c2','TableOnly')\r\n          onModLoad.FixHandZones(10)\r\n\r\n    local GlobalEvents=require(\"/ArkhamHorror/GlobalEvents\")\r\nend\r\n\r\nfunction setGlobalVariables()\r\n    --GlobalVariables = returnSetUpObj('__(Variables) - Global') -- getObjectFromGUID('b1c381') --\r\n    --CastZone = returnSetUpObj('__(Script) - CastZone')\r\nend\r\n\n----#include /ArkhamHorror/GlobalSystem\nend)\n__bundle_register(\"/ArkhamHorror/GlobalEvents\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal tool = {}\r\n      tool.waitFor=require(\"/_libs/WaitUtils\")\r\n      tool.processTrash=require(\"/_libs/TrashCan/TrashCan\").process\r\n\r\nlocal dropTimer = 0.8\r\n\r\nlocal GlobalEvents = {}\r\n--------------------------------------------------------------------------------\r\n--- onObjectEnter : CONTAINER --------------------------------------------------\r\nfunction onObjectEnterContainer(bag, obj)\r\n    if string.find(string.lower(obj.getDescription()), string.lower(bag.getGMNotes()), 1, true) then\r\n        --tool.waitFor.DropIntoBox(bag, obj, shuffleContainer, dropTimer)\r\n    elseif string.find(string.lower(bag.getGMNotes()), 'trashcan', 1, true) then\r\n        tool.waitFor.DropIntoBox(bag, obj, TrashFunction, dropTimer)\r\n    end\r\nend\r\n--------------------------------------------------------------------------------\r\n--- SHUFFLE FUNCTION -----------------------------------------------------------\r\nfunction shuffleContainer(bag)\r\n    printToAll('Shuffling : '..bag.getName()..' Bag', 'Yellow')\r\n    bag.shuffle()\r\nend\r\n--------------------------------------------------------------------------------\r\n--- TRASH FUNCTION -------------------------------------------------------------\r\nfunction TrashFunction(TrashBag)\r\n    tool.processTrash(TrashBag)\r\nend\r\n\r\n--------------------------------------------------------------------------------\r\n--------------------------------------------------------------------------------\r\nreturn GlobalEvents\r\n\nend)\n__bundle_register(\"/_libs/TrashCan/TrashCan\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal TrashCan = {}\r\n--------------------------------------------------------------------------------\r\n-- Global Variabels\r\nlocal debug = require(\"/_libs/debug\")\r\nlocal zprint = debug.zprint\r\nlocal tool      = require(\"/_libs/TrashCan/TrashTools\")\r\n      tool.cast = require(\"/_libs/TrashCan/TrashCast\")\r\nlocal KIND = {Delete='Delete', SmallCard='Small', LargeCard='Large', Bag='Bag', ScriptZone='ScriptZone', SpecialCase='SpecialCase', Deck='Deck'}\r\n--------------------------------------------------------------------------------\r\n--- Function to Called by EVENT ------------------------------------------------\r\nfunction TrashCan.process(TrashBag)\r\n  runTrash(TrashBag)\r\nend\r\n--------------------------------------------------------------------------------\r\n--- ProcessBagContents(TrashBag)------------------------------------------------\r\nfunction runTrash(TrashBag)\r\n    local removedDeckList = removeDecksFormTrash(TrashBag, TrashBag.getData().ContainedObjects)\r\n    Wait.frames(function() ProcessBag(TrashBag, removedDeckList) end, 5) -- Wait a bit to ensure decks have spawned after being taken out of bag.\r\nend\r\n--------------------------------------------------------------------------------\r\n--- ProcessBag(TrashBag, removedDeckList) --------------------------------------\r\n--------------------------------------------------------------------------------\r\nfunction ProcessBag(TrashBag, removedDeckList)\r\n    local uniqueCast = UniqueCastLocations(TrashBag, removedDeckList)\r\n    for _, kind in pairs(KIND) do\r\n        if kind ~= 'Deck' then\r\n            uniqueCast = ProcessKind(TrashBag, kind, uniqueCast, removedDeckList)\r\n        end\r\n    end\r\nend\r\n--- ProcessKind(TrashBag, Kind, uniqueCast, removedDeckList) -------------------\r\nfunction ProcessKind(TrashBag, Kind, uniqueCast, removedDeckList)\r\n    --zprint(uniqueCast, 'uniqueCast')\r\n    local TrashContents = TrashBag.getObjects()\r\n    local idex = tool.takeObjects_reverseIndex(TrashContents)\r\n    for k,dex in ipairs(idex) do\r\n        local obj = TrashContents[dex+1]\r\n        if obj.tags[1] then\r\n            local id = tool.setIDs(obj.tags)\r\n            if id.discard then\r\n                if id.kind == Kind then\r\n                    for q,w in pairs(uniqueCast) do\r\n                        if q == id.id then\r\n                            moveObject(TrashBag.takeObject({index = dex}), TrashBag, uniqueCast[id.id], id)\r\n                            break\r\n                        end\r\n                    end\r\n                end\r\n            end\r\n        end\r\n    end\r\n\r\n    if (Kind == 'Small' or Kind == 'Large') then\r\n        for _, deck in ipairs(removedDeckList) do\r\n            TrashContents = deck.getObjects()\r\n            idex = tool.takeObjects_reverseIndex(TrashContents)\r\n            for k,dex in ipairs(idex) do\r\n                local obj = TrashContents[dex+1]\r\n                if obj.tags[1] then\r\n                    local id = tool.setIDs(obj.tags)\r\n                    if id.discard then\r\n                        if id.kind == Kind then\r\n                            for q,w in pairs(uniqueCast) do\r\n                                if q == id.id then\r\n                                    moveObject(deck.takeObject({index = dex}), TrashBag, uniqueCast[id.id], id)\r\n                                    break\r\n                                end\r\n                            end\r\n                        end\r\n                    end\r\n                end\r\n            end\r\n        end\r\n    end\r\n    return uniqueCast\r\nend\r\n\r\nfunction moveObject(obj, TrashBag, uniqueCastID, id)\r\n    obj.setPosition(tool.placeTopOrBot_ofObject(TrashBag,'top')+Vector(0,0.2,0))\r\n    obj.setPositionSmooth(tool.placeTopOrBot_ofObject(uniqueCastID.targetSource,'top')+Vector(0,uniqueCastID.Y,0)) --uniqueCastID.targetSource.getPosition()\r\n    uniqueCastID.Y = uniqueCastID.Y + obj.getBounds().size.y+0.2\r\n    Wait.condition(function() uniqueCastID.targetObj = Wait_AddCardtoDeck(obj, uniqueCastID) end, function() return not obj.isSmoothMoving() end)\r\nend\r\n\r\nfunction Wait_AddCardtoDeck(obj, uniqueCastID)--(card, discardZonePos, targetObj)\r\n    local discardPile = uniqueCastID.targetObj\r\n    if discardPile then\r\n        discardPile = discardPile.putObject(obj)\r\n    else\r\n        obj.setPosition(tool.placeTopOrBot_ofObject(uniqueCastID.targetSource,'top'))--+Vector(0,0.05,0))\r\n        --zprint(tool.placeTopOrBot_ofObject(uniqueCastID.targetSource,'top'))\r\n        discardPile = obj\r\n    end\r\n    return discardPile\r\nend\r\n--- UniqueCastLocations(TrashBag, removedDeckList) -----------------------------\r\n--- Build a list from trash and find the unique locations for each discard, then cast at that location and return found data.\r\n--- Loop though trash objects and find the \"DiscardMe_\" Tag.. and then extract the \"kind\" of discard type as well as the unique Identifyer (ID) of the discard (DiscardMe_Bag, ID_BlueBagTest)\r\nfunction UniqueCastLocations(TrashBag, removedDeckList)\r\n    local z = {}\r\n        for k,obj in ipairs(TrashBag.getObjects()) do\r\n            if obj.tags[1] then\r\n                local id = tool.setIDs(obj.tags)\r\n                if id.discard then\r\n                    z[id.id] = id.kind\r\n                end\r\n            end\r\n        end\r\n\r\n        for _, deck in ipairs (removedDeckList) do\r\n            for _, card in ipairs(deck.getObjects()) do\r\n                if card.tags[1] then\r\n                    local id = tool.setIDs(card.tags)\r\n                    if id.discard then\r\n                        z[id.id] = id.kind\r\n                    end\r\n                end\r\n            end\r\n        end\r\n\r\n        z = tool.cast.findContainer(z)\r\n    return z\r\nend\r\n--------------------------------------------------------------------------------\r\n--- removeDecksFormTrash(TrashBag) ---------------------------------------------\r\nfunction removeDecksFormTrash(TrashBag, TrashBag_ContentData)\r\n    local z = {}\r\n        local indexesToRemove = tool.takeObjects_reverseIndex(TrashBag_ContentData, {Name='Deck'})\r\n        for _,indexToRemove in ipairs (indexesToRemove) do\r\n            local o = TrashBag.takeObject({ index = indexToRemove })\r\n            o.setPosition(tool.placeTopOrBot_ofObject(TrashBag,'top')+Vector(0,-70,0))\r\n            o.setRotation(Vector(0,180,0))\r\n            o.setLock(true)\r\n            table.insert(z, o)\r\n        end\r\n    if z[1] then return z else return {} end\r\nend\r\n--------------------------------------------------------------------------------\r\n--------------------------------------------------------------------------------\r\nreturn TrashCan\r\n\nend)\n__bundle_register(\"/_libs/TrashCan/TrashCast\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal TrashCast = {}\r\n--------------------------------------------------------------------------------\r\n-- Global Variabels\r\nlocal ShowCast = true -- cast debug visial\r\nlocal zprint = require(\"/_libs/debug\").zprint\r\nlocal DiscardPlatforms = nil\r\nlocal YOffset = 1\r\n--local ustring = require(\"/_libs/StringUtils\")\r\nfunction setVariables()\r\n    if not DiscardPlatforms then\r\n        DiscardPlatforms = {}\r\n        DiscardPlatforms.DiscardType_Zone  = {size=Vector{1,1,1},   posOffset=Vector(0, 0, 0)}--, platforms=getObjectsWithTag('Discard_Zone')}\r\n        DiscardPlatforms.DiscardType_Bag   = {size=Vector(3,3,3),   posOffset=Vector(0, 0, 0)}--, platforms=getObjectsWithTag('Discard_Bag')}\r\n        DiscardPlatforms.DiscardType_Small = {size=Vector(2.5,1,4), posOffset=Vector(0, 0, 0)}--, platforms=getObjectsWithTag('Discard_Platform_Small')}\r\n        DiscardPlatforms.DiscardType_Large = {size=Vector(3,1,5),   posOffset=Vector(0, 0, 0)}--, platforms=getObjectsWithTag('Discard_Platform_Large')}\r\n    end\r\nend\r\n\r\n--------------------------------------------------------------------------------\r\n--- Main Function to Call ------------------------------------------------------\r\nfunction TrashCast.findContainer(data)\r\n    setVariables()\r\n    return CastByString(data)\r\nend\r\n--------------------------------------------------------------------------------\r\n--- Cast Code ------------------------------------------------------------------\r\nfunction CastByString(TrashIDList)\r\n    for id,kind in pairs(TrashIDList) do\r\n        local target = getObjectsWithAllTags({'DiscardTarget', id})\r\n        if target[1] then target=target[1] end\r\n        TrashIDList[id] = cast(target, DiscardPlatforms['DiscardType_'..kind], kind)\r\n    end\r\n    return TrashIDList\r\nend\r\n\r\nfunction cast(target, platformType, kind)\r\n    local size = Vector(0,0,0)\r\n        if string.lower(kind) == 'zone' then\r\n            size = target.getScale()\r\n        else\r\n            size = platformType.size\r\n        end\r\n\r\n    local zone = Physics.cast({ origin=target.getPosition() + platformType.posOffset,\r\n                                direction={0,1,0},\r\n                                type=3,\r\n                                max_distance=0,\r\n                                size=size,\r\n                                debug=ShowCast})\r\n    return ProcessCast(target, zone, kind)\r\nend\r\n\r\nfunction ProcessCast(target, zone, kind)\r\n    local z = {}\r\n    local noCDB = true -- no card, deck or bag at cast location\r\n        for k,found in pairs(zone) do\r\n            local obj = found.hit_object\r\n            if (obj.type == 'Card' or obj.type == 'Deck' or obj.type == 'Bag') then\r\n                z.targetObj = obj\r\n                noCDB = false\r\n            end\r\n            if obj == target then\r\n                z.targetSource = obj\r\n            end\r\n            --[[if noCDB then\r\n                z.target = target\r\n            end]]\r\n        end\r\n        z.Y=YOffset\r\n        z.kind=kind\r\n    return z\r\nend\r\n\r\nreturn TrashCast\r\n\nend)\n__bundle_register(\"/_libs/debug\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal debug = {}\r\n\r\nfunction debug.setDebugHotKeys()\r\n    addHotkey(\"dBug_PrintTags\",hot_PrintTags , false)\r\nend\r\n\r\nfunction hot_PrintTags(playerColor, object, pointerPosition, isKeyUp)\r\n    local objString = tostring(object)\r\n    local nameString = object.getName()\r\n    print('\\n'..objString)\r\n    if nameString == '' then\r\n        print(logString(object.getTags(), ' Tags : <No Name>'))\r\n    else\r\n        print(logString(object.getTags(), ' Tags : '..nameString))\r\n    end\r\nend\r\n\r\nfunction debug.zprint(var,title)\r\n    if (type(var) == \"table\") then\r\n        if title then\r\n            print(logString(var,'\\n-- '..title..' --'))\r\n        else\r\n            print(logString(var))\r\n        end\r\n    else\r\n        if title then print('-- '..title..' --') end\r\n        print(var)\r\n    end\r\nend\r\n\r\nfunction debug.zpDATA(table,key,title)\r\n    if title then\r\n        print('\\n-- '..title..' --')\r\n    end\r\n    for _, tbl in pairs(table) do\r\n        for k,v in pairs(tbl) do\r\n            if k == key then\r\n                print('  '..tostring(k)..' : '..v)\r\n            end\r\n        end\r\n    end\r\nend\r\n\r\nreturn debug\r\n\nend)\n__bundle_register(\"/_libs/TrashCan/TrashTools\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal TrashTools = {}\r\nlocal debug = require(\"/_libs/debug\")\r\nlocal zprint = debug.zprint\r\n\r\n--- setID from obj.getTags -----------------------------------------------------\r\nfunction TrashTools.setIDs(tagList)\r\n    local id = {}\r\n    for k,tag in pairs(tagList) do\r\n        if string.find(tag, 'DiscardMe_', 1, true) then\r\n            id.kind = tag:gsub('DiscardMe_', '')\r\n            id.discard = true\r\n        elseif string.find(tag, 'DeleteMe', 1, true) then\r\n            id.delete = true\r\n        elseif string.find(tag, 'ID_', 1, true) then\r\n            id.id = tag\r\n        end\r\n    end\r\n    return id\r\nend\r\n--[[\r\n--- setTrashIDs ----------------------------------------------------------------\r\nfunction TrashTools.setTrashIDs(tagList, kind)\r\n    local id = {}\r\n        id.tag = TrashTools.findTagString(tagList, 'DiscardMe_'..kind):gsub('DiscardMe_', '')\r\n    return id\r\nend\r\n]]\r\n\r\n--- posFromObject(obj,switch) - 'top', 'bot'------------------------------------\r\nfunction TrashTools.placeTopOrBot_ofObject(obj,switch)\r\n    if not switch then switch = 'top' end\r\n    if switch == 'top' then\r\n        return obj.getPosition() + Vector(0, obj.getBounds().size.y+0.01, 0)\r\n    elseif switch =='bot' then\r\n        return obj.getPosition() + Vector(0, -obj.getBounds().size.y-0.01, 0)\r\n    else\r\n        return Vector(0, 10, 0)\r\n    end\r\nend\r\n--- ReverseIndex ---------------------------------------------------------------\r\nfunction TrashTools.takeObjects_reverseIndex(ContainedObjects, switch)\r\n    --zprint(ContainedObjects,'ContainedObjects')\r\n    local z = {}\r\n        if ContainedObjects[1] then\r\n            local getdata = false; if ContainedObjects[1].Nickname ~= nil then getdata = true end\r\n\r\n            for i, obj in ipairs(ContainedObjects) do\r\n                local index = i; if getdata then index = index-1 else index = obj.index end\r\n                if switch then\r\n                    for key,find in pairs(switch) do\r\n                        if obj[key] == find then\r\n                            table.insert(z, index)\r\n                        end\r\n                    end\r\n                else\r\n                    table.insert(z, index)\r\n                end\r\n            end\r\n            table.sort(z, function(a,b) return a>b end)\r\n        end\r\n    return z\r\nend\r\n--- TagFound --- ---------------------------------------------------------------\r\nfunction TrashTools.tagFound(tags, keys, useFind) -- useFind BOOL : use == or use string.find()\r\n    if useFind then\r\n        for _, tag in pairs(tags) do\r\n            for _, key in pairs(keys) do\r\n                if string.find(string.lower(tag), string.lower(key), 1, true) then\r\n                    return true\r\n                end\r\n            end\r\n        end\r\n    else\r\n        for _, tag in pairs(tags) do\r\n            for _, key in pairs(keys) do\r\n                if string.lower(tag) == string.lower(key) then\r\n                    return true\r\n                end\r\n            end\r\n        end\r\n    end\r\n    return false\r\nend\r\n--- find and return Tag via a string(substring search --------------------------\r\nfunction TrashTools.findTagString(tagTable, str)\r\n    for k, line in pairs(tagTable) do\r\n        if string.find(string.lower(line), string.lower(str), 1, true) then\r\n            return line\r\n        end\r\n    end\r\nend\r\n--- Test Function\r\nfunction TrashTools.test()\r\n    printToAll('----=== REQUIRE IS WORKING ===----', 'Green')\r\nend\r\n\r\nreturn TrashTools\r\n\nend)\n__bundle_register(\"/_libs/WaitUtils\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal WaitUtils = {}\r\n\r\nlocal wait_ids ={}\r\n\r\nfunction WaitUtils.DropIntoBox(bag, obj, func, time) -- '0.8'\r\n    if wait_ids[bag] then Wait.stop(wait_ids[bag]) end\r\n    wait_ids[bag] = Wait.time(function() func(bag) end, time)\r\nend\r\n\r\nfunction WaitUtils.frames(func, time, ...)--(bag, obj, func, time) -- '0.8'\r\n    --if wait_ids[bag] then Wait.stop(wait_ids[bag]) end\r\n    --wait_ids[bag] = Wait.time(function() func(bag) end, time)\r\n    local args = {...}\r\n    Wait.frames(function() func(args) end, time)\r\nend\r\n\r\n--- Test Function\r\nfunction WaitUtils.test()\r\n    printToAll('----=== WaitUtils ===----', 'Orange')\r\nend\r\n\r\nreturn WaitUtils\r\n\nend)\n__bundle_register(\"/_libs/onModLoad\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal onModLoad = {}\r\n--------------------------------------------------------------------------------\r\n--- MEGA FREEZE -- (Freeze by tag \"MegaFreeze\", and Freeze by SetupZone) func('scriptzoneGUID', 'anyting')\r\n    function onModLoad.MegaFreeze(guid, switch)\r\n        -- Freeze Objects Tag with MegaFreeze\r\n        for _, obj in pairs(getObjectsWithTag('MegaFreeze')) do\r\n            if switch then\r\n                if obj.getDescription() == 'Set' then\r\n                    obj.interactable = false\r\n                end\r\n            else\r\n                obj.interactable = false\r\n            end\r\n        end\r\n\r\n        --Freeze Objects in SetUpZone\r\n        if not switch and guid then\r\n            for k,o in pairs(getObjectFromGUID(guid).getObjects()) do\r\n                o.interactable = false\r\n            end\r\n        end\r\n    end\r\n--------------------------------------------------------------------------------\r\n--- Fix Hand Zones - Fixe HandZone Height\r\n    function onModLoad.FixHandZones(yOffset)\r\n        local Y = yOffset\r\n        local playerList = Player.getAvailableColors()\r\n        for _, colour in ipairs(playerList) do\r\n            local pramsOLD = Player[colour].getHandTransform()\r\n            pramsNew = {position={pramsOLD.position.x, Y, pramsOLD.position.z}\r\n                       ,rotation={0,180,0}\r\n                       ,scale={15.50, 5.40, 0.82}\r\n                       }\r\n            Player[colour].setHandTransform(pramsNew, 1)\r\n        end\r\n    end\r\n--------------------------------------------------------------------------------\r\nreturn onModLoad\r\n\nend)\nreturn __bundle_require(\"__root\")",
   "LuaScriptState": "",
   "XmlUI": "<!-- Xml UI. See documentation: https://api.tabletopsimulator.com/ui/introUI/ -->",
   "SnapPoints": [
@@ -933,7 +933,7 @@
         "posZ": 99.13288,
         "rotX": -2.4133813E-05,
         "rotY": 359.893219,
-        "rotZ": 6.30067052E-06,
+        "rotZ": 6.3006737E-06,
         "scaleX": 1.2,
         "scaleY": 1.2,
         "scaleZ": 1.2
@@ -992,7 +992,7 @@
       "Description": "MegaFreeze",
       "GMNotes": "",
       "ColorDiffuse": {
-        "r": 0.265701622,
+        "r": 0.265701562,
         "g": 0.4622566,
         "b": 0.46542573
       },
@@ -1218,11 +1218,11 @@
       "Name": "Bag",
       "Transform": {
         "posX": -21.3299923,
-        "posY": 0.713606,
+        "posY": 0.71360606,
         "posZ": 28.690012,
-        "rotX": -1.12043233E-06,
-        "rotY": -0.00466844765,
-        "rotZ": 3.57188765E-06,
+        "rotX": -6.9354553E-07,
+        "rotY": -0.004668441,
+        "rotZ": 3.5735377E-06,
         "scaleX": 0.575001061,
         "scaleY": 0.575001061,
         "scaleZ": 0.575001061
@@ -1512,7 +1512,7 @@
       "Description": "",
       "GMNotes": "Goo",
       "ColorDiffuse": {
-        "r": 0.18519932,
+        "r": 0.185199261,
         "g": 1.0,
         "b": 0.0
       },
@@ -7166,11 +7166,11 @@
       "Name": "Bag",
       "Transform": {
         "posX": -28.7600079,
-        "posY": 0.71360606,
+        "posY": 0.713605344,
         "posZ": 34.28,
-        "rotX": -6.25006862E-07,
+        "rotX": -6.38201243E-07,
         "rotY": 359.9869,
-        "rotZ": 2.75982779E-06,
+        "rotZ": 4.03548756E-06,
         "scaleX": 0.575001061,
         "scaleY": 0.575001061,
         "scaleZ": 0.575001061
@@ -8185,7 +8185,7 @@
       "Name": "Bag",
       "Transform": {
         "posX": -33.7700043,
-        "posY": 0.569346368,
+        "posY": 0.5693397,
         "posZ": 31.3464222,
         "rotX": -1.189277E-05,
         "rotY": -0.0008507987,
@@ -17861,7 +17861,7 @@
         "posY": -5.721769,
         "posZ": 174.6095,
         "rotX": 359.8968,
-        "rotY": 0.00179474126,
+        "rotY": 0.00179474044,
         "rotZ": -7.635158E-06,
         "scaleX": 3.44999743,
         "scaleY": 3.44999743,
@@ -17941,7 +17941,7 @@
         "posY": -5.721769,
         "posZ": 152.375061,
         "rotX": 359.8968,
-        "rotY": 0.00179474079,
+        "rotY": 0.00179474,
         "rotZ": -7.635158E-06,
         "scaleX": 3.44999743,
         "scaleY": 3.44999743,
@@ -18018,7 +18018,7 @@
       "Name": "Bag",
       "Transform": {
         "posX": -37.3978424,
-        "posY": 0.662595332,
+        "posY": 0.6625944,
         "posZ": 30.7125015,
         "rotX": -8.47104559E-07,
         "rotY": 2.939516E-05,
@@ -18031,9 +18031,9 @@
       "Description": "",
       "GMNotes": "scriptCastZone\n[bag]\n{Discard_Investigator Graveyard}",
       "ColorDiffuse": {
-        "r": 0.429105729,
-        "g": 0.429105729,
-        "b": 0.429105729
+        "r": 0.429105669,
+        "g": 0.429105669,
+        "b": 0.429105669
       },
       "LayoutGroupSortIndex": 0,
       "Value": 0,
@@ -18077,7 +18077,7 @@
       "Description": "MegaFreeze",
       "GMNotes": "",
       "ColorDiffuse": {
-        "r": 0.265709579,
+        "r": 0.265709519,
         "g": 0.4622566,
         "b": 0.46542573
       },
@@ -18130,8 +18130,8 @@
       "GMNotes": "",
       "ColorDiffuse": {
         "r": 1.0,
-        "g": 0.343211025,
-        "b": 0.188590974
+        "g": 0.343210965,
+        "b": 0.188590914
       },
       "LayoutGroupSortIndex": 0,
       "Value": 0,
@@ -18181,7 +18181,7 @@
       "Description": "MegaFreeze",
       "GMNotes": "",
       "ColorDiffuse": {
-        "r": 0.09405989,
+        "r": 0.09405983,
         "g": 0.5921568,
         "b": 0.8
       },
@@ -19208,11 +19208,11 @@
       "Name": "Die_8",
       "Transform": {
         "posX": -26.4755783,
-        "posY": 1.44658887,
+        "posY": 1.44658756,
         "posZ": 26.6715279,
-        "rotX": 326.2638,
-        "rotY": 286.429169,
-        "rotZ": 90.0000153,
+        "rotX": 326.263763,
+        "rotY": 286.4292,
+        "rotZ": 89.99991,
         "scaleX": 1.84999931,
         "scaleY": 1.84999931,
         "scaleZ": 1.84999931
@@ -19317,9 +19317,9 @@
         "posX": -79.69631,
         "posY": 0.980007768,
         "posZ": 5.623901,
-        "rotX": 3.2344858E-06,
-        "rotY": 178.495529,
-        "rotZ": -1.959285E-05,
+        "rotX": 4.70886675E-07,
+        "rotY": 178.495544,
+        "rotZ": -2.10490252E-05,
         "scaleX": 0.7483102,
         "scaleY": 1.0,
         "scaleZ": 0.7483102
@@ -20397,7 +20397,7 @@
         "posY": 1.01999974,
         "posZ": 27.8501415,
         "rotX": 0.119319379,
-        "rotY": 1.5696105E-05,
+        "rotY": 1.5696156E-05,
         "rotZ": 0.07973546,
         "scaleX": 0.710175,
         "scaleY": 2.66637731,
@@ -21725,9 +21725,9 @@
         "posX": 78.75501,
         "posY": 2.076501,
         "posZ": 16.2468681,
-        "rotX": -2.85501869E-06,
-        "rotY": 0.0107612871,
-        "rotZ": 1.6255612E-07,
+        "rotX": -3.03756065E-06,
+        "rotY": 0.0107612805,
+        "rotZ": -2.82304541E-07,
         "scaleX": 1.0,
         "scaleY": 1.0,
         "scaleZ": 1.0
@@ -21767,10 +21767,10 @@
       "Transform": {
         "posX": 74.25,
         "posY": 2.33535147,
-        "posZ": 3.25009346,
-        "rotX": 1.01323049E-05,
+        "posZ": 3.25009441,
+        "rotX": 9.794121E-06,
         "rotY": 179.99939,
-        "rotZ": -4.0204813E-07,
+        "rotZ": -4.16875565E-07,
         "scaleX": 2.0,
         "scaleY": 2.0,
         "scaleZ": 2.0
@@ -21826,7 +21826,7 @@
         "posZ": 18.362278,
         "rotX": -9.989881E-06,
         "rotY": 180.014236,
-        "rotZ": -2.59189437E-05,
+        "rotZ": -2.5918951E-05,
         "scaleX": 0.336068362,
         "scaleY": 0.499330342,
         "scaleZ": 0.5182024
@@ -21884,9 +21884,9 @@
         "posX": 87.91374,
         "posY": 2.88434553,
         "posZ": -5.953996,
-        "rotX": 1.00330617E-05,
-        "rotY": 0.535469055,
-        "rotZ": -8.50556E-07,
+        "rotX": 1.351778E-06,
+        "rotY": 0.5354678,
+        "rotZ": -1.37270717E-06,
         "scaleX": 2.99999833,
         "scaleY": 2.99999833,
         "scaleZ": 2.99999833
@@ -21924,9 +21924,9 @@
         "posX": 84.6830444,
         "posY": 2.884346,
         "posZ": -0.7673749,
-        "rotX": -4.13370435E-06,
+        "rotX": -4.43972976E-06,
         "rotY": 2.432157,
-        "rotZ": 5.35070342E-07,
+        "rotZ": 5.4897E-07,
         "scaleX": 2.99999833,
         "scaleY": 2.99999833,
         "scaleZ": 2.99999833
@@ -21936,7 +21936,7 @@
       "GMNotes": "",
       "ColorDiffuse": {
         "r": 0.0,
-        "g": 0.123672672,
+        "g": 0.1236726,
         "b": 1.0
       },
       "LayoutGroupSortIndex": 0,
@@ -21964,9 +21964,9 @@
         "posX": 81.91212,
         "posY": 3.06734347,
         "posZ": -4.344756,
-        "rotX": -6.289941E-06,
-        "rotY": 0.04486087,
-        "rotZ": -8.841534E-07,
+        "rotX": -4.76695641E-06,
+        "rotY": 0.04484463,
+        "rotZ": 5.33471052E-07,
         "scaleX": 3.99999619,
         "scaleY": 3.99999619,
         "scaleZ": 3.99999619
@@ -22002,11 +22002,11 @@
       "Name": "go_game_piece_white",
       "Transform": {
         "posX": 67.64831,
-        "posY": 3.06734586,
+        "posY": 3.06734538,
         "posZ": 30.4693069,
-        "rotX": -4.850471E-06,
+        "rotX": -2.028814E-06,
         "rotY": 359.9623,
-        "rotZ": 3.47058716E-07,
+        "rotZ": -1.175107E-09,
         "scaleX": 3.99999619,
         "scaleY": 3.99999619,
         "scaleZ": 3.99999619
@@ -22015,7 +22015,7 @@
       "Description": "",
       "GMNotes": "",
       "ColorDiffuse": {
-        "r": 0.11857257,
+        "r": 0.118572496,
         "g": 1.0,
         "b": 0.0
       },
@@ -22042,11 +22042,11 @@
       "Name": "Infinite_Bag",
       "Transform": {
         "posX": -94.99015,
-        "posY": 0.8676786,
+        "posY": 0.867678344,
         "posZ": 21.6325626,
-        "rotX": -3.42375233E-06,
+        "rotX": -3.38755217E-06,
         "rotY": 359.947174,
-        "rotZ": 1.95634275E-05,
+        "rotZ": 2.00208578E-05,
         "scaleX": 0.725000262,
         "scaleY": 0.725000262,
         "scaleZ": 0.725000262
@@ -22138,11 +22138,11 @@
       "Name": "Infinite_Bag",
       "Transform": {
         "posX": -94.99052,
-        "posY": 0.8676783,
+        "posY": 0.8676784,
         "posZ": 19.7504978,
-        "rotX": -3.378011E-06,
-        "rotY": -0.0008553971,
-        "rotZ": 1.968686E-05,
+        "rotX": -3.38276641E-06,
+        "rotY": -0.000855446851,
+        "rotZ": 1.9554891E-05,
         "scaleX": 0.725000262,
         "scaleY": 0.725000262,
         "scaleZ": 0.725000262
@@ -22234,11 +22234,11 @@
       "Name": "Infinite_Bag",
       "Transform": {
         "posX": -94.99052,
-        "posY": 0.8676781,
+        "posY": 0.867678165,
         "posZ": 17.8695183,
-        "rotX": -3.69848226E-06,
+        "rotX": -3.38811151E-06,
         "rotY": 359.973969,
-        "rotZ": 1.98884827E-05,
+        "rotZ": 1.99492461E-05,
         "scaleX": 0.725000262,
         "scaleY": 0.725000262,
         "scaleZ": 0.725000262
@@ -22330,9 +22330,9 @@
         "posX": -94.9905,
         "posY": 0.8676781,
         "posZ": 15.9885015,
-        "rotX": -3.826735E-06,
-        "rotY": 0.0286862142,
-        "rotZ": 2.00227787E-05,
+        "rotX": -3.6930785E-06,
+        "rotY": 0.0286862049,
+        "rotZ": 1.99326823E-05,
         "scaleX": 0.725000262,
         "scaleY": 0.725000262,
         "scaleZ": 0.725000262
@@ -22434,9 +22434,9 @@
         "posX": 93.05967,
         "posY": 2.88434553,
         "posZ": -5.93697453,
-        "rotX": 1.067147E-06,
+        "rotX": 1.99585344E-08,
         "rotY": 359.985474,
-        "rotZ": -7.460458E-07,
+        "rotZ": -5.562844E-07,
         "scaleX": 2.99999833,
         "scaleY": 2.99999833,
         "scaleZ": 2.99999833
@@ -22561,12 +22561,12 @@
       "GUID": "9c4d00",
       "Name": "Custom_Token",
       "Transform": {
-        "posX": -65.12308,
-        "posY": 1.099856,
-        "posZ": 21.0285778,
-        "rotX": 359.937164,
-        "rotY": 179.958832,
-        "rotZ": 180.027985,
+        "posX": -65.12296,
+        "posY": 1.10095966,
+        "posZ": 21.0285015,
+        "rotX": -0.000161395525,
+        "rotY": 179.976837,
+        "rotZ": 180.009644,
         "scaleX": 0.61,
         "scaleY": 1.0,
         "scaleZ": 0.61
@@ -22629,7 +22629,7 @@
       "ColorDiffuse": {
         "r": 1.0,
         "g": 0.560566366,
-        "b": 0.30587244
+        "b": 0.305872351
       },
       "LayoutGroupSortIndex": 0,
       "Value": 0,
@@ -22704,11 +22704,11 @@
       "Name": "Infinite_Bag",
       "Transform": {
         "posX": -94.32453,
-        "posY": 0.863003969,
+        "posY": 0.8630038,
         "posZ": 26.5580177,
-        "rotX": -3.43916963E-06,
+        "rotX": -3.68913152E-06,
         "rotY": 359.942169,
-        "rotZ": 2.04210864E-05,
+        "rotZ": 2.05053148E-05,
         "scaleX": 1.0,
         "scaleY": 1.0,
         "scaleZ": 1.0
@@ -56605,7 +56605,7 @@
         "posY": 1.15020084,
         "posZ": 33.3377,
         "rotX": 90.0,
-        "rotY": 0.000935133139,
+        "rotY": 0.000942319,
         "rotZ": 0.0,
         "scaleX": 1.0,
         "scaleY": 1.0,
@@ -56863,9 +56863,9 @@
             "z": 1.97561359
           },
           "Rotation": {
-            "x": 0.000216873828,
+            "x": 0.000216873857,
             "y": 359.976868,
-            "z": 5.59588334E-05
+            "z": 5.5958848E-05
           }
         },
         {
@@ -56875,7 +56875,7 @@
             "z": 1.96346533
           },
           "Rotation": {
-            "x": 0.000213462627,
+            "x": 0.000213462656,
             "y": 359.975861,
             "z": 7.20330645E-05
           }
@@ -56911,7 +56911,7 @@
             "z": 2.71305776
           },
           "Rotation": {
-            "x": -0.000100741148,
+            "x": -0.000100741163,
             "y": 359.969818,
             "z": 2.17130855E-05
           }
@@ -56935,7 +56935,7 @@
             "z": 2.71154737
           },
           "Rotation": {
-            "x": -0.000118692944,
+            "x": -0.000118692973,
             "y": 359.973877,
             "z": -6.724213E-05
           }
@@ -56949,7 +56949,7 @@
           "Rotation": {
             "x": -0.000130601155,
             "y": 359.973938,
-            "z": 0.000114092058
+            "z": 0.000114092087
           }
         },
         {
@@ -57124,9 +57124,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.043081753,
-        "g": 0.164626926,
-        "b": 0.431289256
+        "r": 0.0430817157,
+        "g": 0.164626867,
+        "b": 0.4312892
       },
       "Tags": [
         "Draw_Target",
@@ -57188,9 +57188,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430817381,
-        "g": 0.1646269,
-        "b": 0.431289226
+        "r": 0.0430816934,
+        "g": 0.164626837,
+        "b": 0.431289166
       },
       "Tags": [
         "Draw_Target",
@@ -57252,9 +57252,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.043081753,
-        "g": 0.164626926,
-        "b": 0.431289256
+        "r": 0.0430817157,
+        "g": 0.164626867,
+        "b": 0.4312892
       },
       "Tags": [
         "Draw_Target",
@@ -57316,9 +57316,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430816039,
-        "g": 0.164626718,
-        "b": 0.431289017
+        "r": 0.04308156,
+        "g": 0.164626658,
+        "b": 0.431288958
       },
       "Tags": [
         "Draw_Target",
@@ -57355,7 +57355,7 @@
             "z": -0.00351506122
           },
           "Rotation": {
-            "x": 1.31832312E-05,
+            "x": 1.3183233E-05,
             "y": 359.9346,
             "z": 180.0
           }
@@ -57380,9 +57380,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.043081753,
-        "g": 0.164626926,
-        "b": 0.431289256
+        "r": 0.0430817157,
+        "g": 0.164626867,
+        "b": 0.4312892
       },
       "Tags": [
         "Draw_Target",
@@ -57444,9 +57444,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.043081753,
-        "g": 0.164626926,
-        "b": 0.431289256
+        "r": 0.0430817157,
+        "g": 0.164626867,
+        "b": 0.4312892
       },
       "Tags": [
         "Draw_Target",
@@ -57508,9 +57508,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.043081753,
-        "g": 0.164626926,
-        "b": 0.431289256
+        "r": 0.0430817157,
+        "g": 0.164626867,
+        "b": 0.4312892
       },
       "Tags": [
         "Draw_Target",
@@ -57547,8 +57547,8 @@
             "z": -7.14347159E-09
           },
           "Rotation": {
-            "x": 1.14100467E-05,
-            "y": 0.0310918223,
+            "x": 1.14100485E-05,
+            "y": 0.0310918279,
             "z": 180.0
           }
         }
@@ -57572,9 +57572,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430817381,
-        "g": 0.1646269,
-        "b": 0.431289226
+        "r": 0.0430816934,
+        "g": 0.164626837,
+        "b": 0.431289166
       },
       "Tags": [
         "Draw_Target",
@@ -57636,9 +57636,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.0430818051,
-        "g": 0.164626986,
-        "b": 0.431289315
+        "r": 0.043081753,
+        "g": 0.164626926,
+        "b": 0.431289256
       },
       "Tags": [
         "Draw_Target",
@@ -57700,9 +57700,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.0430818051,
-        "g": 0.164626986,
-        "b": 0.431289315
+        "r": 0.043081753,
+        "g": 0.164626926,
+        "b": 0.431289256
       },
       "Tags": [
         "Draw_Target",
@@ -57764,9 +57764,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.0430818424,
-        "g": 0.164627045,
-        "b": 0.431289375
+        "r": 0.0430818051,
+        "g": 0.164626986,
+        "b": 0.431289315
       },
       "Tags": [
         "Draw_Target",
@@ -57828,9 +57828,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.0430818051,
-        "g": 0.164626986,
-        "b": 0.431289315
+        "r": 0.043081753,
+        "g": 0.164626926,
+        "b": 0.431289256
       },
       "Tags": [
         "Draw_Target",
@@ -57867,7 +57867,7 @@
             "z": 0.000347266236
           },
           "Rotation": {
-            "x": 1.70766052E-05,
+            "x": 1.70765979E-05,
             "y": 0.03452461,
             "z": 7.864218E-09
           }
@@ -57892,9 +57892,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.04308182,
-        "g": 0.164627016,
-        "b": 0.431289345
+        "r": 0.0430817828,
+        "g": 0.164626956,
+        "b": 0.4312893
       },
       "Tags": [
         "Draw_Target",
@@ -57956,9 +57956,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.04308182,
-        "g": 0.164627016,
-        "b": 0.431289345
+        "r": 0.0430817828,
+        "g": 0.164626956,
+        "b": 0.4312893
       },
       "Tags": [
         "Draw_Target",
@@ -58020,9 +58020,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.04308182,
-        "g": 0.164627016,
-        "b": 0.431289345
+        "r": 0.0430817828,
+        "g": 0.164626956,
+        "b": 0.4312893
       },
       "Tags": [
         "Draw_Target",
@@ -58084,9 +58084,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.04308182,
-        "g": 0.164627016,
-        "b": 0.431289345
+        "r": 0.0430817828,
+        "g": 0.164626956,
+        "b": 0.4312893
       },
       "Tags": [
         "Draw_Target",
@@ -58148,9 +58148,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.0430818051,
-        "g": 0.164626986,
-        "b": 0.431289315
+        "r": 0.043081753,
+        "g": 0.164626926,
+        "b": 0.431289256
       },
       "Tags": [
         "Draw_Target",
@@ -58212,9 +58212,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.0430818051,
-        "g": 0.164626986,
-        "b": 0.431289315
+        "r": 0.043081753,
+        "g": 0.164626926,
+        "b": 0.431289256
       },
       "Tags": [
         "Draw_Target",
@@ -58276,9 +58276,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.043081753,
-        "g": 0.164626926,
-        "b": 0.431289256
+        "r": 0.0430817157,
+        "g": 0.164626867,
+        "b": 0.4312892
       },
       "Tags": [
         "Draw_Target",
@@ -58340,8 +58340,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.1490131,
-        "g": 0.07450489,
+        "r": 0.149013042,
+        "g": 0.07450483,
         "b": 0.0235294122
       },
       "Tags": [
@@ -58395,8 +58395,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.1490131,
-        "g": 0.07450489,
+        "r": 0.149013042,
+        "g": 0.07450483,
         "b": 0.0235294122
       },
       "Tags": [
@@ -58450,8 +58450,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.1490131,
-        "g": 0.07450489,
+        "r": 0.149013042,
+        "g": 0.07450483,
         "b": 0.0235294122
       },
       "Tags": [
@@ -58505,8 +58505,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.1490131,
-        "g": 0.07450489,
+        "r": 0.149013042,
+        "g": 0.07450483,
         "b": 0.0235294122
       },
       "Tags": [
@@ -58560,8 +58560,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.1490131,
-        "g": 0.07450489,
+        "r": 0.149013042,
+        "g": 0.07450483,
         "b": 0.0235294122
       },
       "Tags": [
@@ -58615,8 +58615,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.1490131,
-        "g": 0.07450489,
+        "r": 0.149013042,
+        "g": 0.07450483,
         "b": 0.0235294122
       },
       "Tags": [
@@ -58670,8 +58670,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.1490131,
-        "g": 0.07450489,
+        "r": 0.149013042,
+        "g": 0.07450483,
         "b": 0.0235294122
       },
       "Tags": [
@@ -58725,8 +58725,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.1490131,
-        "g": 0.07450489,
+        "r": 0.149013042,
+        "g": 0.07450483,
         "b": 0.0235294122
       },
       "Tags": [
@@ -58769,7 +58769,7 @@
         "posX": -72.19457,
         "posY": -0.00208260538,
         "posZ": 52.04165,
-        "rotX": 0.103204846,
+        "rotX": 0.103204876,
         "rotY": 179.9856,
         "rotZ": -2.994322E-05,
         "scaleX": 8.22,
@@ -58780,8 +58780,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.1490131,
-        "g": 0.07450489,
+        "r": 0.149013042,
+        "g": 0.07450483,
         "b": 0.0235294122
       },
       "Tags": [
@@ -58835,8 +58835,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.1490131,
-        "g": 0.07450489,
+        "r": 0.149013042,
+        "g": 0.07450483,
         "b": 0.0235294122
       },
       "Tags": [
@@ -58890,8 +58890,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.1490131,
-        "g": 0.07450489,
+        "r": 0.149013042,
+        "g": 0.07450483,
         "b": 0.0235294122
       },
       "Tags": [
@@ -58945,8 +58945,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.1490131,
-        "g": 0.07450489,
+        "r": 0.149013042,
+        "g": 0.07450483,
         "b": 0.0235294122
       },
       "Tags": [
@@ -59000,8 +59000,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.1490131,
-        "g": 0.07450489,
+        "r": 0.149013042,
+        "g": 0.07450483,
         "b": 0.0235294122
       },
       "Tags": [
@@ -59055,9 +59055,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249993145,
-        "g": 0.249993145,
-        "b": 0.249993145
+        "r": 0.249993086,
+        "g": 0.249993086,
+        "b": 0.249993086
       },
       "Tags": [
         "MegaFreeze"
@@ -59110,9 +59110,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249993145,
-        "g": 0.249993145,
-        "b": 0.249993145
+        "r": 0.249993086,
+        "g": 0.249993086,
+        "b": 0.249993086
       },
       "Tags": [
         "MegaFreeze"
@@ -59165,9 +59165,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249993145,
-        "g": 0.249993145,
-        "b": 0.249993145
+        "r": 0.249993086,
+        "g": 0.249993086,
+        "b": 0.249993086
       },
       "Tags": [
         "MegaFreeze"
@@ -59220,9 +59220,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249993145,
-        "g": 0.249993145,
-        "b": 0.249993145
+        "r": 0.249993086,
+        "g": 0.249993086,
+        "b": 0.249993086
       },
       "Tags": [
         "MegaFreeze"
@@ -59275,9 +59275,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249993145,
-        "g": 0.249993145,
-        "b": 0.249993145
+        "r": 0.249993086,
+        "g": 0.249993086,
+        "b": 0.249993086
       },
       "Tags": [
         "MegaFreeze"
@@ -59330,9 +59330,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249993145,
-        "g": 0.249993145,
-        "b": 0.249993145
+        "r": 0.249993086,
+        "g": 0.249993086,
+        "b": 0.249993086
       },
       "Tags": [
         "MegaFreeze"
@@ -59385,9 +59385,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249993145,
-        "g": 0.249993145,
-        "b": 0.249993145
+        "r": 0.249993086,
+        "g": 0.249993086,
+        "b": 0.249993086
       },
       "Tags": [
         "MegaFreeze"
@@ -59658,9 +59658,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249993145,
-        "g": 0.249993145,
-        "b": 0.249993145
+        "r": 0.249993086,
+        "g": 0.249993086,
+        "b": 0.249993086
       },
       "Tags": [
         "MegaFreeze"
@@ -59702,7 +59702,7 @@
             "z": -0.441030085
           },
           "Rotation": {
-            "x": -1.67640633E-06,
+            "x": -1.67640655E-06,
             "y": 0.0160372835,
             "z": -1.07153388E-08
           }
@@ -59727,7 +59727,7 @@
           },
           "Rotation": {
             "x": -9.786796E-06,
-            "y": 0.0284145,
+            "y": 0.0284145083,
             "z": -5.20418268E-07
           }
         },
@@ -59812,7 +59812,7 @@
           "Rotation": {
             "x": -1.02474394E-06,
             "y": 359.98526,
-            "z": -2.728223E-08
+            "z": -2.72822351E-08
           }
         }
       ]
@@ -59824,7 +59824,7 @@
         "posX": -72.16457,
         "posY": 1.000004,
         "posZ": 52.04165,
-        "rotX": 0.103204869,
+        "rotX": 0.1032049,
         "rotY": 180.02005,
         "rotZ": 3.21593143E-05,
         "scaleX": 7.46,
@@ -59835,9 +59835,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249993145,
-        "g": 0.249993145,
-        "b": 0.249993145
+        "r": 0.249993086,
+        "g": 0.249993086,
+        "b": 0.249993086
       },
       "Tags": [
         "MegaFreeze"
@@ -59891,7 +59891,7 @@
             "z": -0.441347778
           },
           "Rotation": {
-            "x": -3.56758869E-06,
+            "x": -3.56758937E-06,
             "y": 359.9729,
             "z": 1.50950882E-06
           }
@@ -59941,7 +59941,7 @@
           "Rotation": {
             "x": -5.669995E-06,
             "y": 0.0101496438,
-            "z": 2.06423053E-07
+            "z": 2.06423081E-07
           }
         }
       ]
@@ -59964,9 +59964,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249993145,
-        "g": 0.249993145,
-        "b": 0.249993145
+        "r": 0.249993086,
+        "g": 0.249993086,
+        "b": 0.249993086
       },
       "Tags": [
         "MegaFreeze"
@@ -60010,7 +60010,7 @@
           "Rotation": {
             "x": 2.45910155E-06,
             "y": 0.0273480881,
-            "z": 1.688153E-06
+            "z": 1.68815325E-06
           }
         },
         {
@@ -60045,7 +60045,7 @@
           },
           "Rotation": {
             "x": 1.85304125E-05,
-            "y": 0.02851009,
+            "y": 0.0285100974,
             "z": 5.982497E-07
           }
         },
@@ -60081,9 +60081,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249993145,
-        "g": 0.249993145,
-        "b": 0.249993145
+        "r": 0.249993086,
+        "g": 0.249993086,
+        "b": 0.249993086
       },
       "Tags": [
         "MegaFreeze"
@@ -60174,9 +60174,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249993145,
-        "g": 0.249993145,
-        "b": 0.249993145
+        "r": 0.249993086,
+        "g": 0.249993086,
+        "b": 0.249993086
       },
       "Tags": [
         "MegaFreeze"
@@ -60279,9 +60279,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249993145,
-        "g": 0.249993145,
-        "b": 0.249993145
+        "r": 0.249993086,
+        "g": 0.249993086,
+        "b": 0.249993086
       },
       "Tags": [
         "MegaFreeze"
@@ -60359,7 +60359,7 @@
             "z": 0.444871366
           },
           "Rotation": {
-            "x": -1.28584907E-05,
+            "x": -1.28584925E-05,
             "y": 359.9674,
             "z": -8.94592045E-09
           }
@@ -60429,9 +60429,9 @@
         "posX": -86.74648,
         "posY": 0.880006731,
         "posZ": 30.1031,
-        "rotX": 3.52166035E-06,
+        "rotX": 3.45334433E-06,
         "rotY": 180.002151,
-        "rotZ": -1.99783826E-05,
+        "rotZ": -1.975401E-05,
         "scaleX": 1.1,
         "scaleY": 3.0,
         "scaleZ": 1.1
@@ -60487,11 +60487,11 @@
       "Name": "Custom_Model",
       "Transform": {
         "posX": -90.6586456,
-        "posY": 0.8800054,
+        "posY": 0.88000536,
         "posZ": 30.09189,
-        "rotX": 3.33851267E-06,
+        "rotX": 3.37114625E-06,
         "rotY": 179.921967,
-        "rotZ": -1.979508E-05,
+        "rotZ": -1.97653153E-05,
         "scaleX": 1.1,
         "scaleY": 3.0,
         "scaleZ": 1.1
@@ -60549,9 +60549,9 @@
         "posX": -83.9706,
         "posY": 0.9851819,
         "posZ": 21.6443481,
-        "rotX": 3.35373466E-06,
+        "rotX": 3.32752461E-06,
         "rotY": 179.972839,
-        "rotZ": -1.990571E-05,
+        "rotZ": -1.96146466E-05,
         "scaleX": 0.725001633,
         "scaleY": 1.75291157,
         "scaleZ": 0.725001633
@@ -60609,9 +60609,9 @@
         "posX": -84.821106,
         "posY": 0.8800071,
         "posZ": 24.4480114,
-        "rotX": 3.18305842E-06,
+        "rotX": 3.297773E-06,
         "rotY": 180.019562,
-        "rotZ": -1.96054571E-05,
+        "rotZ": -1.97512272E-05,
         "scaleX": 0.6,
         "scaleY": 1.0,
         "scaleZ": 0.601098061
@@ -60620,7 +60620,7 @@
       "Description": "",
       "GMNotes": "[Delete]",
       "ColorDiffuse": {
-        "r": 0.0940974,
+        "r": 0.09409732,
         "g": 0.5921568,
         "b": 0.8
       },
@@ -60835,12 +60835,12 @@
       "GUID": "b21114",
       "Name": "Custom_Token",
       "Transform": {
-        "posX": -68.0140839,
-        "posY": 1.03094423,
-        "posZ": 21.0462952,
-        "rotX": 0.0333655253,
-        "rotY": 179.9964,
-        "rotZ": 180.009,
+        "posX": -68.0141449,
+        "posY": 1.0305078,
+        "posZ": 21.0463524,
+        "rotX": 0.007369611,
+        "rotY": 179.99733,
+        "rotZ": 179.996674,
         "scaleX": 0.61,
         "scaleY": 1.0,
         "scaleZ": 0.61
@@ -60888,11 +60888,11 @@
       "Name": "go_game_piece_white",
       "Transform": {
         "posX": -121.236549,
-        "posY": 1.25514042,
+        "posY": 1.25514054,
         "posZ": 16.6499462,
-        "rotX": -3.62850915E-06,
+        "rotX": -3.4170007E-06,
         "rotY": 359.979156,
-        "rotZ": 2.02219017E-05,
+        "rotZ": 1.98958915E-05,
         "scaleX": 2.04999876,
         "scaleY": 2.04999876,
         "scaleZ": 2.04999876
@@ -60928,11 +60928,11 @@
       "Name": "Bag",
       "Transform": {
         "posX": -100.004524,
-        "posY": 0.6949686,
+        "posY": 0.694968462,
         "posZ": 32.9502,
-        "rotX": -3.98891825E-06,
+        "rotX": -3.99058626E-06,
         "rotY": 359.9917,
-        "rotZ": 2.033911E-05,
+        "rotZ": 2.0334106E-05,
         "scaleX": 1.0,
         "scaleY": 1.0,
         "scaleZ": 1.0
@@ -61148,9 +61148,9 @@
         "posX": -102.177971,
         "posY": 1.300897,
         "posZ": 25.3521767,
-        "rotX": -3.24744815E-06,
+        "rotX": -3.18363482E-06,
         "rotY": 359.980133,
-        "rotZ": 1.98599519E-05,
+        "rotZ": 1.987683E-05,
         "scaleX": 2.299998,
         "scaleY": 2.299998,
         "scaleZ": 2.299998
@@ -61186,11 +61186,11 @@
       "Name": "Bag",
       "Transform": {
         "posX": -20.4243565,
-        "posY": 1.329207,
-        "posZ": -1.22497177,
-        "rotX": 8.896556E-06,
-        "rotY": 0.0181198455,
-        "rotZ": 8.644198E-06,
+        "posY": 1.32920051,
+        "posZ": -1.22497237,
+        "rotX": 8.896553E-06,
+        "rotY": 0.01811984,
+        "rotZ": 8.649198E-06,
         "scaleX": 1.0,
         "scaleY": 1.0,
         "scaleZ": 1.0
@@ -61232,11 +61232,11 @@
       "Name": "Bag",
       "Transform": {
         "posX": -89.71089,
-        "posY": 0.6949714,
+        "posY": 0.6949722,
         "posZ": 27.2213268,
-        "rotX": -2.666693E-06,
-        "rotY": 359.992249,
-        "rotZ": 1.995714E-05,
+        "rotX": -2.96356279E-06,
+        "rotY": 359.992279,
+        "rotZ": 1.932183E-05,
         "scaleX": 1.0,
         "scaleY": 1.0,
         "scaleZ": 1.0
@@ -84254,7 +84254,7 @@
         "posX": -68.12282,
         "posY": 0.920199037,
         "posZ": 14.9989128,
-        "rotX": 3.28545229E-06,
+        "rotX": 3.285906E-06,
         "rotY": 179.999771,
         "rotZ": 179.999985,
         "scaleX": 2.24,
@@ -84546,7 +84546,7 @@
         "posX": -62.99374,
         "posY": 0.910572648,
         "posZ": 13.8338289,
-        "rotX": 3.29397722E-06,
+        "rotX": 3.31474735E-06,
         "rotY": 179.999954,
         "rotZ": 179.999985,
         "scaleX": 2.24,
@@ -84722,7 +84722,7 @@
         "posX": -73.095665,
         "posY": 0.915383339,
         "posZ": 14.9456911,
-        "rotX": 3.293301E-06,
+        "rotX": 3.26693976E-06,
         "rotY": 179.999237,
         "rotZ": 179.999985,
         "scaleX": 2.24,
@@ -84956,7 +84956,7 @@
         "posX": -45.3696136,
         "posY": 1.47069037,
         "posZ": 48.75061,
-        "rotX": -8.513157E-06,
+        "rotX": -8.670131E-06,
         "rotY": 180.027908,
         "rotZ": 179.999985,
         "scaleX": 1.85,
@@ -85944,7 +85944,7 @@
         "posX": -40.8692245,
         "posY": 1.43217957,
         "posZ": 48.75061,
-        "rotX": 1.28874262E-05,
+        "rotX": 1.32084742E-05,
         "rotY": 179.995956,
         "rotZ": 179.999985,
         "scaleX": 1.85,
@@ -86465,11 +86465,11 @@
       "GUID": "096f78",
       "Name": "Deck",
       "Transform": {
-        "posX": -49.87,
-        "posY": 1.55252755,
+        "posX": -49.870224,
+        "posY": 1.5284574,
         "posZ": 48.75061,
-        "rotX": -7.893035E-06,
-        "rotY": 179.97226,
+        "rotX": -1.40729153E-05,
+        "rotY": 179.999985,
         "rotZ": 179.999985,
         "scaleX": 1.85,
         "scaleY": 1.0,
@@ -86503,11 +86503,6 @@
       "Hands": false,
       "SidewaysCard": false,
       "DeckIDs": [
-        53004,
-        53006,
-        52913,
-        52919,
-        53010,
         52911,
         52908,
         53009,
@@ -86538,8 +86533,8 @@
         52920
       ],
       "CustomDeck": {
-        "530": {
-          "FaceURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292474/5E9F93FFD17253005523F1503C497180CD75F86E/",
+        "529": {
+          "FaceURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292123/754E639D1530BE96A09BD8DAD3FCBFE59AF72BF6/",
           "BackURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292369/5A4309071543FE761B2804DEAF90670952942B22/",
           "NumWidth": 7,
           "NumHeight": 4,
@@ -86547,8 +86542,8 @@
           "UniqueBack": false,
           "Type": 0
         },
-        "529": {
-          "FaceURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292123/754E639D1530BE96A09BD8DAD3FCBFE59AF72BF6/",
+        "530": {
+          "FaceURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292474/5E9F93FFD17253005523F1503C497180CD75F86E/",
           "BackURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292369/5A4309071543FE761B2804DEAF90670952942B22/",
           "NumWidth": 7,
           "NumHeight": 4,
@@ -86561,291 +86556,6 @@
       "LuaScriptState": "",
       "XmlUI": "",
       "ContainedObjects": [
-        {
-          "GUID": "df98dd",
-          "Name": "Card",
-          "Transform": {
-            "posX": -54.4893265,
-            "posY": 9.344752,
-            "posZ": 18.36228,
-            "rotX": -2.72629018E-06,
-            "rotY": 179.972214,
-            "rotZ": 179.999985,
-            "scaleX": 1.85,
-            "scaleY": 1.0,
-            "scaleZ": 1.85
-          },
-          "Nickname": "Powder of Ibn-Ghazi (Unique)",
-          "Description": "",
-          "GMNotes": "",
-          "ColorDiffuse": {
-            "r": 0.713363945,
-            "g": 0.713363945,
-            "b": 0.713363945
-          },
-          "Tags": [
-            "DiscardMe_Small",
-            "ID_UniqueItem"
-          ],
-          "LayoutGroupSortIndex": 0,
-          "Value": 0,
-          "Locked": false,
-          "Grid": true,
-          "Snap": true,
-          "IgnoreFoW": false,
-          "MeasureMovement": false,
-          "DragSelectable": true,
-          "Autoraise": true,
-          "Sticky": true,
-          "Tooltip": false,
-          "GridProjection": false,
-          "HideWhenFaceDown": true,
-          "Hands": true,
-          "CardID": 53004,
-          "SidewaysCard": false,
-          "CustomDeck": {
-            "530": {
-              "FaceURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292474/5E9F93FFD17253005523F1503C497180CD75F86E/",
-              "BackURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292369/5A4309071543FE761B2804DEAF90670952942B22/",
-              "NumWidth": 7,
-              "NumHeight": 4,
-              "BackIsHidden": true,
-              "UniqueBack": false,
-              "Type": 0
-            }
-          },
-          "LuaScript": "",
-          "LuaScriptState": "",
-          "XmlUI": ""
-        },
-        {
-          "GUID": "a70858",
-          "Name": "Card",
-          "Transform": {
-            "posX": -54.48932,
-            "posY": 9.31107,
-            "posZ": 18.362278,
-            "rotX": -2.51547317E-06,
-            "rotY": 179.9722,
-            "rotZ": 179.999985,
-            "scaleX": 1.85,
-            "scaleY": 1.0,
-            "scaleZ": 1.85
-          },
-          "Nickname": "Ruby of R'lyeh (Unique)",
-          "Description": "",
-          "GMNotes": "",
-          "ColorDiffuse": {
-            "r": 0.713363945,
-            "g": 0.713363945,
-            "b": 0.713363945
-          },
-          "Tags": [
-            "DiscardMe_Small",
-            "ID_UniqueItem"
-          ],
-          "LayoutGroupSortIndex": 0,
-          "Value": 0,
-          "Locked": false,
-          "Grid": true,
-          "Snap": true,
-          "IgnoreFoW": false,
-          "MeasureMovement": false,
-          "DragSelectable": true,
-          "Autoraise": true,
-          "Sticky": true,
-          "Tooltip": false,
-          "GridProjection": false,
-          "HideWhenFaceDown": true,
-          "Hands": true,
-          "CardID": 53006,
-          "SidewaysCard": false,
-          "CustomDeck": {
-            "530": {
-              "FaceURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292474/5E9F93FFD17253005523F1503C497180CD75F86E/",
-              "BackURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292369/5A4309071543FE761B2804DEAF90670952942B22/",
-              "NumWidth": 7,
-              "NumHeight": 4,
-              "BackIsHidden": true,
-              "UniqueBack": false,
-              "Type": 0
-            }
-          },
-          "LuaScript": "",
-          "LuaScriptState": "",
-          "XmlUI": ""
-        },
-        {
-          "GUID": "0f312a",
-          "Name": "Card",
-          "Transform": {
-            "posX": -54.48932,
-            "posY": 8.982519,
-            "posZ": 18.362278,
-            "rotX": -2.51660867E-06,
-            "rotY": 179.9722,
-            "rotZ": 179.999985,
-            "scaleX": 1.85,
-            "scaleY": 1.0,
-            "scaleZ": 1.85
-          },
-          "Nickname": "Enchanted Blade (Unique)",
-          "Description": "",
-          "GMNotes": "",
-          "ColorDiffuse": {
-            "r": 0.713363945,
-            "g": 0.713363945,
-            "b": 0.713363945
-          },
-          "Tags": [
-            "DiscardMe_Small",
-            "ID_UniqueItem"
-          ],
-          "LayoutGroupSortIndex": 0,
-          "Value": 0,
-          "Locked": false,
-          "Grid": true,
-          "Snap": true,
-          "IgnoreFoW": false,
-          "MeasureMovement": false,
-          "DragSelectable": true,
-          "Autoraise": true,
-          "Sticky": true,
-          "Tooltip": false,
-          "GridProjection": false,
-          "HideWhenFaceDown": true,
-          "Hands": true,
-          "CardID": 52913,
-          "SidewaysCard": false,
-          "CustomDeck": {
-            "529": {
-              "FaceURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292123/754E639D1530BE96A09BD8DAD3FCBFE59AF72BF6/",
-              "BackURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292369/5A4309071543FE761B2804DEAF90670952942B22/",
-              "NumWidth": 7,
-              "NumHeight": 4,
-              "BackIsHidden": true,
-              "UniqueBack": false,
-              "Type": 0
-            }
-          },
-          "LuaScript": "",
-          "LuaScriptState": "",
-          "XmlUI": ""
-        },
-        {
-          "GUID": "f5c815",
-          "Name": "Card",
-          "Transform": {
-            "posX": -54.48932,
-            "posY": 8.871258,
-            "posZ": 18.362278,
-            "rotX": -2.51660867E-06,
-            "rotY": 179.9722,
-            "rotZ": 179.999985,
-            "scaleX": 1.85,
-            "scaleY": 1.0,
-            "scaleZ": 1.85
-          },
-          "Nickname": "Gate Box (Unique)",
-          "Description": "",
-          "GMNotes": "",
-          "ColorDiffuse": {
-            "r": 0.713363945,
-            "g": 0.713363945,
-            "b": 0.713363945
-          },
-          "Tags": [
-            "DiscardMe_Small",
-            "ID_UniqueItem"
-          ],
-          "LayoutGroupSortIndex": 0,
-          "Value": 0,
-          "Locked": false,
-          "Grid": true,
-          "Snap": true,
-          "IgnoreFoW": false,
-          "MeasureMovement": false,
-          "DragSelectable": true,
-          "Autoraise": true,
-          "Sticky": true,
-          "Tooltip": false,
-          "GridProjection": false,
-          "HideWhenFaceDown": true,
-          "Hands": true,
-          "CardID": 52919,
-          "SidewaysCard": false,
-          "CustomDeck": {
-            "529": {
-              "FaceURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292123/754E639D1530BE96A09BD8DAD3FCBFE59AF72BF6/",
-              "BackURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292369/5A4309071543FE761B2804DEAF90670952942B22/",
-              "NumWidth": 7,
-              "NumHeight": 4,
-              "BackIsHidden": true,
-              "UniqueBack": false,
-              "Type": 0
-            }
-          },
-          "LuaScript": "",
-          "LuaScriptState": "",
-          "XmlUI": ""
-        },
-        {
-          "GUID": "dd4a10",
-          "Name": "Card",
-          "Transform": {
-            "posX": -54.48932,
-            "posY": 8.582519,
-            "posZ": 18.362278,
-            "rotX": -2.51660867E-06,
-            "rotY": 179.9722,
-            "rotZ": 179.999985,
-            "scaleX": 1.85,
-            "scaleY": 1.0,
-            "scaleZ": 1.85
-          },
-          "Nickname": "The King in Yellow (Unique)",
-          "Description": "",
-          "GMNotes": "",
-          "ColorDiffuse": {
-            "r": 0.713363945,
-            "g": 0.713363945,
-            "b": 0.713363945
-          },
-          "Tags": [
-            "DiscardMe_Small",
-            "ID_UniqueItem"
-          ],
-          "LayoutGroupSortIndex": 0,
-          "Value": 0,
-          "Locked": false,
-          "Grid": true,
-          "Snap": true,
-          "IgnoreFoW": false,
-          "MeasureMovement": false,
-          "DragSelectable": true,
-          "Autoraise": true,
-          "Sticky": true,
-          "Tooltip": false,
-          "GridProjection": false,
-          "HideWhenFaceDown": true,
-          "Hands": true,
-          "CardID": 53010,
-          "SidewaysCard": false,
-          "CustomDeck": {
-            "530": {
-              "FaceURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292474/5E9F93FFD17253005523F1503C497180CD75F86E/",
-              "BackURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292369/5A4309071543FE761B2804DEAF90670952942B22/",
-              "NumWidth": 7,
-              "NumHeight": 4,
-              "BackIsHidden": true,
-              "UniqueBack": false,
-              "Type": 0
-            }
-          },
-          "LuaScript": "",
-          "LuaScriptState": "",
-          "XmlUI": ""
-        },
         {
           "GUID": "e34e62",
           "Name": "Card",
@@ -88451,7 +88161,7 @@
         "posX": -54.3655052,
         "posY": 1.51882792,
         "posZ": 48.7501373,
-        "rotX": -1.08704107E-05,
+        "rotX": -8.758843E-06,
         "rotY": 180.021347,
         "rotZ": 179.999985,
         "scaleX": 1.85,
@@ -90019,7 +89729,7 @@
         "posX": -58.8707771,
         "posY": 1.53326857,
         "posZ": 48.75061,
-        "rotX": 1.7770768E-05,
+        "rotX": 1.47640139E-05,
         "rotY": 179.9997,
         "rotZ": 179.999985,
         "scaleX": 1.85,
@@ -91770,9 +91480,9 @@
         "posX": -40.84592,
         "posY": 1.38634086,
         "posZ": 55.2520943,
-        "rotX": 8.745901E-06,
+        "rotX": 2.2360714E-06,
         "rotY": 179.999969,
-        "rotZ": -1.832368E-05,
+        "rotZ": -1.832627E-05,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -91827,9 +91537,9 @@
         "posX": -45.346302,
         "posY": 1.40329325,
         "posZ": 55.2521133,
-        "rotX": -1.32503719E-05,
+        "rotX": -1.57753839E-05,
         "rotY": 180.000137,
-        "rotZ": -1.85552726E-05,
+        "rotZ": -1.89638959E-05,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -92003,9 +91713,9 @@
         "posX": -49.8373947,
         "posY": 1.40329182,
         "posZ": 55.2520065,
-        "rotX": -4.10370058E-06,
+        "rotX": 1.2553952E-06,
         "rotY": 180.005524,
-        "rotZ": -1.81834512E-05,
+        "rotZ": -1.879106E-05,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -92188,9 +91898,9 @@
         "posX": -54.3472137,
         "posY": 1.386337,
         "posZ": 55.2520065,
-        "rotX": 1.31173229E-05,
+        "rotX": 1.49732723E-05,
         "rotY": 179.999557,
-        "rotZ": -1.82424083E-05,
+        "rotZ": -1.81907362E-05,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -92242,12 +91952,12 @@
       "GUID": "f1c676",
       "Name": "Deck",
       "Transform": {
-        "posX": -74.19357,
-        "posY": 0.9609668,
-        "posZ": 29.2022667,
-        "rotX": 0.7278002,
-        "rotY": 180.015671,
-        "rotZ": -0.00112526456,
+        "posX": -74.19356,
+        "posY": 0.9621371,
+        "posZ": 29.2022686,
+        "rotX": 0.722310364,
+        "rotY": 180.016281,
+        "rotZ": 359.954468,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -92627,12 +92337,12 @@
       "GUID": "ac2558",
       "Name": "Card",
       "Transform": {
-        "posX": -58.1039,
-        "posY": 0.8849332,
-        "posZ": 36.4748421,
-        "rotX": 359.991333,
-        "rotY": 180.095016,
-        "rotZ": 179.915909,
+        "posX": -58.1032524,
+        "posY": 0.8853449,
+        "posZ": 36.47488,
+        "rotX": 359.980347,
+        "rotY": 180.098221,
+        "rotZ": 179.898178,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -92684,12 +92394,12 @@
       "GUID": "c1af5f",
       "Name": "Card",
       "Transform": {
-        "posX": -49.5660858,
-        "posY": 0.882729232,
-        "posZ": 35.9192734,
-        "rotX": -0.005166426,
-        "rotY": 180.027039,
-        "rotZ": 359.978119,
+        "posX": -49.58968,
+        "posY": 0.881949067,
+        "posZ": 35.918972,
+        "rotX": 0.0138270808,
+        "rotY": 179.723679,
+        "rotZ": 0.0170619935,
         "scaleX": 2.24,
         "scaleY": 1.0,
         "scaleZ": 2.24
@@ -92741,12 +92451,12 @@
       "GUID": "91afd2",
       "Name": "Card",
       "Transform": {
-        "posX": -51.8968658,
-        "posY": 0.9069834,
-        "posZ": 35.4923,
-        "rotX": -0.004757766,
-        "rotY": 180.258438,
-        "rotZ": 359.2867,
+        "posX": -51.9068,
+        "posY": 0.909801841,
+        "posZ": 35.4837837,
+        "rotX": 0.0116144978,
+        "rotY": 180.166779,
+        "rotZ": 359.990234,
         "scaleX": 2.24,
         "scaleY": 1.0,
         "scaleZ": 2.24
@@ -92799,11 +92509,11 @@
       "Name": "Card",
       "Transform": {
         "posX": -77.85349,
-        "posY": 0.893558562,
-        "posZ": 36.5824356,
-        "rotX": 359.977966,
-        "rotY": 179.999481,
-        "rotZ": 180.000046,
+        "posY": 0.8935507,
+        "posZ": 36.582428,
+        "rotX": 359.974976,
+        "rotY": 179.999542,
+        "rotZ": 180.000076,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -92855,12 +92565,12 @@
       "GUID": "34c0e7",
       "Name": "Card",
       "Transform": {
-        "posX": -75.95771,
-        "posY": 0.915013552,
-        "posZ": 36.5163765,
-        "rotX": 0.06086534,
-        "rotY": 179.978485,
-        "rotZ": 180.595154,
+        "posX": -75.95762,
+        "posY": 0.915283442,
+        "posZ": 36.5162354,
+        "rotX": 0.0472516231,
+        "rotY": 179.978058,
+        "rotZ": 180.625534,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -92913,11 +92623,11 @@
       "Name": "Card",
       "Transform": {
         "posX": -73.69834,
-        "posY": 0.931325555,
-        "posZ": 33.4186859,
-        "rotX": 0.760974765,
-        "rotY": 179.9875,
-        "rotZ": 179.997147,
+        "posY": 0.9317092,
+        "posZ": 33.41866,
+        "rotX": 0.7692914,
+        "rotY": 179.987534,
+        "rotZ": 179.998047,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -92969,12 +92679,12 @@
       "GUID": "28e165",
       "Name": "Card",
       "Transform": {
-        "posX": -75.78869,
-        "posY": 0.934675932,
-        "posZ": 31.8771324,
-        "rotX": 0.7864457,
-        "rotY": 180.0148,
-        "rotZ": 179.929321,
+        "posX": -75.7886,
+        "posY": 0.934994161,
+        "posZ": 31.8769569,
+        "rotX": 0.784474969,
+        "rotY": 180.019043,
+        "rotZ": 179.915848,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -93027,11 +92737,11 @@
       "Name": "Card",
       "Transform": {
         "posX": -77.74254,
-        "posY": 0.946820259,
-        "posZ": 31.0124054,
-        "rotX": 0.7798399,
-        "rotY": 179.993729,
-        "rotZ": 179.525879,
+        "posY": 0.946505,
+        "posZ": 31.0123234,
+        "rotX": 0.7810174,
+        "rotY": 179.993958,
+        "rotZ": 179.537872,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -93084,11 +92794,11 @@
       "Name": "Card",
       "Transform": {
         "posX": -57.2490654,
-        "posY": 1.21026826,
+        "posY": 1.21028757,
         "posZ": 20.3355885,
-        "rotX": 0.00100429053,
+        "rotX": 0.00063546974,
         "rotY": 179.993591,
-        "rotZ": 180.000168,
+        "rotZ": 180.00029,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -93140,12 +92850,12 @@
       "GUID": "1e32e6",
       "Name": "Card",
       "Transform": {
-        "posX": -50.0126762,
-        "posY": 0.8335299,
-        "posZ": 37.31864,
-        "rotX": 0.00151245634,
-        "rotY": 180.009018,
-        "rotZ": 7.56642248E-06,
+        "posX": -50.04493,
+        "posY": 0.8335913,
+        "posZ": 37.31647,
+        "rotX": 0.000251929217,
+        "rotY": 179.699966,
+        "rotZ": -2.842263E-05,
         "scaleX": 2.24,
         "scaleY": 1.0,
         "scaleZ": 2.24
@@ -93200,9 +92910,9 @@
         "posX": -66.05437,
         "posY": 0.880013347,
         "posZ": 23.453249,
-        "rotX": 3.07618052E-06,
+        "rotX": 3.48293474E-06,
         "rotY": 180.012238,
-        "rotZ": -1.97935715E-05,
+        "rotZ": -1.984946E-05,
         "scaleX": 1.1,
         "scaleY": 3.0,
         "scaleZ": 1.1
@@ -93261,11 +92971,11 @@
       "Name": "Custom_Model",
       "Transform": {
         "posX": -63.56927,
-        "posY": 0.8800143,
+        "posY": 0.8800142,
         "posZ": 23.1079826,
-        "rotX": 3.23645077E-06,
+        "rotX": 3.383076E-06,
         "rotY": 179.969223,
-        "rotZ": -1.96651217E-05,
+        "rotZ": -1.96764E-05,
         "scaleX": 1.1,
         "scaleY": 3.0,
         "scaleZ": 1.1
@@ -93323,12 +93033,12 @@
       "GUID": "4c5248",
       "Name": "Custom_Model",
       "Transform": {
-        "posX": -63.5156441,
+        "posX": -63.51565,
         "posY": 0.8800145,
         "posZ": 25.83876,
-        "rotX": 3.41584951E-06,
+        "rotX": 3.61018988E-06,
         "rotY": 180.0,
-        "rotZ": -1.96418951E-05,
+        "rotZ": -1.97128429E-05,
         "scaleX": 1.1,
         "scaleY": 3.0,
         "scaleZ": 1.1
@@ -93388,11 +93098,11 @@
       "Name": "Custom_Tile",
       "Transform": {
         "posX": -68.2370148,
-        "posY": 0.880012751,
+        "posY": 0.8800127,
         "posZ": 23.5945187,
-        "rotX": 4.8173556E-06,
-        "rotY": 180.024521,
-        "rotZ": -2.17497727E-05,
+        "rotX": 3.176665E-06,
+        "rotY": 180.024643,
+        "rotZ": -1.974591E-05,
         "scaleX": 0.6,
         "scaleY": 1.0,
         "scaleZ": 0.6
@@ -93402,8 +93112,8 @@
       "GMNotes": "Delete\nCunt\nFuck\nWhat\nGoAway\nWhy",
       "ColorDiffuse": {
         "r": 1.0,
-        "g": 0.343249649,
-        "b": 0.188627571
+        "g": 0.3432496,
+        "b": 0.188627511
       },
       "Tags": [
         "DeleteMe"
@@ -93445,8 +93155,8 @@
         "posX": -70.1085,
         "posY": 0.9200121,
         "posZ": 23.44222,
-        "rotX": -3.26740337E-06,
-        "rotY": 0.0182438064,
+        "rotX": -3.17157446E-06,
+        "rotY": 0.018243866,
         "rotZ": 180.000015,
         "scaleX": 0.25,
         "scaleY": 0.4,
@@ -93509,9 +93219,9 @@
       "Description": "",
       "GMNotes": "Discard_Platform_Large",
       "ColorDiffuse": {
-        "r": 0.04308168,
-        "g": 0.1646268,
-        "b": 0.431289136
+        "r": 0.0430816337,
+        "g": 0.164626747,
+        "b": 0.431289077
       },
       "Tags": [
         "DiscardTarget",
@@ -93573,9 +93283,9 @@
       "Description": "",
       "GMNotes": "Discard_Platform_Large",
       "ColorDiffuse": {
-        "r": 0.0430817157,
-        "g": 0.164626867,
-        "b": 0.4312892
+        "r": 0.04308168,
+        "g": 0.1646268,
+        "b": 0.431289136
       },
       "Tags": [
         "DiscardTarget",
@@ -93637,9 +93347,9 @@
       "Description": "",
       "GMNotes": "Discard_Platform_Large",
       "ColorDiffuse": {
-        "r": 0.0430817157,
-        "g": 0.164626867,
-        "b": 0.4312892
+        "r": 0.04308168,
+        "g": 0.1646268,
+        "b": 0.431289136
       },
       "Tags": [
         "DiscardTarget",
@@ -93690,9 +93400,9 @@
         "posX": -39.05516,
         "posY": 1.1663332,
         "posZ": 15.9705076,
-        "rotX": -2.442751E-07,
+        "rotX": -1.87508488E-06,
         "rotY": 179.99971,
-        "rotZ": -6.292828E-06,
+        "rotZ": -6.309241E-06,
         "scaleX": 2.24,
         "scaleY": 1.0,
         "scaleZ": 2.24
@@ -93747,9 +93457,9 @@
         "posX": -45.6792,
         "posY": 1.18328893,
         "posZ": 15.7639866,
-        "rotX": 6.883809E-06,
+        "rotX": 8.723619E-06,
         "rotY": 179.99971,
-        "rotZ": -2.76243168E-06,
+        "rotZ": -2.673492E-06,
         "scaleX": 2.24,
         "scaleY": 1.0,
         "scaleZ": 2.24
@@ -93920,12 +93630,12 @@
       "GUID": "acffee",
       "Name": "Deck",
       "Transform": {
-        "posX": -45.46376,
-        "posY": 0.8952333,
-        "posZ": 34.9297,
-        "rotX": 1.27478243E-05,
-        "rotY": 179.975266,
-        "rotZ": 181.065445,
+        "posX": -45.46495,
+        "posY": 0.8939492,
+        "posZ": 34.9299278,
+        "rotX": -0.000405609928,
+        "rotY": 179.983444,
+        "rotZ": 181.03067,
         "scaleX": 2.24,
         "scaleY": 1.0,
         "scaleZ": 2.24
@@ -94171,12 +93881,12 @@
       "GUID": "a4e7bf",
       "Name": "Custom_Board",
       "Transform": {
-        "posX": 10.3188572,
-        "posY": 4.50121641,
-        "posZ": 0.974575162,
-        "rotX": 0.2906997,
-        "rotY": 179.39328,
-        "rotZ": 0.1157283,
+        "posX": 10.3188505,
+        "posY": 4.50095,
+        "posZ": 0.973922968,
+        "rotX": 0.2909751,
+        "rotY": 179.3958,
+        "rotZ": 0.116211772,
         "scaleX": 0.16,
         "scaleY": 0.43,
         "scaleZ": 0.35
@@ -94185,9 +93895,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.04308168,
-        "g": 0.1646268,
-        "b": 0.431289136
+        "r": 0.0430816337,
+        "g": 0.164626747,
+        "b": 0.431289077
       },
       "Tags": [
         "DiscardTarget"
@@ -94234,12 +93944,12 @@
       "GUID": "384e24",
       "Name": "Custom_Board",
       "Transform": {
-        "posX": 10.3293829,
-        "posY": 4.228962,
-        "posZ": 0.9292572,
-        "rotX": 0.286648452,
-        "rotY": 179.384277,
-        "rotZ": 0.114525735,
+        "posX": 10.3293743,
+        "posY": 4.22869539,
+        "posZ": 0.9286271,
+        "rotX": 0.286971271,
+        "rotY": 179.3867,
+        "rotZ": 0.115051188,
         "scaleX": 0.16,
         "scaleY": 0.43,
         "scaleZ": 0.35
@@ -94248,9 +93958,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430816561,
-        "g": 0.164626777,
-        "b": 0.4312891
+        "r": 0.0430816039,
+        "g": 0.164626718,
+        "b": 0.431289017
       },
       "Tags": [
         "DiscardTarget"
@@ -94297,12 +94007,12 @@
       "GUID": "aae8cd",
       "Name": "Custom_Board",
       "Transform": {
-        "posX": 10.2852764,
-        "posY": 1.79701841,
-        "posZ": 1.17847764,
-        "rotX": 0.0320765451,
-        "rotY": 180.071625,
-        "rotZ": 0.02677428,
+        "posX": 10.2852545,
+        "posY": 1.79958808,
+        "posZ": 1.17839551,
+        "rotX": 0.02305356,
+        "rotY": 180.071854,
+        "rotZ": 0.0249999482,
         "scaleX": 0.16,
         "scaleY": 0.43,
         "scaleZ": 0.35
@@ -94311,9 +94021,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430816934,
-        "g": 0.164626837,
-        "b": 0.431289166
+        "r": 0.0430816561,
+        "g": 0.164626777,
+        "b": 0.4312891
       },
       "Tags": [
         "DiscardTarget"
@@ -94351,7 +94061,7 @@
           "Rotation": {
             "x": 1.65742058E-05,
             "y": 359.986359,
-            "z": -2.43032773E-05
+            "z": -2.4303281E-05
           }
         }
       ]
@@ -94360,12 +94070,12 @@
       "GUID": "717efa",
       "Name": "Custom_Board",
       "Transform": {
-        "posX": 10.2894983,
-        "posY": 1.5311389,
-        "posZ": 1.2077111,
+        "posX": 10.2894964,
+        "posY": 1.53113866,
+        "posZ": 1.20770144,
         "rotX": 359.972656,
         "rotY": 180.042313,
-        "rotZ": 0.00822376,
+        "rotZ": 0.00821676,
         "scaleX": 0.16,
         "scaleY": 0.43,
         "scaleZ": 0.35
@@ -94374,9 +94084,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430817157,
-        "g": 0.164626867,
-        "b": 0.4312892
+        "r": 0.04308168,
+        "g": 0.1646268,
+        "b": 0.431289136
       },
       "Tags": [
         "DiscardTarget"
@@ -94423,12 +94133,12 @@
       "GUID": "7c8733",
       "Name": "Custom_Board",
       "Transform": {
-        "posX": 10.2888508,
-        "posY": 2.06822658,
-        "posZ": 1.17138124,
-        "rotX": 0.07079077,
-        "rotY": 180.080383,
-        "rotZ": 0.0408811122,
+        "posX": 10.28881,
+        "posY": 2.06567764,
+        "posZ": 1.17130756,
+        "rotX": 0.07971169,
+        "rotY": 180.08075,
+        "rotZ": 0.0430682339,
         "scaleX": 0.16,
         "scaleY": 0.43,
         "scaleZ": 0.35
@@ -94437,9 +94147,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.04308168,
-        "g": 0.1646268,
-        "b": 0.431289136
+        "r": 0.0430816337,
+        "g": 0.164626747,
+        "b": 0.431289077
       },
       "Tags": [
         "DiscardTarget"
@@ -94472,12 +94182,12 @@
       "GUID": "1dcf97",
       "Name": "Custom_Board",
       "Transform": {
-        "posX": 10.2830563,
-        "posY": 2.334709,
-        "posZ": 1.1303612,
-        "rotX": 0.12260998,
-        "rotY": 180.033386,
-        "rotZ": 0.0577063151,
+        "posX": 10.2830353,
+        "posY": 2.33472538,
+        "posZ": 1.13014209,
+        "rotX": 0.122850023,
+        "rotY": 180.034088,
+        "rotZ": 0.0583658963,
         "scaleX": 0.16,
         "scaleY": 0.43,
         "scaleZ": 0.35
@@ -94486,9 +94196,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430817157,
-        "g": 0.164626867,
-        "b": 0.4312892
+        "r": 0.04308168,
+        "g": 0.1646268,
+        "b": 0.431289136
       },
       "Tags": [
         "DiscardTarget"
@@ -94535,12 +94245,12 @@
       "GUID": "d076bc",
       "Name": "Custom_Board",
       "Transform": {
-        "posX": 10.2815847,
-        "posY": 2.60403872,
-        "posZ": 1.07090712,
-        "rotX": 0.16011323,
-        "rotY": 180.164368,
-        "rotZ": 0.07247295,
+        "posX": 10.28156,
+        "posY": 2.605986,
+        "posZ": 1.07064772,
+        "rotX": 0.156633422,
+        "rotY": 180.165329,
+        "rotZ": 0.07148218,
         "scaleX": 0.16,
         "scaleY": 0.43,
         "scaleZ": 0.35
@@ -94549,9 +94259,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.04308168,
-        "g": 0.1646268,
-        "b": 0.431289136
+        "r": 0.0430816337,
+        "g": 0.164626747,
+        "b": 0.431289077
       },
       "Tags": [
         "DiscardTarget"
@@ -94584,12 +94294,12 @@
       "GUID": "e3672e",
       "Name": "Custom_Board",
       "Transform": {
-        "posX": 10.2802134,
-        "posY": 2.87556672,
-        "posZ": 1.06619322,
-        "rotX": 0.190496951,
-        "rotY": 180.196518,
-        "rotZ": 0.08358038,
+        "posX": 10.2802,
+        "posY": 2.87365556,
+        "posZ": 1.06583309,
+        "rotX": 0.194274217,
+        "rotY": 180.19783,
+        "rotZ": 0.08601828,
         "scaleX": 0.16,
         "scaleY": 0.43,
         "scaleZ": 0.35
@@ -94598,9 +94308,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430817157,
-        "g": 0.164626867,
-        "b": 0.4312892
+        "r": 0.04308168,
+        "g": 0.1646268,
+        "b": 0.431289136
       },
       "Tags": [
         "DiscardTarget"
@@ -94647,12 +94357,12 @@
       "GUID": "235397",
       "Name": "Custom_Board",
       "Transform": {
-        "posX": 10.322361,
-        "posY": 3.41431,
-        "posZ": 0.986147463,
-        "rotX": 0.245262042,
-        "rotY": 179.7849,
-        "rotZ": 0.101718329,
+        "posX": 10.3223639,
+        "posY": 3.414045,
+        "posZ": 0.98562634,
+        "rotX": 0.24568893,
+        "rotY": 179.786758,
+        "rotZ": 0.102362216,
         "scaleX": 0.16,
         "scaleY": 0.43,
         "scaleZ": 0.35
@@ -94661,9 +94371,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430817157,
-        "g": 0.164626867,
-        "b": 0.4312892
+        "r": 0.04308168,
+        "g": 0.1646268,
+        "b": 0.431289136
       },
       "Tags": [
         "DiscardTarget"
@@ -94699,7 +94409,7 @@
             "z": -0.00066336937
           },
           "Rotation": {
-            "x": 1.18156E-05,
+            "x": 1.18156022E-05,
             "y": 359.975037,
             "z": -1.85686361E-06
           }
@@ -94710,12 +94420,12 @@
       "GUID": "79f499",
       "Name": "Custom_Board",
       "Transform": {
-        "posX": 10.2935257,
-        "posY": 3.14368534,
-        "posZ": 1.00242209,
-        "rotX": 0.221670821,
-        "rotY": 180.121033,
-        "rotZ": 0.09569662,
+        "posX": 10.2935162,
+        "posY": 3.14509153,
+        "posZ": 1.00200272,
+        "rotX": 0.22112821,
+        "rotY": 180.122574,
+        "rotZ": 0.09580463,
         "scaleX": 0.16,
         "scaleY": 0.43,
         "scaleZ": 0.35
@@ -94724,9 +94434,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.04308168,
-        "g": 0.1646268,
-        "b": 0.431289136
+        "r": 0.0430816337,
+        "g": 0.164626747,
+        "b": 0.431289077
       },
       "Tags": [
         "DiscardTarget"
@@ -94759,12 +94469,12 @@
       "GUID": "1d4a50",
       "Name": "Custom_Board",
       "Transform": {
-        "posX": 10.3102121,
-        "posY": 3.68620825,
-        "posZ": 0.9530698,
-        "rotX": 0.263605326,
-        "rotY": 179.717026,
-        "rotZ": 0.108078778,
+        "posX": 10.3102074,
+        "posY": 3.6859417,
+        "posZ": 0.9525246,
+        "rotX": 0.26408422,
+        "rotY": 179.719116,
+        "rotZ": 0.108741321,
         "scaleX": 0.16,
         "scaleY": 0.43,
         "scaleZ": 0.35
@@ -94773,9 +94483,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.04308168,
-        "g": 0.1646268,
-        "b": 0.431289136
+        "r": 0.0430816337,
+        "g": 0.164626747,
+        "b": 0.431289077
       },
       "Tags": [
         "DiscardTarget"
@@ -94808,12 +94518,12 @@
       "GUID": "d5a4cc",
       "Name": "Custom_Board",
       "Transform": {
-        "posX": 10.3028345,
-        "posY": 3.95669031,
-        "posZ": 0.938917637,
-        "rotX": 0.276557922,
-        "rotY": 179.791885,
-        "rotZ": 0.113193221,
+        "posX": 10.3028307,
+        "posY": 3.95642376,
+        "posZ": 0.9383009,
+        "rotX": 0.276857883,
+        "rotY": 179.79422,
+        "rotZ": 0.113718346,
         "scaleX": 0.16,
         "scaleY": 0.43,
         "scaleZ": 0.35
@@ -94822,9 +94532,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430817381,
-        "g": 0.1646269,
-        "b": 0.431289226
+        "r": 0.0430816934,
+        "g": 0.164626837,
+        "b": 0.431289166
       },
       "Tags": [
         "DiscardTarget"
@@ -94861,7 +94571,7 @@
           },
           "Rotation": {
             "x": 1.69245122E-05,
-            "y": 0.0298834685,
+            "y": 0.029883476,
             "z": -7.07923937E-06
           }
         }
@@ -94885,9 +94595,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "Discard_Platform_Large",
       "ColorDiffuse": {
-        "r": 0.0430816934,
-        "g": 0.164626837,
-        "b": 0.431289166
+        "r": 0.0430816561,
+        "g": 0.164626777,
+        "b": 0.4312891
       },
       "Tags": [
         "DiscardTarget",
@@ -94938,9 +94648,9 @@
         "posX": 60.1409874,
         "posY": 1.1180793,
         "posZ": 58.1824341,
-        "rotX": -1.18666167E-05,
+        "rotX": -1.186662E-05,
         "rotY": 180.028015,
-        "rotZ": -3.70710063E-06,
+        "rotZ": -3.707099E-06,
         "scaleX": 0.2,
         "scaleY": 0.43,
         "scaleZ": 0.44
@@ -94949,9 +94659,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "Discard_Platform_Large",
       "ColorDiffuse": {
-        "r": 0.0430817157,
-        "g": 0.164626867,
-        "b": 0.4312892
+        "r": 0.04308168,
+        "g": 0.1646268,
+        "b": 0.431289136
       },
       "Tags": [
         "DiscardTarget",
@@ -95013,9 +94723,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "Discard_Platform_Large",
       "ColorDiffuse": {
-        "r": 0.0430816934,
-        "g": 0.164626837,
-        "b": 0.431289166
+        "r": 0.0430816561,
+        "g": 0.164626777,
+        "b": 0.4312891
       },
       "Tags": [
         "DiscardTarget",
@@ -95077,9 +94787,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "Discard_Platform_Large",
       "ColorDiffuse": {
-        "r": 0.0430816934,
-        "g": 0.164626837,
-        "b": 0.431289166
+        "r": 0.0430816561,
+        "g": 0.164626777,
+        "b": 0.4312891
       },
       "Tags": [
         "DiscardTarget",
@@ -95141,9 +94851,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "Discard_Platform_Large",
       "ColorDiffuse": {
-        "r": 0.04308168,
-        "g": 0.1646268,
-        "b": 0.431289136
+        "r": 0.0430816337,
+        "g": 0.164626747,
+        "b": 0.431289077
       },
       "Tags": [
         "DiscardTarget",
@@ -95205,9 +94915,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "Discard_Platform_Large",
       "ColorDiffuse": {
-        "r": 0.0430817381,
-        "g": 0.1646269,
-        "b": 0.431289226
+        "r": 0.0430816934,
+        "g": 0.164626837,
+        "b": 0.431289166
       },
       "Tags": [
         "DiscardTarget",
@@ -95269,9 +94979,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "Discard_Platform_Large",
       "ColorDiffuse": {
-        "r": 0.0430816934,
-        "g": 0.164626837,
-        "b": 0.431289166
+        "r": 0.0430816561,
+        "g": 0.164626777,
+        "b": 0.4312891
       },
       "Tags": [
         "DiscardTarget",
@@ -95379,9 +95089,9 @@
       "Description": "",
       "GMNotes": "Discard_Platform_Small",
       "ColorDiffuse": {
-        "r": 0.0430815,
-        "g": 0.164626569,
-        "b": 0.431288868
+        "r": 0.0430814549,
+        "g": 0.164626509,
+        "b": 0.4312888
       },
       "Tags": [
         "DiscardTarget",
@@ -95443,9 +95153,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "Discard_Platform_Large",
       "ColorDiffuse": {
-        "r": 0.04308168,
-        "g": 0.1646268,
-        "b": 0.431289136
+        "r": 0.0430816337,
+        "g": 0.164626747,
+        "b": 0.431289077
       },
       "Tags": [
         "DiscardTarget",
@@ -95507,9 +95217,9 @@
       "Description": "",
       "GMNotes": "Discard_Platform_Small",
       "ColorDiffuse": {
-        "r": 0.0430815443,
-        "g": 0.164626628,
-        "b": 0.431288928
+        "r": 0.0430815,
+        "g": 0.164626569,
+        "b": 0.431288868
       },
       "Tags": [
         "DiscardTarget",
@@ -95571,9 +95281,9 @@
       "Description": "",
       "GMNotes": "Discard_Platform_Small",
       "ColorDiffuse": {
-        "r": 0.043081522,
-        "g": 0.1646266,
-        "b": 0.4312889
+        "r": 0.0430814847,
+        "g": 0.164626539,
+        "b": 0.431288838
       },
       "Tags": [
         "DiscardTarget",
@@ -95635,9 +95345,9 @@
       "Description": "",
       "GMNotes": "Discard_Platform_Small",
       "ColorDiffuse": {
-        "r": 0.0430815443,
-        "g": 0.164626628,
-        "b": 0.431288928
+        "r": 0.0430815,
+        "g": 0.164626569,
+        "b": 0.431288868
       },
       "Tags": [
         "DiscardTarget",
@@ -95699,9 +95409,9 @@
       "Description": "",
       "GMNotes": "Discard_Platform_Small",
       "ColorDiffuse": {
-        "r": 0.0430815443,
-        "g": 0.164626628,
-        "b": 0.431288928
+        "r": 0.0430815,
+        "g": 0.164626569,
+        "b": 0.431288868
       },
       "Tags": [
         "DiscardTarget",
@@ -95763,9 +95473,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "Discard_Platform_Small",
       "ColorDiffuse": {
-        "r": 0.0430814847,
-        "g": 0.164626539,
-        "b": 0.431288838
+        "r": 0.04308144,
+        "g": 0.164626479,
+        "b": 0.431288779
       },
       "Tags": [
         "DiscardTarget",
@@ -95802,7 +95512,7 @@
             "z": -0.00278994767
           },
           "Rotation": {
-            "x": 1.484719E-05,
+            "x": 1.48471872E-05,
             "y": 359.963867,
             "z": 180.0
           }
@@ -95818,7 +95528,7 @@
         "posZ": 55.254715,
         "rotX": 0.1031921,
         "rotY": 180.0077,
-        "rotZ": 1.21301146E-05,
+        "rotZ": 1.21301209E-05,
         "scaleX": 0.16,
         "scaleY": 0.43,
         "scaleZ": 0.35
@@ -95827,9 +95537,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "Discard_Platform_Small",
       "ColorDiffuse": {
-        "r": 0.0430815443,
-        "g": 0.164626628,
-        "b": 0.431288928
+        "r": 0.0430815,
+        "g": 0.164626569,
+        "b": 0.431288868
       },
       "Tags": [
         "DiscardTarget",
@@ -95866,9 +95576,9 @@
             "z": -0.000733109657
           },
           "Rotation": {
-            "x": -2.3624496E-05,
+            "x": -2.36245E-05,
             "y": 359.9488,
-            "z": -1.730374E-06
+            "z": -1.73037358E-06
           }
         }
       ]
@@ -95891,9 +95601,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "Discard_Platform_Small",
       "ColorDiffuse": {
-        "r": 0.04308156,
-        "g": 0.164626658,
-        "b": 0.431288958
+        "r": 0.043081522,
+        "g": 0.1646266,
+        "b": 0.4312889
       },
       "Tags": [
         "DiscardTarget",
@@ -95941,12 +95651,12 @@
       "GUID": "4f3a3a",
       "Name": "Card",
       "Transform": {
-        "posX": -57.5434151,
-        "posY": 0.8336552,
-        "posZ": 34.4131546,
-        "rotX": -0.000193980653,
-        "rotY": 180.000916,
-        "rotZ": 179.998016,
+        "posX": -57.5431557,
+        "posY": 0.8337235,
+        "posZ": 34.413166,
+        "rotX": -0.0004991755,
+        "rotY": 179.997833,
+        "rotZ": 179.995331,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -95998,12 +95708,12 @@
       "GUID": "cd5e78",
       "Name": "Card",
       "Transform": {
-        "posX": -55.12947,
-        "posY": 0.912970841,
-        "posZ": 36.8278923,
-        "rotX": -0.00197208277,
-        "rotY": 180.001785,
-        "rotZ": 179.923416,
+        "posX": -55.1281281,
+        "posY": 0.8949839,
+        "posZ": 36.8277321,
+        "rotX": 359.989838,
+        "rotY": 180.007614,
+        "rotZ": 180.713379,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -96055,12 +95765,12 @@
       "GUID": "040f6c",
       "Name": "Card",
       "Transform": {
-        "posX": -55.0434341,
-        "posY": 0.855986238,
-        "posZ": 33.56155,
-        "rotX": 359.978,
-        "rotY": 180.127914,
-        "rotZ": 180.132538,
+        "posX": -55.04278,
+        "posY": 0.854301631,
+        "posZ": 33.5612869,
+        "rotX": 359.9562,
+        "rotY": 180.132187,
+        "rotZ": 180.231873,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -96112,12 +95822,12 @@
       "GUID": "9609e0",
       "Name": "Deck",
       "Transform": {
-        "posX": -76.3106,
-        "posY": 1.04758155,
-        "posZ": 34.3570557,
-        "rotX": 359.124,
-        "rotY": 180.022568,
-        "rotZ": 179.530289,
+        "posX": -76.31064,
+        "posY": 1.04784608,
+        "posZ": 34.3568649,
+        "rotX": 359.139771,
+        "rotY": 180.021469,
+        "rotZ": 179.5372,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -96465,8 +96175,8 @@
         "posX": -72.1385345,
         "posY": 1.38042319,
         "posZ": 48.7536774,
-        "rotX": 0.103190579,
-        "rotY": 179.9983,
+        "rotX": 0.103192039,
+        "rotY": 179.998184,
         "rotZ": 180.0,
         "scaleX": 1.85,
         "scaleY": 1.0,
@@ -96522,8 +96232,8 @@
         "posX": -76.63114,
         "posY": 1.38042557,
         "posZ": 48.75499,
-        "rotX": 0.103202485,
-        "rotY": 179.995087,
+        "rotX": 0.103201605,
+        "rotY": 179.99498,
         "rotZ": 180.0,
         "scaleX": 1.85,
         "scaleY": 1.0,
@@ -96577,10 +96287,10 @@
       "Name": "Card",
       "Transform": {
         "posX": -67.6347,
-        "posY": 1.39213264,
+        "posY": 1.39213252,
         "posZ": 55.25442,
-        "rotX": 0.103195429,
-        "rotY": 179.998383,
+        "rotX": 0.103191696,
+        "rotY": 179.998276,
         "rotZ": 180.0,
         "scaleX": 1.85,
         "scaleY": 1.0,
@@ -96636,8 +96346,8 @@
         "posX": -72.1336746,
         "posY": 1.39213264,
         "posZ": 55.25457,
-        "rotX": 0.1031904,
-        "rotY": 179.997971,
+        "rotX": 0.103196733,
+        "rotY": 179.997849,
         "rotZ": 180.0,
         "scaleX": 1.85,
         "scaleY": 1.0,
@@ -96693,8 +96403,8 @@
         "posX": -76.63236,
         "posY": 1.39213359,
         "posZ": 55.2553177,
-        "rotX": 0.103221245,
-        "rotY": 179.997955,
+        "rotX": 0.103224695,
+        "rotY": 179.997849,
         "rotZ": 180.0,
         "scaleX": 1.85,
         "scaleY": 1.0,
@@ -96748,11 +96458,11 @@
       "Name": "Custom_Token",
       "Transform": {
         "posX": -64.433815,
-        "posY": 1.47760952,
-        "posZ": 20.2727489,
-        "rotX": 5.86339664,
-        "rotY": 181.9671,
-        "rotZ": 22.70778,
+        "posY": 1.47728777,
+        "posZ": 20.2731037,
+        "rotX": 5.9349246,
+        "rotY": 182.004364,
+        "rotZ": 22.6954784,
         "scaleX": 0.61,
         "scaleY": 1.0,
         "scaleZ": 0.61
@@ -96804,12 +96514,12 @@
       "GUID": "25b937",
       "Name": "Custom_Token",
       "Transform": {
-        "posX": -67.86839,
-        "posY": 1.33371806,
-        "posZ": 20.2478943,
-        "rotX": 359.595978,
-        "rotY": 0.14989917,
-        "rotZ": 359.931152,
+        "posX": -67.8689346,
+        "posY": 1.332768,
+        "posZ": 20.24839,
+        "rotX": 359.8961,
+        "rotY": 0.174834669,
+        "rotZ": 359.897766,
         "scaleX": 0.61,
         "scaleY": 1.0,
         "scaleZ": 0.61
@@ -96861,12 +96571,12 @@
       "GUID": "920d47",
       "Name": "Custom_Token",
       "Transform": {
-        "posX": -66.06566,
-        "posY": 1.52913821,
-        "posZ": 20.1400852,
-        "rotX": 0.9325778,
-        "rotY": 179.870026,
-        "rotZ": 7.34135628,
+        "posX": -66.0658646,
+        "posY": 1.52845144,
+        "posZ": 20.1411381,
+        "rotX": 0.604618549,
+        "rotY": 179.872574,
+        "rotZ": 7.39920568,
         "scaleX": 0.61,
         "scaleY": 1.0,
         "scaleZ": 0.607863367
@@ -96919,12 +96629,12 @@
       "GUID": "e832df",
       "Name": "Card",
       "Transform": {
-        "posX": -57.81795,
-        "posY": 0.8856375,
-        "posZ": 31.0601826,
-        "rotX": 0.8180952,
-        "rotY": 179.984085,
-        "rotZ": 179.624863,
+        "posX": -57.81779,
+        "posY": 0.887303948,
+        "posZ": 31.0601482,
+        "rotX": 0.8228897,
+        "rotY": 179.987244,
+        "rotZ": 179.578568,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -97099,9 +96809,9 @@
         "posX": -65.9788361,
         "posY": 0.880013645,
         "posZ": 26.0728836,
-        "rotX": 3.61367074E-06,
+        "rotX": 3.59478577E-06,
         "rotY": 180.000229,
-        "rotZ": -1.98380858E-05,
+        "rotZ": -1.98227935E-05,
         "scaleX": 1.1,
         "scaleY": 3.0,
         "scaleZ": 1.1
@@ -97162,10 +96872,10 @@
       "Transform": {
         "posX": -70.5048447,
         "posY": 1.19110882,
-        "posZ": 26.1139412,
-        "rotX": -3.58503416E-06,
-        "rotY": 0.0103950175,
-        "rotZ": 2.02771625E-05,
+        "posZ": 26.11394,
+        "rotX": -3.553172E-06,
+        "rotY": 0.010390358,
+        "rotZ": 2.03054842E-05,
         "scaleX": 1.69999814,
         "scaleY": 1.69999814,
         "scaleZ": 1.69999814
@@ -97174,7 +96884,7 @@
       "Description": "",
       "GMNotes": "D.Zone_Test1",
       "ColorDiffuse": {
-        "r": 0.332210362,
+        "r": 0.3322103,
         "g": 1.0,
         "b": 0.0
       },
@@ -97204,12 +96914,12 @@
       "GUID": "ff7fe8",
       "Name": "Custom_Model",
       "Transform": {
-        "posX": -64.45905,
-        "posY": 0.915573239,
-        "posZ": 20.0029316,
-        "rotX": 0.004776464,
-        "rotY": 359.978333,
-        "rotZ": -0.004773565,
+        "posX": -64.45904,
+        "posY": 0.9155242,
+        "posZ": 20.0029888,
+        "rotX": 0.004017028,
+        "rotY": 359.9784,
+        "rotZ": -0.00569664,
         "scaleX": 0.475000054,
         "scaleY": 0.475000054,
         "scaleZ": 0.475000054
@@ -97257,9 +96967,9 @@
         "posX": -68.5208,
         "posY": 1.19110954,
         "posZ": 26.1318245,
-        "rotX": -3.377646E-06,
-        "rotY": -0.00338696362,
-        "rotZ": 2.00802333E-05,
+        "rotX": -3.45617127E-06,
+        "rotY": -0.003386954,
+        "rotZ": 2.00614541E-05,
         "scaleX": 1.69999814,
         "scaleY": 1.69999814,
         "scaleZ": 1.69999814
@@ -97301,9 +97011,9 @@
         "posX": -11.15286,
         "posY": 1.770466,
         "posZ": -1.82552719,
-        "rotX": -4.998766E-06,
-        "rotY": 0.00120800314,
-        "rotZ": 2.774484E-06,
+        "rotX": -5.66994731E-06,
+        "rotY": 0.00120803458,
+        "rotZ": 4.151691E-06,
         "scaleX": 1.4,
         "scaleY": 1.4,
         "scaleZ": 1.4
@@ -97339,11 +97049,11 @@
       "Name": "Card",
       "Transform": {
         "posX": -51.59919,
-        "posY": 1.21029067,
-        "posZ": 20.9180984,
-        "rotX": 0.000160478681,
-        "rotY": 179.999573,
-        "rotZ": 179.998871,
+        "posY": 1.21028471,
+        "posZ": 20.9181,
+        "rotX": 0.0002145382,
+        "rotY": 179.999481,
+        "rotZ": 179.9985,
         "scaleX": 2.24,
         "scaleY": 1.0,
         "scaleZ": 2.24
@@ -97395,12 +97105,12 @@
       "GUID": "268ae0",
       "Name": "Card",
       "Transform": {
-        "posX": -54.48925,
-        "posY": 1.23570728,
-        "posZ": 18.3621979,
-        "rotX": 0.0147474706,
-        "rotY": 179.999863,
-        "rotZ": 180.000656,
+        "posX": -54.4892426,
+        "posY": 1.23654,
+        "posZ": 18.36219,
+        "rotX": 0.0157065559,
+        "rotY": 179.999741,
+        "rotZ": 180.001022,
         "scaleX": 2.24,
         "scaleY": 1.0,
         "scaleZ": 2.24
@@ -97453,11 +97163,11 @@
       "Name": "Card",
       "Transform": {
         "posX": -56.9431572,
-        "posY": 1.26222277,
-        "posZ": 17.3725471,
-        "rotX": 0.0177728273,
-        "rotY": 179.999939,
-        "rotZ": 179.976532,
+        "posY": 1.26205361,
+        "posZ": 17.3725452,
+        "rotX": 0.0206306018,
+        "rotY": 180.000031,
+        "rotZ": 179.953232,
         "scaleX": 2.24,
         "scaleY": 1.0,
         "scaleZ": 2.24
@@ -97509,12 +97219,12 @@
       "GUID": "48a950",
       "Name": "Card",
       "Transform": {
-        "posX": -53.4540939,
-        "posY": 1.2763716,
-        "posZ": 20.89187,
-        "rotX": 0.0182454,
-        "rotY": 180.021484,
-        "rotZ": 180.646149,
+        "posX": -53.4540863,
+        "posY": 1.27704859,
+        "posZ": 20.8918667,
+        "rotX": 0.02256245,
+        "rotY": 180.021515,
+        "rotZ": 180.657745,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -97566,12 +97276,12 @@
       "GUID": "a93254",
       "Name": "Card",
       "Transform": {
-        "posX": -50.7621,
-        "posY": 1.2555542,
+        "posX": -50.7620926,
+        "posY": 1.25554812,
         "posZ": 17.0304279,
-        "rotX": 0.581806,
-        "rotY": 179.9837,
-        "rotZ": 181.004013,
+        "rotX": 0.5809968,
+        "rotY": 179.983582,
+        "rotZ": 181.004044,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -97623,12 +97333,12 @@
       "GUID": "874dfa",
       "Name": "Deck",
       "Transform": {
-        "posX": -49.5356636,
-        "posY": 0.8649999,
-        "posZ": 28.8771038,
-        "rotX": 7.459792E-07,
-        "rotY": 180.0,
-        "rotZ": -2.99999147E-06,
+        "posX": -67.63655,
+        "posY": 1.41181755,
+        "posZ": 48.75257,
+        "rotX": 0.103202626,
+        "rotY": 180.021713,
+        "rotZ": 180.000031,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -97959,6 +97669,365 @@
               "NumWidth": 10,
               "NumHeight": 6,
               "BackIsHidden": false,
+              "UniqueBack": false,
+              "Type": 0
+            }
+          },
+          "LuaScript": "",
+          "LuaScriptState": "",
+          "XmlUI": ""
+        }
+      ]
+    },
+    {
+      "GUID": "dd7939",
+      "Name": "Deck",
+      "Transform": {
+        "posX": -45.0263634,
+        "posY": 0.966099262,
+        "posZ": 35.5316849,
+        "rotX": 0.00160642131,
+        "rotY": 179.968079,
+        "rotZ": 1.02509391,
+        "scaleX": 1.85,
+        "scaleY": 1.0,
+        "scaleZ": 1.85
+      },
+      "Nickname": "",
+      "Description": "",
+      "GMNotes": "",
+      "ColorDiffuse": {
+        "r": 0.713363945,
+        "g": 0.713363945,
+        "b": 0.713363945
+      },
+      "Tags": [
+        "DiscardMe_Small",
+        "ID_UniqueItem"
+      ],
+      "LayoutGroupSortIndex": 0,
+      "Value": 0,
+      "Locked": false,
+      "Grid": true,
+      "Snap": true,
+      "IgnoreFoW": false,
+      "MeasureMovement": false,
+      "DragSelectable": true,
+      "Autoraise": true,
+      "Sticky": true,
+      "Tooltip": true,
+      "GridProjection": false,
+      "HideWhenFaceDown": true,
+      "Hands": false,
+      "SidewaysCard": false,
+      "DeckIDs": [
+        53004,
+        53006,
+        52913,
+        52919,
+        53010
+      ],
+      "CustomDeck": {
+        "530": {
+          "FaceURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292474/5E9F93FFD17253005523F1503C497180CD75F86E/",
+          "BackURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292369/5A4309071543FE761B2804DEAF90670952942B22/",
+          "NumWidth": 7,
+          "NumHeight": 4,
+          "BackIsHidden": true,
+          "UniqueBack": false,
+          "Type": 0
+        },
+        "529": {
+          "FaceURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292123/754E639D1530BE96A09BD8DAD3FCBFE59AF72BF6/",
+          "BackURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292369/5A4309071543FE761B2804DEAF90670952942B22/",
+          "NumWidth": 7,
+          "NumHeight": 4,
+          "BackIsHidden": true,
+          "UniqueBack": false,
+          "Type": 0
+        }
+      },
+      "LuaScript": "",
+      "LuaScriptState": "",
+      "XmlUI": "",
+      "ContainedObjects": [
+        {
+          "GUID": "df98dd",
+          "Name": "Card",
+          "Transform": {
+            "posX": -46.23534,
+            "posY": 0.933919132,
+            "posZ": 34.85684,
+            "rotX": 0.0130159333,
+            "rotY": 180.000854,
+            "rotZ": 0.6303785,
+            "scaleX": 1.85,
+            "scaleY": 1.0,
+            "scaleZ": 1.85
+          },
+          "Nickname": "Powder of Ibn-Ghazi (Unique)",
+          "Description": "",
+          "GMNotes": "",
+          "ColorDiffuse": {
+            "r": 0.713363945,
+            "g": 0.713363945,
+            "b": 0.713363945
+          },
+          "Tags": [
+            "DiscardMe_Small",
+            "ID_UniqueItem"
+          ],
+          "LayoutGroupSortIndex": 0,
+          "Value": 0,
+          "Locked": false,
+          "Grid": true,
+          "Snap": true,
+          "IgnoreFoW": false,
+          "MeasureMovement": false,
+          "DragSelectable": true,
+          "Autoraise": true,
+          "Sticky": true,
+          "Tooltip": false,
+          "GridProjection": false,
+          "HideWhenFaceDown": true,
+          "Hands": true,
+          "CardID": 53004,
+          "SidewaysCard": false,
+          "CustomDeck": {
+            "530": {
+              "FaceURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292474/5E9F93FFD17253005523F1503C497180CD75F86E/",
+              "BackURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292369/5A4309071543FE761B2804DEAF90670952942B22/",
+              "NumWidth": 7,
+              "NumHeight": 4,
+              "BackIsHidden": true,
+              "UniqueBack": false,
+              "Type": 0
+            }
+          },
+          "LuaScript": "",
+          "LuaScriptState": "",
+          "XmlUI": ""
+        },
+        {
+          "GUID": "a70858",
+          "Name": "Card",
+          "Transform": {
+            "posX": -46.2353134,
+            "posY": 0.969952345,
+            "posZ": 34.8566055,
+            "rotX": 0.06814502,
+            "rotY": 180.001816,
+            "rotZ": 0.40889588,
+            "scaleX": 1.85,
+            "scaleY": 1.0,
+            "scaleZ": 1.85
+          },
+          "Nickname": "Ruby of R'lyeh (Unique)",
+          "Description": "",
+          "GMNotes": "",
+          "ColorDiffuse": {
+            "r": 0.713363945,
+            "g": 0.713363945,
+            "b": 0.713363945
+          },
+          "Tags": [
+            "DiscardMe_Small",
+            "ID_UniqueItem"
+          ],
+          "LayoutGroupSortIndex": 0,
+          "Value": 0,
+          "Locked": false,
+          "Grid": true,
+          "Snap": true,
+          "IgnoreFoW": false,
+          "MeasureMovement": false,
+          "DragSelectable": true,
+          "Autoraise": true,
+          "Sticky": true,
+          "Tooltip": false,
+          "GridProjection": false,
+          "HideWhenFaceDown": true,
+          "Hands": true,
+          "CardID": 53006,
+          "SidewaysCard": false,
+          "CustomDeck": {
+            "530": {
+              "FaceURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292474/5E9F93FFD17253005523F1503C497180CD75F86E/",
+              "BackURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292369/5A4309071543FE761B2804DEAF90670952942B22/",
+              "NumWidth": 7,
+              "NumHeight": 4,
+              "BackIsHidden": true,
+              "UniqueBack": false,
+              "Type": 0
+            }
+          },
+          "LuaScript": "",
+          "LuaScriptState": "",
+          "XmlUI": ""
+        },
+        {
+          "GUID": "0f312a",
+          "Name": "Card",
+          "Transform": {
+            "posX": -46.23526,
+            "posY": 1.11290252,
+            "posZ": 34.856617,
+            "rotX": 0.1376506,
+            "rotY": 179.9977,
+            "rotZ": 358.0387,
+            "scaleX": 1.85,
+            "scaleY": 1.0,
+            "scaleZ": 1.85
+          },
+          "Nickname": "Enchanted Blade (Unique)",
+          "Description": "",
+          "GMNotes": "",
+          "ColorDiffuse": {
+            "r": 0.713363945,
+            "g": 0.713363945,
+            "b": 0.713363945
+          },
+          "Tags": [
+            "DiscardMe_Small",
+            "ID_UniqueItem"
+          ],
+          "LayoutGroupSortIndex": 0,
+          "Value": 0,
+          "Locked": false,
+          "Grid": true,
+          "Snap": true,
+          "IgnoreFoW": false,
+          "MeasureMovement": false,
+          "DragSelectable": true,
+          "Autoraise": true,
+          "Sticky": true,
+          "Tooltip": false,
+          "GridProjection": false,
+          "HideWhenFaceDown": true,
+          "Hands": true,
+          "CardID": 52913,
+          "SidewaysCard": false,
+          "CustomDeck": {
+            "529": {
+              "FaceURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292123/754E639D1530BE96A09BD8DAD3FCBFE59AF72BF6/",
+              "BackURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292369/5A4309071543FE761B2804DEAF90670952942B22/",
+              "NumWidth": 7,
+              "NumHeight": 4,
+              "BackIsHidden": true,
+              "UniqueBack": false,
+              "Type": 0
+            }
+          },
+          "LuaScript": "",
+          "LuaScriptState": "",
+          "XmlUI": ""
+        },
+        {
+          "GUID": "f5c815",
+          "Name": "Card",
+          "Transform": {
+            "posX": -46.2352333,
+            "posY": 1.01312041,
+            "posZ": 34.856617,
+            "rotX": 0.0414373539,
+            "rotY": 180.000076,
+            "rotZ": 0.165832624,
+            "scaleX": 1.85,
+            "scaleY": 1.0,
+            "scaleZ": 1.85
+          },
+          "Nickname": "Gate Box (Unique)",
+          "Description": "",
+          "GMNotes": "",
+          "ColorDiffuse": {
+            "r": 0.713363945,
+            "g": 0.713363945,
+            "b": 0.713363945
+          },
+          "Tags": [
+            "DiscardMe_Small",
+            "ID_UniqueItem"
+          ],
+          "LayoutGroupSortIndex": 0,
+          "Value": 0,
+          "Locked": false,
+          "Grid": true,
+          "Snap": true,
+          "IgnoreFoW": false,
+          "MeasureMovement": false,
+          "DragSelectable": true,
+          "Autoraise": true,
+          "Sticky": true,
+          "Tooltip": false,
+          "GridProjection": false,
+          "HideWhenFaceDown": true,
+          "Hands": true,
+          "CardID": 52919,
+          "SidewaysCard": false,
+          "CustomDeck": {
+            "529": {
+              "FaceURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292123/754E639D1530BE96A09BD8DAD3FCBFE59AF72BF6/",
+              "BackURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292369/5A4309071543FE761B2804DEAF90670952942B22/",
+              "NumWidth": 7,
+              "NumHeight": 4,
+              "BackIsHidden": true,
+              "UniqueBack": false,
+              "Type": 0
+            }
+          },
+          "LuaScript": "",
+          "LuaScriptState": "",
+          "XmlUI": ""
+        },
+        {
+          "GUID": "dd4a10",
+          "Name": "Card",
+          "Transform": {
+            "posX": -46.23526,
+            "posY": 1.03466928,
+            "posZ": 34.856617,
+            "rotX": 359.8602,
+            "rotY": 179.998932,
+            "rotZ": 0.8526051,
+            "scaleX": 1.85,
+            "scaleY": 1.0,
+            "scaleZ": 1.85
+          },
+          "Nickname": "The King in Yellow (Unique)",
+          "Description": "",
+          "GMNotes": "",
+          "ColorDiffuse": {
+            "r": 0.713363945,
+            "g": 0.713363945,
+            "b": 0.713363945
+          },
+          "Tags": [
+            "DiscardMe_Small",
+            "ID_UniqueItem"
+          ],
+          "LayoutGroupSortIndex": 0,
+          "Value": 0,
+          "Locked": false,
+          "Grid": true,
+          "Snap": true,
+          "IgnoreFoW": false,
+          "MeasureMovement": false,
+          "DragSelectable": true,
+          "Autoraise": true,
+          "Sticky": true,
+          "Tooltip": false,
+          "GridProjection": false,
+          "HideWhenFaceDown": true,
+          "Hands": true,
+          "CardID": 53010,
+          "SidewaysCard": false,
+          "CustomDeck": {
+            "530": {
+              "FaceURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292474/5E9F93FFD17253005523F1503C497180CD75F86E/",
+              "BackURL": "http://cloud-3.steamusercontent.com/ugc/771734893750292369/5A4309071543FE761B2804DEAF90670952942B22/",
+              "NumWidth": 7,
+              "NumHeight": 4,
+              "BackIsHidden": true,
               "UniqueBack": false,
               "Type": 0
             }
