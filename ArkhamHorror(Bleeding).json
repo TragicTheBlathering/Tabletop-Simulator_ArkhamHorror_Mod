@@ -1,7 +1,7 @@
 {
-  "SaveName": "StartOnBags",
-  "EpochTime": 1643701704,
-  "Date": "2/1/2022 6:48:24 PM",
+  "SaveName": "SpecialCase",
+  "EpochTime": 1643928408,
+  "Date": "2/4/2022 9:46:48 AM",
   "VersionNumber": "v13.1.1",
   "GameMode": "LoveCraft Town W.I.P",
   "GameType": "Game",
@@ -594,7 +594,7 @@
     }
   ],
   "DecalPallet": [],
-  "LuaScript": "-- Bundled by luabundle {\"version\":\"1.6.0\"}\nlocal __bundle_require, __bundle_loaded, __bundle_register, __bundle_modules = (function(superRequire)\n\tlocal loadingPlaceholder = {[{}] = true}\n\n\tlocal register\n\tlocal modules = {}\n\n\tlocal require\n\tlocal loaded = {}\n\n\tregister = function(name, body)\n\t\tif not modules[name] then\n\t\t\tmodules[name] = body\n\t\tend\n\tend\n\n\trequire = function(name)\n\t\tlocal loadedModule = loaded[name]\n\n\t\tif loadedModule then\n\t\t\tif loadedModule == loadingPlaceholder then\n\t\t\t\treturn nil\n\t\t\tend\n\t\telse\n\t\t\tif not modules[name] then\n\t\t\t\tif not superRequire then\n\t\t\t\t\tlocal identifier = type(name) == 'string' and '\\\"' .. name .. '\\\"' or tostring(name)\n\t\t\t\t\terror('Tried to require ' .. identifier .. ', but no such module has been registered')\n\t\t\t\telse\n\t\t\t\t\treturn superRequire(name)\n\t\t\t\tend\n\t\t\tend\n\n\t\t\tloaded[name] = loadingPlaceholder\n\t\t\tloadedModule = modules[name](require, loaded, register, modules)\n\t\t\tloaded[name] = loadedModule\n\t\tend\n\n\t\treturn loadedModule\n\tend\n\n\treturn require, loaded, register, modules\nend)(nil)\n__bundle_register(\"__root\", function(require, _LOADED, __bundle_register, __bundle_modules)\n----#include /ArkhamHorror/GlobalSystem\nlocal debug = require(\"/_libs/debug\")\r\n\r\nfunction onLoad()\r\n    debug.setDebugHotKeys()\r\n    \r\n    AllObjects = getAllObjects()\r\n    SetUpZone = getObjectFromGUID('d4e5c2').getObjects()\r\n    local onModLoad=require(\"/_libs/onModLoad\")\r\n          onModLoad.MegaFreeze('d4e5c2','TableOnly')\r\n          onModLoad.FixHandZones(10)\r\n\r\n    local GlobalEvents=require(\"/ArkhamHorror/GlobalEvents\")\r\nend\r\n\r\nfunction setGlobalVariables()\r\n    --GlobalVariables = returnSetUpObj('__(Variables) - Global') -- getObjectFromGUID('b1c381') --\r\n    --CastZone = returnSetUpObj('__(Script) - CastZone')\r\nend\r\n\n----#include /ArkhamHorror/GlobalSystem\nend)\n__bundle_register(\"/ArkhamHorror/GlobalEvents\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal tool = {}\r\n      tool.waitFor=require(\"/_libs/WaitUtils\")\r\n      tool.processTrash=require(\"/_libs/TrashCan/TrashCan\").process\r\n\r\nlocal dropTimer = 0.8\r\n\r\nlocal GlobalEvents = {}\r\n--------------------------------------------------------------------------------\r\n--- onObjectEnter : CONTAINER --------------------------------------------------\r\nfunction onObjectEnterContainer(bag, obj)\r\n    if string.find(string.lower(obj.getDescription()), string.lower(bag.getGMNotes()), 1, true) then\r\n        --tool.waitFor.DropIntoBox(bag, obj, shuffleContainer, dropTimer)\r\n    elseif string.find(string.lower(bag.getGMNotes()), 'trashcan', 1, true) then\r\n        tool.waitFor.DropIntoBox(bag, obj, TrashFunction, dropTimer)\r\n    end\r\nend\r\n--------------------------------------------------------------------------------\r\n--- SHUFFLE FUNCTION -----------------------------------------------------------\r\nfunction shuffleContainer(bag)\r\n    printToAll('Shuffling : '..bag.getName()..' Bag', 'Yellow')\r\n    bag.shuffle()\r\nend\r\n--------------------------------------------------------------------------------\r\n--- TRASH FUNCTION -------------------------------------------------------------\r\nfunction TrashFunction(TrashBag)\r\n    tool.processTrash(TrashBag)\r\nend\r\n\r\n--------------------------------------------------------------------------------\r\n--------------------------------------------------------------------------------\r\nreturn GlobalEvents\r\n\nend)\n__bundle_register(\"/_libs/TrashCan/TrashCan\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal TrashCan = {}\r\n--------------------------------------------------------------------------------\r\n-- Global Variabels\r\nlocal debug = require(\"/_libs/debug\")\r\nlocal zprint = debug.zprint\r\nlocal tool      = require(\"/_libs/TrashCan/TrashTools\")\r\n      tool.cast = require(\"/_libs/TrashCan/TrashCast\")\r\nlocal KIND = {Delete='Delete', SmallCard='Small', LargeCard='Large', Bag='Bag', ScriptZone='ScriptZone', SpecialCase='SpecialCase', Deck='Deck'}\r\n--------------------------------------------------------------------------------\r\n--- Function to Called by EVENT ------------------------------------------------\r\nfunction TrashCan.process(TrashBag)\r\n  runTrash(TrashBag)\r\nend\r\n--------------------------------------------------------------------------------\r\n--- ProcessBagContents(TrashBag)------------------------------------------------\r\nfunction runTrash(TrashBag)\r\n    local removedDeckList = removeDecksFormTrash(TrashBag, TrashBag.getData().ContainedObjects)\r\n    Wait.frames(function() ProcessBag(TrashBag, removedDeckList) end, 5) -- Wait a bit to ensure decks have spawned after being taken out of bag.\r\nend\r\n--------------------------------------------------------------------------------\r\n--- ProcessBag(TrashBag, removedDeckList) --------------------------------------\r\n--------------------------------------------------------------------------------\r\nfunction ProcessBag(TrashBag, removedDeckList)\r\n    local uniqueCast = UniqueCastLocations(TrashBag, removedDeckList)\r\n    for _, kind in pairs(KIND) do\r\n        if kind ~= 'Deck' then\r\n            uniqueCast = ProcessKind(TrashBag, kind, uniqueCast, removedDeckList)\r\n        end\r\n    end\r\nend\r\n--- ProcessKind(TrashBag, Kind, uniqueCast, removedDeckList) -------------------\r\nfunction ProcessKind(TrashBag, Kind, uniqueCast, removedDeckList)\r\n    --zprint(uniqueCast, 'uniqueCast')\r\n    local TrashContents = TrashBag.getObjects()\r\n    local idex = tool.takeObjects_reverseIndex(TrashContents)\r\n    for k,dex in ipairs(idex) do\r\n        local obj = TrashContents[dex+1]\r\n        if obj.tags[1] then\r\n            local id = tool.setIDs(obj.tags)\r\n            if id.discard then\r\n                if id.kind == Kind then\r\n                    for q,w in pairs(uniqueCast) do\r\n                        if q == id.id then\r\n                            moveObject(TrashBag.takeObject({index = dex}), TrashBag, uniqueCast[id.id], id)\r\n                            break\r\n                        end\r\n                    end\r\n                end\r\n            end\r\n        end\r\n    end\r\n\r\n    if (Kind == 'Small' or Kind == 'Large') then\r\n        for _, deck in ipairs(removedDeckList) do\r\n            TrashContents = deck.getObjects()\r\n            idex = tool.takeObjects_reverseIndex(TrashContents)\r\n            for k,dex in ipairs(idex) do\r\n                local obj = TrashContents[dex+1]\r\n                if obj.tags[1] then\r\n                    local id = tool.setIDs(obj.tags)\r\n                    if id.discard then\r\n                        if id.kind == Kind then\r\n                            for q,w in pairs(uniqueCast) do\r\n                                if q == id.id then\r\n                                    moveObject(deck.takeObject({index = dex}), TrashBag, uniqueCast[id.id], id)\r\n                                    break\r\n                                end\r\n                            end\r\n                        end\r\n                    end\r\n                end\r\n            end\r\n        end\r\n    end\r\n    return uniqueCast\r\nend\r\n\r\nfunction moveObject(obj, TrashBag, uniqueCastID, id)\r\n    obj.setPosition(tool.placeTopOrBot_ofObject(TrashBag,'top')+Vector(0,0.2,0))\r\n    obj.setPositionSmooth(tool.placeTopOrBot_ofObject(uniqueCastID.targetSource,'top')+Vector(0,uniqueCastID.Y,0)) --uniqueCastID.targetSource.getPosition()\r\n    uniqueCastID.Y = uniqueCastID.Y + obj.getBounds().size.y+0.2\r\n    Wait.condition(function() uniqueCastID.targetObj = Wait_AddCardtoDeck(obj, uniqueCastID) end, function() return not obj.isSmoothMoving() end)\r\nend\r\n\r\nfunction Wait_AddCardtoDeck(obj, uniqueCastID)--(card, discardZonePos, targetObj)\r\n    local discardPile = uniqueCastID.targetObj\r\n    if discardPile then\r\n        discardPile = discardPile.putObject(obj)\r\n    else\r\n        obj.setPosition(tool.placeTopOrBot_ofObject(uniqueCastID.targetSource,'top'))--+Vector(0,0.05,0))\r\n        --zprint(tool.placeTopOrBot_ofObject(uniqueCastID.targetSource,'top'))\r\n        discardPile = obj\r\n    end\r\n    return discardPile\r\nend\r\n--- UniqueCastLocations(TrashBag, removedDeckList) -----------------------------\r\n--- Build a list from trash and find the unique locations for each discard, then cast at that location and return found data.\r\n--- Loop though trash objects and find the \"DiscardMe_\" Tag.. and then extract the \"kind\" of discard type as well as the unique Identifyer (ID) of the discard (DiscardMe_Bag, ID_BlueBagTest)\r\nfunction UniqueCastLocations(TrashBag, removedDeckList)\r\n    local z = {}\r\n        for k,obj in ipairs(TrashBag.getObjects()) do\r\n            if obj.tags[1] then\r\n                local id = tool.setIDs(obj.tags)\r\n                if id.discard then\r\n                    z[id.id] = id.kind\r\n                end\r\n            end\r\n        end\r\n\r\n        for _, deck in ipairs (removedDeckList) do\r\n            for _, card in ipairs(deck.getObjects()) do\r\n                if card.tags[1] then\r\n                    local id = tool.setIDs(card.tags)\r\n                    if id.discard then\r\n                        z[id.id] = id.kind\r\n                    end\r\n                end\r\n            end\r\n        end\r\n\r\n        z = tool.cast.findContainer(z)\r\n    return z\r\nend\r\n--------------------------------------------------------------------------------\r\n--- removeDecksFormTrash(TrashBag) ---------------------------------------------\r\nfunction removeDecksFormTrash(TrashBag, TrashBag_ContentData)\r\n    local z = {}\r\n        local indexesToRemove = tool.takeObjects_reverseIndex(TrashBag_ContentData, {Name='Deck'})\r\n        for _,indexToRemove in ipairs (indexesToRemove) do\r\n            local o = TrashBag.takeObject({ index = indexToRemove })\r\n            o.setPosition(tool.placeTopOrBot_ofObject(TrashBag,'top')+Vector(0,-70,0))\r\n            o.setRotation(Vector(0,180,0))\r\n            o.setLock(true)\r\n            table.insert(z, o)\r\n        end\r\n    if z[1] then return z else return {} end\r\nend\r\n--------------------------------------------------------------------------------\r\n--------------------------------------------------------------------------------\r\nreturn TrashCan\r\n\nend)\n__bundle_register(\"/_libs/TrashCan/TrashCast\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal TrashCast = {}\r\n--------------------------------------------------------------------------------\r\n-- Global Variabels\r\nlocal ShowCast = true -- cast debug visial\r\nlocal zprint = require(\"/_libs/debug\").zprint\r\nlocal DiscardPlatforms = nil\r\nlocal YOffset = 1\r\n--local ustring = require(\"/_libs/StringUtils\")\r\nfunction setVariables()\r\n    if not DiscardPlatforms then\r\n        DiscardPlatforms = {}\r\n        DiscardPlatforms.DiscardType_Zone  = {size=Vector{1,1,1},   posOffset=Vector(0, 0, 0)}--, platforms=getObjectsWithTag('Discard_Zone')}\r\n        DiscardPlatforms.DiscardType_Bag   = {size=Vector(3,3,3),   posOffset=Vector(0, 0, 0)}--, platforms=getObjectsWithTag('Discard_Bag')}\r\n        DiscardPlatforms.DiscardType_Small = {size=Vector(2.5,1,4), posOffset=Vector(0, 0, 0)}--, platforms=getObjectsWithTag('Discard_Platform_Small')}\r\n        DiscardPlatforms.DiscardType_Large = {size=Vector(3,1,5),   posOffset=Vector(0, 0, 0)}--, platforms=getObjectsWithTag('Discard_Platform_Large')}\r\n    end\r\nend\r\n\r\n--------------------------------------------------------------------------------\r\n--- Main Function to Call ------------------------------------------------------\r\nfunction TrashCast.findContainer(data)\r\n    setVariables()\r\n    return CastByString(data)\r\nend\r\n--------------------------------------------------------------------------------\r\n--- Cast Code ------------------------------------------------------------------\r\nfunction CastByString(TrashIDList)\r\n    for id,kind in pairs(TrashIDList) do\r\n        local target = getObjectsWithAllTags({'DiscardTarget', id})\r\n        if target[1] then target=target[1] end\r\n        TrashIDList[id] = cast(target, DiscardPlatforms['DiscardType_'..kind], kind)\r\n    end\r\n    return TrashIDList\r\nend\r\n\r\nfunction cast(target, platformType, kind)\r\n    local size = Vector(0,0,0)\r\n        if string.lower(kind) == 'zone' then\r\n            size = target.getScale()\r\n        else\r\n            size = platformType.size\r\n        end\r\n\r\n    local zone = Physics.cast({ origin=target.getPosition() + platformType.posOffset,\r\n                                direction={0,1,0},\r\n                                type=3,\r\n                                max_distance=0,\r\n                                size=size,\r\n                                debug=ShowCast})\r\n    return ProcessCast(target, zone, kind)\r\nend\r\n\r\nfunction ProcessCast(target, zone, kind)\r\n    local z = {}\r\n    local noCDB = true -- no card, deck or bag at cast location\r\n        for k,found in pairs(zone) do\r\n            local obj = found.hit_object\r\n            if (obj.type == 'Card' or obj.type == 'Deck' or obj.type == 'Bag') then\r\n                z.targetObj = obj\r\n                noCDB = false\r\n            end\r\n            if obj == target then\r\n                z.targetSource = obj\r\n            end\r\n            --[[if noCDB then\r\n                z.target = target\r\n            end]]\r\n        end\r\n        z.Y=YOffset\r\n        z.kind=kind\r\n    return z\r\nend\r\n\r\nreturn TrashCast\r\n\nend)\n__bundle_register(\"/_libs/debug\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal debug = {}\r\n\r\nfunction debug.setDebugHotKeys()\r\n    addHotkey(\"dBug_PrintTags\",hot_PrintTags , false)\r\nend\r\n\r\nfunction hot_PrintTags(playerColor, object, pointerPosition, isKeyUp)\r\n    local objString = tostring(object)\r\n    local nameString = object.getName()\r\n    print('\\n'..objString)\r\n    if nameString == '' then\r\n        print(logString(object.getTags(), ' Tags : <No Name>'))\r\n    else\r\n        print(logString(object.getTags(), ' Tags : '..nameString))\r\n    end\r\nend\r\n\r\nfunction debug.zprint(var,title)\r\n    if (type(var) == \"table\") then\r\n        if title then\r\n            print(logString(var,'\\n-- '..title..' --'))\r\n        else\r\n            print(logString(var))\r\n        end\r\n    else\r\n        if title then print('-- '..title..' --') end\r\n        print(var)\r\n    end\r\nend\r\n\r\nfunction debug.zpDATA(table,key,title)\r\n    if title then\r\n        print('\\n-- '..title..' --')\r\n    end\r\n    for _, tbl in pairs(table) do\r\n        for k,v in pairs(tbl) do\r\n            if k == key then\r\n                print('  '..tostring(k)..' : '..v)\r\n            end\r\n        end\r\n    end\r\nend\r\n\r\nreturn debug\r\n\nend)\n__bundle_register(\"/_libs/TrashCan/TrashTools\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal TrashTools = {}\r\nlocal debug = require(\"/_libs/debug\")\r\nlocal zprint = debug.zprint\r\n\r\n--- setID from obj.getTags -----------------------------------------------------\r\nfunction TrashTools.setIDs(tagList)\r\n    local id = {}\r\n    for k,tag in pairs(tagList) do\r\n        if string.find(tag, 'DiscardMe_', 1, true) then\r\n            id.kind = tag:gsub('DiscardMe_', '')\r\n            id.discard = true\r\n        elseif string.find(tag, 'DeleteMe', 1, true) then\r\n            id.delete = true\r\n        elseif string.find(tag, 'ID_', 1, true) then\r\n            id.id = tag\r\n        end\r\n    end\r\n    return id\r\nend\r\n--[[\r\n--- setTrashIDs ----------------------------------------------------------------\r\nfunction TrashTools.setTrashIDs(tagList, kind)\r\n    local id = {}\r\n        id.tag = TrashTools.findTagString(tagList, 'DiscardMe_'..kind):gsub('DiscardMe_', '')\r\n    return id\r\nend\r\n]]\r\n\r\n--- posFromObject(obj,switch) - 'top', 'bot'------------------------------------\r\nfunction TrashTools.placeTopOrBot_ofObject(obj,switch)\r\n    if not switch then switch = 'top' end\r\n    if switch == 'top' then\r\n        return obj.getPosition() + Vector(0, obj.getBounds().size.y+0.01, 0)\r\n    elseif switch =='bot' then\r\n        return obj.getPosition() + Vector(0, -obj.getBounds().size.y-0.01, 0)\r\n    else\r\n        return Vector(0, 10, 0)\r\n    end\r\nend\r\n--- ReverseIndex ---------------------------------------------------------------\r\nfunction TrashTools.takeObjects_reverseIndex(ContainedObjects, switch)\r\n    --zprint(ContainedObjects,'ContainedObjects')\r\n    local z = {}\r\n        if ContainedObjects[1] then\r\n            local getdata = false; if ContainedObjects[1].Nickname ~= nil then getdata = true end\r\n\r\n            for i, obj in ipairs(ContainedObjects) do\r\n                local index = i; if getdata then index = index-1 else index = obj.index end\r\n                if switch then\r\n                    for key,find in pairs(switch) do\r\n                        if obj[key] == find then\r\n                            table.insert(z, index)\r\n                        end\r\n                    end\r\n                else\r\n                    table.insert(z, index)\r\n                end\r\n            end\r\n            table.sort(z, function(a,b) return a>b end)\r\n        end\r\n    return z\r\nend\r\n--- TagFound --- ---------------------------------------------------------------\r\nfunction TrashTools.tagFound(tags, keys, useFind) -- useFind BOOL : use == or use string.find()\r\n    if useFind then\r\n        for _, tag in pairs(tags) do\r\n            for _, key in pairs(keys) do\r\n                if string.find(string.lower(tag), string.lower(key), 1, true) then\r\n                    return true\r\n                end\r\n            end\r\n        end\r\n    else\r\n        for _, tag in pairs(tags) do\r\n            for _, key in pairs(keys) do\r\n                if string.lower(tag) == string.lower(key) then\r\n                    return true\r\n                end\r\n            end\r\n        end\r\n    end\r\n    return false\r\nend\r\n--- find and return Tag via a string(substring search --------------------------\r\nfunction TrashTools.findTagString(tagTable, str)\r\n    for k, line in pairs(tagTable) do\r\n        if string.find(string.lower(line), string.lower(str), 1, true) then\r\n            return line\r\n        end\r\n    end\r\nend\r\n--- Test Function\r\nfunction TrashTools.test()\r\n    printToAll('----=== REQUIRE IS WORKING ===----', 'Green')\r\nend\r\n\r\nreturn TrashTools\r\n\nend)\n__bundle_register(\"/_libs/WaitUtils\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal WaitUtils = {}\r\n\r\nlocal wait_ids ={}\r\n\r\nfunction WaitUtils.DropIntoBox(bag, obj, func, time) -- '0.8'\r\n    if wait_ids[bag] then Wait.stop(wait_ids[bag]) end\r\n    wait_ids[bag] = Wait.time(function() func(bag) end, time)\r\nend\r\n\r\nfunction WaitUtils.frames(func, time, ...)--(bag, obj, func, time) -- '0.8'\r\n    --if wait_ids[bag] then Wait.stop(wait_ids[bag]) end\r\n    --wait_ids[bag] = Wait.time(function() func(bag) end, time)\r\n    local args = {...}\r\n    Wait.frames(function() func(args) end, time)\r\nend\r\n\r\n--- Test Function\r\nfunction WaitUtils.test()\r\n    printToAll('----=== WaitUtils ===----', 'Orange')\r\nend\r\n\r\nreturn WaitUtils\r\n\nend)\n__bundle_register(\"/_libs/onModLoad\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal onModLoad = {}\r\n--------------------------------------------------------------------------------\r\n--- MEGA FREEZE -- (Freeze by tag \"MegaFreeze\", and Freeze by SetupZone) func('scriptzoneGUID', 'anyting')\r\n    function onModLoad.MegaFreeze(guid, switch)\r\n        -- Freeze Objects Tag with MegaFreeze\r\n        for _, obj in pairs(getObjectsWithTag('MegaFreeze')) do\r\n            if switch then\r\n                if obj.getDescription() == 'Set' then\r\n                    obj.interactable = false\r\n                end\r\n            else\r\n                obj.interactable = false\r\n            end\r\n        end\r\n\r\n        --Freeze Objects in SetUpZone\r\n        if not switch and guid then\r\n            for k,o in pairs(getObjectFromGUID(guid).getObjects()) do\r\n                o.interactable = false\r\n            end\r\n        end\r\n    end\r\n--------------------------------------------------------------------------------\r\n--- Fix Hand Zones - Fixe HandZone Height\r\n    function onModLoad.FixHandZones(yOffset)\r\n        local Y = yOffset\r\n        local playerList = Player.getAvailableColors()\r\n        for _, colour in ipairs(playerList) do\r\n            local pramsOLD = Player[colour].getHandTransform()\r\n            pramsNew = {position={pramsOLD.position.x, Y, pramsOLD.position.z}\r\n                       ,rotation={0,180,0}\r\n                       ,scale={15.50, 5.40, 0.82}\r\n                       }\r\n            Player[colour].setHandTransform(pramsNew, 1)\r\n        end\r\n    end\r\n--------------------------------------------------------------------------------\r\nreturn onModLoad\r\n\nend)\nreturn __bundle_require(\"__root\")",
+  "LuaScript": "-- Bundled by luabundle {\"version\":\"1.6.0\"}\nlocal __bundle_require, __bundle_loaded, __bundle_register, __bundle_modules = (function(superRequire)\n\tlocal loadingPlaceholder = {[{}] = true}\n\n\tlocal register\n\tlocal modules = {}\n\n\tlocal require\n\tlocal loaded = {}\n\n\tregister = function(name, body)\n\t\tif not modules[name] then\n\t\t\tmodules[name] = body\n\t\tend\n\tend\n\n\trequire = function(name)\n\t\tlocal loadedModule = loaded[name]\n\n\t\tif loadedModule then\n\t\t\tif loadedModule == loadingPlaceholder then\n\t\t\t\treturn nil\n\t\t\tend\n\t\telse\n\t\t\tif not modules[name] then\n\t\t\t\tif not superRequire then\n\t\t\t\t\tlocal identifier = type(name) == 'string' and '\\\"' .. name .. '\\\"' or tostring(name)\n\t\t\t\t\terror('Tried to require ' .. identifier .. ', but no such module has been registered')\n\t\t\t\telse\n\t\t\t\t\treturn superRequire(name)\n\t\t\t\tend\n\t\t\tend\n\n\t\t\tloaded[name] = loadingPlaceholder\n\t\t\tloadedModule = modules[name](require, loaded, register, modules)\n\t\t\tloaded[name] = loadedModule\n\t\tend\n\n\t\treturn loadedModule\n\tend\n\n\treturn require, loaded, register, modules\nend)(nil)\n__bundle_register(\"__root\", function(require, _LOADED, __bundle_register, __bundle_modules)\n----#include /ArkhamHorror/GlobalSystem\nlocal debug = require(\"/_libs/debug\")\r\n\r\nfunction onLoad()\r\n    debug.setDebugHotKeys()\r\n    \r\n    AllObjects = getAllObjects()\r\n    SetUpZone = getObjectFromGUID('d4e5c2').getObjects()\r\n    local onModLoad=require(\"/_libs/onModLoad\")\r\n          onModLoad.MegaFreeze('d4e5c2','TableOnly')\r\n          onModLoad.FixHandZones(10)\r\n\r\n    local GlobalEvents=require(\"/ArkhamHorror/GlobalEvents\")\r\nend\r\n\r\nfunction setGlobalVariables()\r\n    --GlobalVariables = returnSetUpObj('__(Variables) - Global') -- getObjectFromGUID('b1c381') --\r\n    --CastZone = returnSetUpObj('__(Script) - CastZone')\r\nend\r\n\n----#include /ArkhamHorror/GlobalSystem\nend)\n__bundle_register(\"/ArkhamHorror/GlobalEvents\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal tool = {}\r\n      tool.waitFor=require(\"/_libs/WaitUtils\")\r\n      tool.processTrash=require(\"/ArkhamHorror/TrashCan/TrashCan\").process\r\n\r\nlocal dropTimer = 0.8\r\n\r\nlocal GlobalEvents = {}\r\n--------------------------------------------------------------------------------\r\n--- onObjectEnter : CONTAINER --------------------------------------------------\r\nfunction onObjectEnterContainer(bag, obj)\r\n    if string.find(string.lower(obj.getDescription()), string.lower(bag.getGMNotes()), 1, true) then\r\n        --tool.waitFor.DropIntoBox(bag, obj, shuffleContainer, dropTimer)\r\n    elseif string.find(string.lower(bag.getGMNotes()), 'trashcan', 1, true) then\r\n        tool.waitFor.DropIntoBox(bag, obj, TrashFunction, dropTimer)\r\n    end\r\nend\r\n--------------------------------------------------------------------------------\r\n--- SHUFFLE FUNCTION -----------------------------------------------------------\r\nfunction shuffleContainer(bag)\r\n    printToAll('Shuffling : '..bag.getName()..' Bag', 'Yellow')\r\n    bag.shuffle()\r\nend\r\n--------------------------------------------------------------------------------\r\n--- TRASH FUNCTION -------------------------------------------------------------\r\nfunction TrashFunction(TrashBag)\r\n    tool.processTrash(TrashBag)\r\nend\r\n\r\n--------------------------------------------------------------------------------\r\n--------------------------------------------------------------------------------\r\nreturn GlobalEvents\r\n\nend)\n__bundle_register(\"/ArkhamHorror/TrashCan/TrashCan\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal TrashCan = {}\r\n--------------------------------------------------------------------------------\r\n-- Global Variabels\r\nlocal debug = require(\"/_libs/debug\")\r\nlocal zprint = debug.zprint\r\nlocal tool      = require(\"/ArkhamHorror/TrashCan/TrashTools\")\r\n      tool.cast = require(\"/ArkhamHorror/TrashCan/TrashCast\")\r\n      tool.specialCase = require(\"/ArkhamHorror/TrashCan/TrashSpecialCase\")\r\nlocal KIND = {Delete='Delete', SmallCard='Small', LargeCard='Large', Bag='Bag', ScriptZone='Zone', SpecialCase='SpecialCase', Deck='Deck'}\r\n--------------------------------------------------------------------------------\r\n--- Function to Called by EVENT ------------------------------------------------\r\nfunction TrashCan.process(TrashBag)\r\n  runTrash(TrashBag)\r\nend\r\n--------------------------------------------------------------------------------\r\n--- ProcessBagContents(TrashBag)------------------------------------------------\r\nfunction runTrash(TrashBag)\r\n    local removedDeckList = removeDecksFormTrash(TrashBag, TrashBag.getData().ContainedObjects)\r\n    Wait.frames(function() ProcessBag(TrashBag, removedDeckList) end, 5) -- Wait a bit to ensure decks have spawned after being taken out of bag.\r\nend\r\n--------------------------------------------------------------------------------\r\n--- ProcessBag(TrashBag, removedDeckList) --------------------------------------\r\n--------------------------------------------------------------------------------\r\nfunction ProcessBag(TrashBag, removedDeckList)\r\n    local uniqueCast = UniqueCastLocations(TrashBag, removedDeckList)\r\n    for _, kind in pairs(KIND) do\r\n        if kind ~= 'Deck' then\r\n            uniqueCast = ProcessKind(TrashBag, kind, uniqueCast, removedDeckList)\r\n        end\r\n    end\r\nend\r\n--- ProcessKind(TrashBag, Kind, uniqueCast, removedDeckList) -------------------\r\nfunction ProcessKind(TrashBag, Kind, uniqueCast, removedDeckList)\r\n    local TrashContents = TrashBag.getObjects()\r\n    local idex = tool.takeObjects_reverseIndex(TrashContents)\r\n    for k,dex in ipairs(idex) do\r\n        local obj = TrashContents[dex+1]\r\n        if obj.tags[1] then\r\n            local id = tool.setIDs(obj.tags)\r\n            if id.discard then\r\n                if id.kind == Kind then\r\n                    if id.kind == KIND.SpecialCase then\r\n                        moveSpecialCase(TrashBag.takeObject({index = dex}), TrashBag)\r\n                    else\r\n                        for q,w in pairs(uniqueCast) do\r\n                            if q == id.id then\r\n                                moveObject(TrashBag.takeObject({index = dex}), TrashBag, uniqueCast[id.id], id)\r\n                                break\r\n                            end\r\n                        end\r\n                    end\r\n                end\r\n            else\r\n                if id.delete then\r\n                    destroyObject(TrashBag.takeObject({index = dex}))\r\n                end\r\n            end\r\n        end\r\n    end\r\n\r\n    if (Kind == 'Small' or Kind == 'Large') then\r\n        for _, deck in ipairs(removedDeckList) do\r\n            TrashContents = deck.getObjects()\r\n            idex = tool.takeObjects_reverseIndex(TrashContents)\r\n            for k,dex in ipairs(idex) do\r\n                local obj = TrashContents[dex+1]\r\n                if obj.tags[1] then\r\n                    local id = tool.setIDs(obj.tags)\r\n                    if id.discard then\r\n                        if id.kind == Kind then\r\n                            for q,w in pairs(uniqueCast) do\r\n                                if q == id.id then\r\n                                    moveObject(deck.takeObject({index = dex}), TrashBag, uniqueCast[id.id], id)\r\n                                    break\r\n                                end\r\n                            end\r\n                        end\r\n                    end\r\n                end\r\n            end\r\n        end\r\n    end\r\n    return uniqueCast\r\nend\r\n\r\nfunction moveSpecialCase(obj, TrashBag)\r\n    tool.specialCase.Process(obj,TrashBag)\r\nend\r\n\r\nfunction moveObject(obj, TrashBag, uniqueCastID, id)\r\n    Wait.frames(function()\r\n        obj.setPosition(tool.placeTopOrBot_ofObject(TrashBag,'top')+Vector(0,0.2,0))\r\n        obj.setPositionSmooth(tool.placeTopOrBot_ofObject(uniqueCastID.targetSource,'top')+Vector(0,uniqueCastID.Y,0)) --uniqueCastID.targetSource.getPosition()\r\n        uniqueCastID.Y = uniqueCastID.Y + getSizeofObj(obj).y+0.2\r\n        Wait.condition(function() uniqueCastID.targetObj = Wait_AddCardtoDeck(obj, uniqueCastID) end, function() return not obj.isSmoothMoving() end)\r\n    end,1)\r\nend\r\n\r\nfunction getSizeofObj(obj)\r\n    local size = obj.getBoundsNormalized().size\r\n    return size\r\nend\r\n\r\nfunction Wait_AddCardtoDeck(obj, uniqueCastID)--(card, discardZonePos, targetObj)\r\n    local discardPile = uniqueCastID.targetObj\r\n    if discardPile then\r\n        discardPile = discardPile.putObject(obj)\r\n    else\r\n        obj.setPosition(tool.placeTopOrBot_ofObject(uniqueCastID.targetSource,'top'))--+Vector(0,0.05,0))\r\n        --zprint(tool.placeTopOrBot_ofObject(uniqueCastID.targetSource,'top'))\r\n        discardPile = obj\r\n    end\r\n    return discardPile\r\nend\r\n--- UniqueCastLocations(TrashBag, removedDeckList) -----------------------------\r\n--- Build a list from trash and find the unique locations for each discard, then cast at that location and return found data.\r\n--- Loop though trash objects and find the \"DiscardMe_\" Tag.. and then extract the \"kind\" of discard type as well as the unique Identifyer (ID) of the discard (DiscardMe_Bag, ID_BlueBagTest)\r\nfunction UniqueCastLocations(TrashBag, removedDeckList)\r\n    local z = {}\r\n        for k,obj in ipairs(TrashBag.getObjects()) do\r\n            if obj.tags[1] then\r\n                local id = tool.setIDs(obj.tags)\r\n                if id.discard then\r\n                    if id.kind ~= KIND.SpecialCase then\r\n                        z[id.id] = id.kind\r\n                    end\r\n                end\r\n            end\r\n        end\r\n\r\n        for _, deck in ipairs (removedDeckList) do\r\n            for _, card in ipairs(deck.getObjects()) do\r\n                if card.tags[1] then\r\n                    local id = tool.setIDs(card.tags)\r\n                    if id.discard then\r\n                        z[id.id] = id.kind\r\n                    end\r\n                end\r\n            end\r\n        end\r\n\r\n        z = tool.cast.findContainer(z)\r\n    return z\r\nend\r\n--------------------------------------------------------------------------------\r\n--- removeDecksFormTrash(TrashBag) ---------------------------------------------\r\nfunction removeDecksFormTrash(TrashBag, TrashBag_ContentData)\r\n    local z = {}\r\n        local indexesToRemove = tool.takeObjects_reverseIndex(TrashBag_ContentData, {Name='Deck'})\r\n        for _,indexToRemove in ipairs (indexesToRemove) do\r\n            local o = TrashBag.takeObject({ index = indexToRemove })\r\n            o.setPosition(tool.placeTopOrBot_ofObject(TrashBag,'top')+Vector(0,-70,0))\r\n            o.setRotation(Vector(0,180,0))\r\n            o.setLock(true)\r\n            table.insert(z, o)\r\n        end\r\n    if z[1] then return z else return {} end\r\nend\r\n--------------------------------------------------------------------------------\r\n--------------------------------------------------------------------------------\r\nreturn TrashCan\r\n\nend)\n__bundle_register(\"/ArkhamHorror/TrashCan/TrashSpecialCase\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal TrashSpecialCase = {}\r\nlocal tool      = require(\"/ArkhamHorror/TrashCan/TrashTools\")\r\nlocal resetY = 3\r\nlocal Cases = {}\r\n      Cases['NameTest'] = {Y=resetY}\r\n      Cases['DescTest'] = {Y=resetY}\r\n      Cases['GMTest']   = {Y=resetY}\r\n--------------------------------------------------------------------------------\r\nfunction TrashSpecialCase.Process(obj,TrashBag)\r\n    for key, v in pairs(Cases) do\r\n        if key == obj.getName() or key == obj.getDescription() or key == obj.getGMNotes() then\r\n            Cases[key].Process(obj,TrashBag,key)\r\n        end\r\n    end\r\n    for key, v in pairs(Cases) do\r\n        if key == obj.getName() or key == obj.getDescription() or key == obj.getGMNotes() then\r\n            Cases[key].Y = resetY\r\n        end\r\n    end\r\nend\r\n\r\nfunction getSizeofObj(obj)\r\n    local size = obj.getBoundsNormalized().size\r\n    return size\r\nend\r\n--******************************************************************************\r\n-- UNIQUE SPECALA CASE FUNCTIONS START HERE! ***********************************\r\n--******************************************************************************\r\nfunction Cases.NameTest.Process(obj,TrashBag,key)\r\n    local pos = Vector(-53.54, 1.42, 28.22)\r\n    local rot = Vector(0,0,180)\r\n    Wait.frames(function()\r\n        obj.setPosition(tool.placeTopOrBot_ofObject(TrashBag,'top')+Vector(0,0.2,0))\r\n        obj.setPositionSmooth(pos+Vector(0,Cases[key].Y,0))\r\n        obj.setRotationSmooth(rot)\r\n        Cases[key].Y = Cases[key].Y + getSizeofObj(obj).y + 0.2\r\n    end,1)\r\n    --uniqueCastID.Y = uniqueCastID.Y + getSizeofObj(obj).y+0.2\r\nend\r\n\r\nfunction Cases.DescTest.Process(obj,TrashBag,key)\r\n    local pos = Vector(-50.30, 0.82, 28.35)\r\n    local rot = Vector(0,90,0)\r\n    Wait.frames(function()\r\n        obj.setPosition(tool.placeTopOrBot_ofObject(TrashBag,'top')+Vector(0,0.2,0))\r\n        obj.setPositionSmooth(pos+Vector(0,Cases[key].Y,0))\r\n        obj.setRotationSmooth(rot)\r\n        Cases[key].Y = Cases[key].Y + getSizeofObj(obj).y + 0.2\r\n    end,1)\r\nend\r\n\r\nfunction Cases.GMTest.Process(obj,TrashBag,key)\r\n    local pos = Vector(-46.53, 1.68, 28.36)\r\n    local rot = Vector(0,180,180)\r\n    local scale = Vector(1.58, 4.30, 1.58)\r\n    Wait.frames(function()\r\n        obj.setPosition(tool.placeTopOrBot_ofObject(TrashBag,'top')+Vector(0,0.2,0))\r\n        obj.setPositionSmooth(pos+Vector(0,Cases[key].Y,0))\r\n        obj.setRotationSmooth(rot)\r\n        obj.setScale(scale)\r\n        Cases[key].Y = Cases[key].Y + getSizeofObj(obj).y + 0.2\r\n    end,1)\r\nend\r\n\r\nreturn TrashSpecialCase\r\n\nend)\n__bundle_register(\"/ArkhamHorror/TrashCan/TrashTools\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal TrashTools = {}\r\nlocal debug = require(\"/_libs/debug\")\r\nlocal zprint = debug.zprint\r\n\r\n--- setID from obj.getTags -----------------------------------------------------\r\nfunction TrashTools.setIDs(tagList)\r\n    local id = {}\r\n    for k,tag in pairs(tagList) do\r\n        if string.find(tag, 'DiscardMe_', 1, true) then\r\n            id.kind = tag:gsub('DiscardMe_', '')\r\n            id.discard = true\r\n        elseif string.find(tag, 'DeleteMe', 1, true) then\r\n            id.delete = true\r\n        elseif string.find(tag, 'ID_', 1, true) then\r\n            id.id = tag\r\n        end\r\n    end\r\n    return id\r\nend\r\n--[[\r\n--- setTrashIDs ----------------------------------------------------------------\r\nfunction TrashTools.setTrashIDs(tagList, kind)\r\n    local id = {}\r\n        id.tag = TrashTools.findTagString(tagList, 'DiscardMe_'..kind):gsub('DiscardMe_', '')\r\n    return id\r\nend\r\n]]\r\n\r\n--- posFromObject(obj,switch) - 'top', 'bot'------------------------------------\r\nfunction TrashTools.placeTopOrBot_ofObject(obj,switch)\r\n    if not switch then switch = 'top' end\r\n    if switch == 'top' then\r\n        return obj.getPosition() + Vector(0, obj.getBounds().size.y+0.01, 0)\r\n    elseif switch =='bot' then\r\n        return obj.getPosition() + Vector(0, -obj.getBounds().size.y-0.01, 0)\r\n    else\r\n        return Vector(0, 10, 0)\r\n    end\r\nend\r\n--- ReverseIndex ---------------------------------------------------------------\r\nfunction TrashTools.takeObjects_reverseIndex(ContainedObjects, switch)\r\n    --zprint(ContainedObjects,'ContainedObjects')\r\n    local z = {}\r\n        if ContainedObjects[1] then\r\n            local getdata = false; if ContainedObjects[1].Nickname ~= nil then getdata = true end\r\n\r\n            for i, obj in ipairs(ContainedObjects) do\r\n                local index = i; if getdata then index = index-1 else index = obj.index end\r\n                if switch then\r\n                    for key,find in pairs(switch) do\r\n                        if obj[key] == find then\r\n                            table.insert(z, index)\r\n                        end\r\n                    end\r\n                else\r\n                    table.insert(z, index)\r\n                end\r\n            end\r\n            table.sort(z, function(a,b) return a>b end)\r\n        end\r\n    return z\r\nend\r\n--- TagFound --- ---------------------------------------------------------------\r\nfunction TrashTools.tagFound(tags, keys, useFind) -- useFind BOOL : use == or use string.find()\r\n    if useFind then\r\n        for _, tag in pairs(tags) do\r\n            for _, key in pairs(keys) do\r\n                if string.find(string.lower(tag), string.lower(key), 1, true) then\r\n                    return true\r\n                end\r\n            end\r\n        end\r\n    else\r\n        for _, tag in pairs(tags) do\r\n            for _, key in pairs(keys) do\r\n                if string.lower(tag) == string.lower(key) then\r\n                    return true\r\n                end\r\n            end\r\n        end\r\n    end\r\n    return false\r\nend\r\n--- find and return Tag via a string(substring search --------------------------\r\nfunction TrashTools.findTagString(tagTable, str)\r\n    for k, line in pairs(tagTable) do\r\n        if string.find(string.lower(line), string.lower(str), 1, true) then\r\n            return line\r\n        end\r\n    end\r\nend\r\n--- find and return Tag via a string(substring search --------------------------\r\nfunction TrashTools.splitString(str, b1, b2)\r\n    local z = {}\r\n        if not str then\r\n            printToAll('splitString(str, sep, b1, b2) : Must Provide a string (at least)', 'Red')\r\n        else\r\n            -- split at NEW LINE\r\n            if not b1 and not b2 then\r\n                for s in str:gmatch(\"[^\\r\\n]+\") do\r\n                    table.insert(z, s)\r\n                end\r\n            else\r\n            -- split at SEPERATOR\r\n                if b1 and not b2 then\r\n                    if b1 == '' then b1 = ' ' end\r\n                    for s in string.gmatch(str, \"([^\"..'%'..b1..\"]+)\") do\r\n                        table.insert(z, s)\r\n                    end\r\n            -- split Between\r\n                elseif b1 and b2 then\r\n                    for s in string.gmatch(str, '%'..b1..'(.-)%'..b2) do\r\n                        table.insert(z, s)\r\n                    end\r\n                end\r\n            end\r\n        end\r\n    return z\r\nend\r\n\r\n--- Test Function\r\nfunction TrashTools.test()\r\n    printToAll('----=== REQUIRE IS WORKING ===----', 'Green')\r\nend\r\n\r\nreturn TrashTools\r\n\nend)\n__bundle_register(\"/_libs/debug\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal debug = {}\r\n\r\nfunction debug.setDebugHotKeys()\r\n    addHotkey(\"dBug_PrintTags\",hot_PrintTags , false)\r\nend\r\n\r\nfunction hot_PrintTags(playerColor, object, pointerPosition, isKeyUp)\r\n    local objString = tostring(object)\r\n    local nameString = object.getName()\r\n    print('\\n'..objString)\r\n    if nameString == '' then\r\n        print(logString(object.getTags(), ' Tags : <No Name>'))\r\n    else\r\n        print(logString(object.getTags(), ' Tags : '..nameString))\r\n    end\r\nend\r\n\r\nfunction debug.zprint(var,title)\r\n    if (type(var) == \"table\") then\r\n        if title then\r\n            print(logString(var,'\\n-- '..title..' --'))\r\n        else\r\n            print(logString(var))\r\n        end\r\n    else\r\n        if title then print('-- '..title..' --') end\r\n        print(var)\r\n    end\r\nend\r\n\r\nfunction debug.zpDATA(table,key,title)\r\n    if title then\r\n        print('\\n-- '..title..' --')\r\n    end\r\n    for _, tbl in pairs(table) do\r\n        for k,v in pairs(tbl) do\r\n            if k == key then\r\n                print('  '..tostring(k)..' : '..v)\r\n            end\r\n        end\r\n    end\r\nend\r\n\r\nreturn debug\r\n\nend)\n__bundle_register(\"/ArkhamHorror/TrashCan/TrashCast\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal TrashCast = {}\r\n--------------------------------------------------------------------------------\r\n-- Global Variabels\r\nlocal ShowCast = false -- cast debug visial\r\nlocal zprint = require(\"/_libs/debug\").zprint\r\nlocal DiscardPlatforms = nil\r\nlocal YOffset = 1\r\n--local ustring = require(\"/_libs/StringUtils\")\r\nfunction setVariables()\r\n    if not DiscardPlatforms then\r\n        DiscardPlatforms = {}\r\n        DiscardPlatforms.DiscardType_Zone  = {size=Vector{1,1,1},   posOffset=Vector(0, 0, 0)}--, platforms=getObjectsWithTag('Discard_Zone')}\r\n        DiscardPlatforms.DiscardType_Bag   = {size=Vector(3,3,3),   posOffset=Vector(0, 0, 0)}--, platforms=getObjectsWithTag('Discard_Bag')}\r\n        DiscardPlatforms.DiscardType_Small = {size=Vector(2.5,1,4), posOffset=Vector(0, 0, 0)}--, platforms=getObjectsWithTag('Discard_Platform_Small')}\r\n        DiscardPlatforms.DiscardType_Large = {size=Vector(3,1,5),   posOffset=Vector(0, 0, 0)}--, platforms=getObjectsWithTag('Discard_Platform_Large')}\r\n    end\r\nend\r\n\r\n--------------------------------------------------------------------------------\r\n--- Main Function to Call ------------------------------------------------------\r\nfunction TrashCast.findContainer(data)\r\n    setVariables()\r\n    return CastByString(data)\r\nend\r\n--------------------------------------------------------------------------------\r\n--- Cast Code ------------------------------------------------------------------\r\nfunction CastByString(TrashIDList)\r\n    --print('CastbyString')\r\n    for id,kind in pairs(TrashIDList) do\r\n        local target = getObjectsWithAllTags({'DiscardTarget', id})\r\n        if target[1] then target=target[1] end\r\n        TrashIDList[id] = cast(target, DiscardPlatforms['DiscardType_'..kind], kind)\r\n    end\r\n    return TrashIDList\r\nend\r\n\r\nfunction cast(target, platformType, kind)\r\n    local size = Vector(0,0,0)\r\n        if string.lower(kind) == 'zone' then\r\n            size = target.getScale()\r\n        else\r\n            size = platformType.size\r\n        end\r\n\r\n    local zone = Physics.cast({ origin=target.getPosition() + platformType.posOffset,\r\n                                direction={0,1,0},\r\n                                type=3,\r\n                                max_distance=0,\r\n                                size=size,\r\n                                debug=ShowCast})\r\n    return ProcessCast(target, zone, kind)\r\nend\r\n\r\nfunction ProcessCast(target, zone, kind)\r\n    local z = {}\r\n    local noCDB = true -- no card, deck or bag at cast location\r\n        for k,found in pairs(zone) do\r\n            local obj = found.hit_object\r\n            if (obj.type == 'Card' or obj.type == 'Deck' or obj.type == 'Bag') then\r\n                z.targetObj = obj\r\n                noCDB = false\r\n            end\r\n            if obj == target then\r\n                z.targetSource = obj\r\n            end\r\n            if target.type == \"Scripting\" then -- if string.find(tostring(target), 'ScriptingTrigger', 1, true) then\r\n                z.targetSource = target\r\n            end\r\n        end\r\n        z.Y=YOffset\r\n        z.kind=kind\r\n    return z\r\nend\r\n\r\nreturn TrashCast\r\n\nend)\n__bundle_register(\"/_libs/WaitUtils\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal WaitUtils = {}\r\n\r\nlocal wait_ids ={}\r\n\r\nfunction WaitUtils.DropIntoBox(bag, obj, func, time) -- '0.8'\r\n    if wait_ids[bag] then Wait.stop(wait_ids[bag]) end\r\n    wait_ids[bag] = Wait.time(function() func(bag) end, time)\r\nend\r\n\r\nfunction WaitUtils.frames(func, time, ...)--(bag, obj, func, time) -- '0.8'\r\n    --if wait_ids[bag] then Wait.stop(wait_ids[bag]) end\r\n    --wait_ids[bag] = Wait.time(function() func(bag) end, time)\r\n    local args = {...}\r\n    Wait.frames(function() func(args) end, time)\r\nend\r\n\r\n--- Test Function\r\nfunction WaitUtils.test()\r\n    printToAll('----=== WaitUtils ===----', 'Orange')\r\nend\r\n\r\nreturn WaitUtils\r\n\nend)\n__bundle_register(\"/_libs/onModLoad\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal onModLoad = {}\r\n--------------------------------------------------------------------------------\r\n--- MEGA FREEZE -- (Freeze by tag \"MegaFreeze\", and Freeze by SetupZone) func('scriptzoneGUID', 'anyting')\r\n    function onModLoad.MegaFreeze(guid, switch)\r\n        -- Freeze Objects Tag with MegaFreeze\r\n        for _, obj in pairs(getObjectsWithTag('MegaFreeze')) do\r\n            if switch then\r\n                if obj.getDescription() == 'Set' then\r\n                    obj.interactable = false\r\n                end\r\n            else\r\n                obj.interactable = false\r\n            end\r\n        end\r\n\r\n        --Freeze Objects in SetUpZone\r\n        if not switch and guid then\r\n            for k,o in pairs(getObjectFromGUID(guid).getObjects()) do\r\n                o.interactable = false\r\n            end\r\n        end\r\n    end\r\n--------------------------------------------------------------------------------\r\n--- Fix Hand Zones - Fixe HandZone Height\r\n    function onModLoad.FixHandZones(yOffset)\r\n        local Y = yOffset\r\n        local playerList = Player.getAvailableColors()\r\n        for _, colour in ipairs(playerList) do\r\n            local pramsOLD = Player[colour].getHandTransform()\r\n            pramsNew = {position={pramsOLD.position.x, Y, pramsOLD.position.z}\r\n                       ,rotation={0,180,0}\r\n                       ,scale={15.50, 5.40, 0.82}\r\n                       }\r\n            Player[colour].setHandTransform(pramsNew, 1)\r\n        end\r\n    end\r\n--------------------------------------------------------------------------------\r\nreturn onModLoad\r\n\nend)\nreturn __bundle_require(\"__root\")",
   "LuaScriptState": "",
   "XmlUI": "<!-- Xml UI. See documentation: https://api.tabletopsimulator.com/ui/introUI/ -->",
   "SnapPoints": [
@@ -933,7 +933,7 @@
         "posZ": 99.13288,
         "rotX": -2.4133813E-05,
         "rotY": 359.893219,
-        "rotZ": 6.3006737E-06,
+        "rotZ": 6.300679E-06,
         "scaleX": 1.2,
         "scaleY": 1.2,
         "scaleZ": 1.2
@@ -992,7 +992,7 @@
       "Description": "MegaFreeze",
       "GMNotes": "",
       "ColorDiffuse": {
-        "r": 0.265701562,
+        "r": 0.265701473,
         "g": 0.4622566,
         "b": 0.46542573
       },
@@ -1218,11 +1218,11 @@
       "Name": "Bag",
       "Transform": {
         "posX": -21.3299923,
-        "posY": 0.71360606,
+        "posY": 0.713606,
         "posZ": 28.690012,
-        "rotX": -6.9354553E-07,
-        "rotY": -0.004668441,
-        "rotZ": 3.5735377E-06,
+        "rotX": -1.55232215E-06,
+        "rotY": -0.00466829445,
+        "rotZ": 3.56523515E-06,
         "scaleX": 0.575001061,
         "scaleY": 0.575001061,
         "scaleZ": 0.575001061
@@ -1512,7 +1512,7 @@
       "Description": "",
       "GMNotes": "Goo",
       "ColorDiffuse": {
-        "r": 0.185199261,
+        "r": 0.185199171,
         "g": 1.0,
         "b": 0.0
       },
@@ -7166,11 +7166,11 @@
       "Name": "Bag",
       "Transform": {
         "posX": -28.7600079,
-        "posY": 0.713605344,
+        "posY": 0.713605762,
         "posZ": 34.28,
-        "rotX": -6.38201243E-07,
+        "rotX": -6.398199E-07,
         "rotY": 359.9869,
-        "rotZ": 4.03548756E-06,
+        "rotZ": 4.46237436E-06,
         "scaleX": 0.575001061,
         "scaleY": 0.575001061,
         "scaleZ": 0.575001061
@@ -7333,10 +7333,10 @@
       "Name": "Bag",
       "Transform": {
         "posX": -28.7600155,
-        "posY": 0.713605642,
+        "posY": 0.7136056,
         "posZ": 28.69,
         "rotX": -2.12045819E-07,
-        "rotY": 0.007893204,
+        "rotY": 0.007893197,
         "rotZ": 3.918673E-06,
         "scaleX": 0.575001061,
         "scaleY": 0.575001061,
@@ -8185,7 +8185,7 @@
       "Name": "Bag",
       "Transform": {
         "posX": -33.7700043,
-        "posY": 0.5693397,
+        "posY": 0.5693297,
         "posZ": 31.3464222,
         "rotX": -1.189277E-05,
         "rotY": -0.0008507987,
@@ -17861,7 +17861,7 @@
         "posY": -5.721769,
         "posZ": 174.6095,
         "rotX": 359.8968,
-        "rotY": 0.00179474044,
+        "rotY": 0.00179473916,
         "rotZ": -7.635158E-06,
         "scaleX": 3.44999743,
         "scaleY": 3.44999743,
@@ -17941,7 +17941,7 @@
         "posY": -5.721769,
         "posZ": 152.375061,
         "rotX": 359.8968,
-        "rotY": 0.00179474,
+        "rotY": 0.0017947387,
         "rotZ": -7.635158E-06,
         "scaleX": 3.44999743,
         "scaleY": 3.44999743,
@@ -18018,7 +18018,7 @@
       "Name": "Bag",
       "Transform": {
         "posX": -37.3978424,
-        "posY": 0.6625944,
+        "posY": 0.662592947,
         "posZ": 30.7125015,
         "rotX": -8.47104559E-07,
         "rotY": 2.939516E-05,
@@ -18031,9 +18031,9 @@
       "Description": "",
       "GMNotes": "scriptCastZone\n[bag]\n{Discard_Investigator Graveyard}",
       "ColorDiffuse": {
-        "r": 0.429105669,
-        "g": 0.429105669,
-        "b": 0.429105669
+        "r": 0.42910558,
+        "g": 0.42910558,
+        "b": 0.42910558
       },
       "LayoutGroupSortIndex": 0,
       "Value": 0,
@@ -18077,7 +18077,7 @@
       "Description": "MegaFreeze",
       "GMNotes": "",
       "ColorDiffuse": {
-        "r": 0.265709519,
+        "r": 0.26570943,
         "g": 0.4622566,
         "b": 0.46542573
       },
@@ -18130,8 +18130,8 @@
       "GMNotes": "",
       "ColorDiffuse": {
         "r": 1.0,
-        "g": 0.343210965,
-        "b": 0.188590914
+        "g": 0.343210876,
+        "b": 0.188590825
       },
       "LayoutGroupSortIndex": 0,
       "Value": 0,
@@ -18181,7 +18181,7 @@
       "Description": "MegaFreeze",
       "GMNotes": "",
       "ColorDiffuse": {
-        "r": 0.09405983,
+        "r": 0.09405974,
         "g": 0.5921568,
         "b": 0.8
       },
@@ -19208,11 +19208,11 @@
       "Name": "Die_8",
       "Transform": {
         "posX": -26.4755783,
-        "posY": 1.44658756,
-        "posZ": 26.6715279,
-        "rotX": 326.263763,
-        "rotY": 286.4292,
-        "rotZ": 89.99991,
+        "posY": 1.44658935,
+        "posZ": 26.671526,
+        "rotX": 326.263824,
+        "rotY": 286.42926,
+        "rotZ": 89.9999161,
         "scaleX": 1.84999931,
         "scaleY": 1.84999931,
         "scaleZ": 1.84999931
@@ -19315,11 +19315,11 @@
       "Name": "Custom_Token",
       "Transform": {
         "posX": -79.69631,
-        "posY": 0.980007768,
-        "posZ": 5.623901,
-        "rotX": 4.70886675E-07,
-        "rotY": 178.495544,
-        "rotZ": -2.10490252E-05,
+        "posY": 0.9800079,
+        "posZ": 5.623902,
+        "rotX": 2.85731517E-06,
+        "rotY": 178.495636,
+        "rotZ": -1.96588426E-05,
         "scaleX": 0.7483102,
         "scaleY": 1.0,
         "scaleZ": 0.7483102
@@ -20397,7 +20397,7 @@
         "posY": 1.01999974,
         "posZ": 27.8501415,
         "rotX": 0.119319379,
-        "rotY": 1.5696156E-05,
+        "rotY": 1.56962342E-05,
         "rotZ": 0.07973546,
         "scaleX": 0.710175,
         "scaleY": 2.66637731,
@@ -21725,9 +21725,9 @@
         "posX": 78.75501,
         "posY": 2.076501,
         "posZ": 16.2468681,
-        "rotX": -3.03756065E-06,
-        "rotY": 0.0107612805,
-        "rotZ": -2.82304541E-07,
+        "rotX": -3.57486988E-06,
+        "rotY": 0.0107612787,
+        "rotZ": 1.310488E-06,
         "scaleX": 1.0,
         "scaleY": 1.0,
         "scaleZ": 1.0
@@ -21766,11 +21766,11 @@
       "Name": "Custom_Model_Bag",
       "Transform": {
         "posX": 74.25,
-        "posY": 2.33535147,
-        "posZ": 3.25009441,
-        "rotX": 9.794121E-06,
+        "posY": 2.33535123,
+        "posZ": 3.25009513,
+        "rotX": 1.10076428E-07,
         "rotY": 179.99939,
-        "rotZ": -4.16875565E-07,
+        "rotZ": 4.402075E-07,
         "scaleX": 2.0,
         "scaleY": 2.0,
         "scaleZ": 2.0
@@ -21826,7 +21826,7 @@
         "posZ": 18.362278,
         "rotX": -9.989881E-06,
         "rotY": 180.014236,
-        "rotZ": -2.5918951E-05,
+        "rotZ": -2.59189619E-05,
         "scaleX": 0.336068362,
         "scaleY": 0.499330342,
         "scaleZ": 0.5182024
@@ -21861,7 +21861,6 @@
       },
       "LuaScript": "function onload()\r\n    MakeButtons()\r\n-- Run on Load for Testing\r\nend\r\n\r\nfunction SplitString(string, dem)\r\n    local before, after = string.match(string, \"(.*)%\"..dem..\"(.*)\")\r\n    local z = {name=name, before=before, after=after}\r\n    return z\r\nend\r\n\r\n-- Add All the Changes in here!\r\nfunction ChangeStuff(c)\r\n    local name = c.getName()\r\n    local description = c.getDescription()\r\n    local gmNote = c.getGMNotes()\r\n    c.use_grid = true\r\n    c.tooltip = false\r\n\r\n    local str = ''\r\n    local n = ''\r\n    if string.find(name, 'Southside') then\r\n        c.setName('Southside Locations')\r\n        str = string.gsub(c.getName(), \" Locations\", \"\")\r\n        c.setDescription('')\r\n        c.setGMNotes('')\r\n        c.setTags({'ID_Southside','DiscardMe_Large'})\r\n\r\n    elseif string.find(name, 'Uptown') then\r\n        c.setName('Uptown Locations')\r\n        str = string.gsub(c.getName(), \" Locations\", \"\")\r\n        c.setDescription('')\r\n        c.setGMNotes('')\r\n        c.setTags({'ID_Uptown','DiscardMe_Large'})\r\n\r\n    elseif string.find(name, 'French') then\r\n        c.setName('French Hill Locations')\r\n        str = string.gsub(c.getName(), \" Locations\", \"\")\r\n        c.setDescription('')\r\n        c.setGMNotes('')\r\n        c.setTags({'ID_FrenchHill','DiscardMe_Large'})\r\n\r\n    elseif string.find(name, 'Miskatonic University') then\r\n        c.setName('Miskatonic University Locations')\r\n        str = string.gsub(c.getName(), \" Locations\", \"\")\r\n        c.setDescription('')\r\n        c.setGMNotes('')\r\n        c.setTags({'ID_MiskatonicUniversity','DiscardMe_Large'})\r\n\r\n    elseif string.find(name, 'Rivertown') then\r\n        c.setName('Rivertown Locations')\r\n        str = string.gsub(c.getName(), \" Locations\", \"\")\r\n        c.setDescription('')\r\n        c.setGMNotes('')\r\n        c.setTags({'ID_Rivertown','DiscardMe_Large'})\r\n\r\n    elseif string.find(name, 'Merchant District') then\r\n        c.setName('Merchant District Locations')\r\n        str = string.gsub(c.getName(), \" Locations\", \"\")\r\n        c.setDescription('')\r\n        c.setGMNotes('')\r\n        c.setTags({'ID_MerchantDistrict','DiscardMe_Large'})\r\n\r\n    elseif string.find(name, 'Easttown') then\r\n        c.setName('Easttown Locations')\r\n        str = string.gsub(c.getName(), \" Locations\", \"\")\r\n        c.setDescription('')\r\n        c.setGMNotes('')\r\n        c.setTags({'ID_Easttown','DiscardMe_Large'})\r\n\r\n    elseif string.find(name, 'Downtown') then\r\n        c.setName('Downtown Locations')\r\n        str = string.gsub(c.getName(), \" Locations\", \"\")\r\n        c.setDescription('')\r\n        c.setGMNotes('')\r\n        c.setTags({'ID_Downtown','DiscardMe_Large'})\r\n\r\n    elseif string.find(name, 'Northside') then\r\n        c.setName('Northside Locations')\r\n        str = string.gsub(c.getName(), \" Locations\", \"\")\r\n        c.setDescription('')\r\n        c.setGMNotes('')\r\n        c.setTags({'ID_Northside','DiscardMe_Large'})\r\n\r\n-- START SMALL CARDS -----------------------------------------------------------\r\n    elseif string.find(description, 'Common') then\r\n        n = string.gsub(name, '_', ' ')\r\n        c.setName(n)\r\n        c.setDescription('')\r\n        c.setGMNotes('')\r\n        c.setTags({'ID_CommonItem','DiscardMe_Small'})\r\n\r\n    elseif string.find(description, 'Spell') then\r\n        n = string.gsub(name, '_', ' ')\r\n        c.setName(n)\r\n        c.setDescription('')\r\n        c.setGMNotes('')\r\n        c.setTags({'ID_Spell','DiscardMe_Small'})\r\n\r\n    elseif string.find(description, 'Unique') then\r\n        n = string.gsub(name, '_', ' ')\r\n        c.setName(n)\r\n        c.setDescription('')\r\n        c.setGMNotes('')\r\n        c.setTags({'ID_UniqueItem','DiscardMe_Small'})\r\n\r\n    elseif string.find(description, 'Skill') then\r\n        n = string.gsub(name, '_', ' ')\r\n        c.setName(n)\r\n        c.setDescription('')\r\n        c.setGMNotes('')\r\n        c.setTags({'ID_Skill','DiscardMe_Small'})\r\n\r\n    elseif string.find(description, 'Ally') then\r\n        n = string.gsub(name, \"_%(Allies%)\", \"\")\r\n        --c.addTag('Trash_')\r\n        c.setName(n..' (Ally)')\r\n        c.setDescription('')\r\n        c.setGMNotes('')\r\n        c.setTags({'ID_Ally','DiscardMe_Small'})\r\n    end---END EDIT IF STATMENT\r\nend\r\n\r\nfunction b_function()\r\n    local func_findDeck = function(o) return o.tag==\"Deck\" end\r\n    local deckList = findInRadiusBy(self.getPosition(), 7.2, func_findDeck)\r\n    if #deckList == 0 then\r\n        broadcastToAll(\"ERROR: No deck found on device.\", {0.9,0.2,0.2})\r\n    else\r\n        --print('GO!')\r\n        self.clearButtons()\r\n        spawnAllCards(deckList[1])\r\n    end\r\nend\r\n\r\nfunction spawnAllCards(deck)\r\n    function spawnAllCards_routine()\r\n        deck.setLock(true)\r\n        spawnedCardList = {}\r\n        local pos = deck.getPosition()\r\n        pos.y = pos.y + 1.75\r\n        pos.y = pos.y + 0.2 * #deck.getObjects()\r\n        for _ in ipairs(deck.getObjects()) do\r\n            local drawnCard = deck.takeObject({\r\n                position=pos,\r\n                callback=\"spawnAllCards_callback\",\r\n                callback_owner=self\r\n            })\r\n            ChangeStuff(drawnCard)\r\n            --drawnCard.setLock(true)\r\n            --drawnCard.setDescription(self.getDescription())\r\n            pos.y = pos.y - 0.2\r\n            coroutine.yield(0)\r\n        end\r\n\r\n        wait(2)\r\n\r\n        spawnedCardList = reverseTable(spawnedCardList)\r\n        for _, card in ipairs(spawnedCardList) do\r\n            card.setLock(false)\r\n            coroutine.yield(0)\r\n        end\r\n\r\n        MakeButtons()\r\n        return 1\r\n    end\r\n    startLuaCoroutine(self, 'spawnAllCards_routine')\r\nend\r\n\r\n--Callback, assigns each card to a table\r\nfunction spawnAllCards_callback(card)\r\n    table.insert(spawnedCardList, card)\r\nend\r\n\r\n--Coroutine delay, in seconds\r\nfunction wait(time)\r\n    local start = os.time()\r\n    repeat coroutine.yield(0) until os.time() > start + time\r\nend\r\n\r\n--Reverses a table\r\nfunction reverseTable(t)\r\n    local reversedTable = {}\r\n    local itemCount = #t\r\n    for k, v in ipairs(t) do\r\n        reversedTable[itemCount + 1 - k] = v\r\n    end\r\n    return reversedTable\r\nend\r\n\r\n--Finds objects in radius of a position, accepts optional filtering function\r\nfunction findInRadiusBy(pos, radius, func, debug)\r\n    local radius = (radius or 1)\r\n    local objList = Physics.cast({\r\n        origin=pos, direction={0,1,0}, type=3, size={radius,radius,radius},\r\n        max_distance=0, debug=true--(debug or false)\r\n    })\r\n\r\n    local refinedList = {}\r\n    for _, obj in ipairs(objList) do\r\n        if func == nil then\r\n            table.insert(refinedList, obj.hit_object)\r\n        else\r\n            if func(obj.hit_object) then\r\n                table.insert(refinedList, obj.hit_object)\r\n            end\r\n        end\r\n    end\r\n\r\n    return refinedList\r\nend\r\n\r\nfunction MakeButtons()\r\n    self.createButton({\r\n        label=\"Fix Arkham Decks\", tooltip=\"Copy Description to Cards\",\r\n        click_function=\"b_function\", function_owner=self,\r\n        position={0,0.6,9.5}, rotation={0,0,0}, height=450, width=2500,\r\n        font_size=250, scale={2.5,2.5,2.5}--, color={0,0,0}, font_color={1,1,1}\r\n    })\r\nend",
       "LuaScriptState": "",
-      "XmlUI": "",
       "AttachedSnapPoints": [
         {
           "Position": {
@@ -21884,9 +21883,9 @@
         "posX": 87.91374,
         "posY": 2.88434553,
         "posZ": -5.953996,
-        "rotX": 1.351778E-06,
-        "rotY": 0.5354678,
-        "rotZ": -1.37270717E-06,
+        "rotX": -1.553998E-08,
+        "rotY": 0.535467565,
+        "rotZ": -1.51324844E-06,
         "scaleX": 2.99999833,
         "scaleY": 2.99999833,
         "scaleZ": 2.99999833
@@ -21923,10 +21922,10 @@
       "Transform": {
         "posX": 84.6830444,
         "posY": 2.884346,
-        "posZ": -0.7673749,
-        "rotX": -4.43972976E-06,
-        "rotY": 2.432157,
-        "rotZ": 5.4897E-07,
+        "posZ": -0.7673748,
+        "rotX": 3.530181E-06,
+        "rotY": 2.43215632,
+        "rotZ": 5.54215262E-07,
         "scaleX": 2.99999833,
         "scaleY": 2.99999833,
         "scaleZ": 2.99999833
@@ -21936,7 +21935,7 @@
       "GMNotes": "",
       "ColorDiffuse": {
         "r": 0.0,
-        "g": 0.1236726,
+        "g": 0.123672508,
         "b": 1.0
       },
       "LayoutGroupSortIndex": 0,
@@ -21964,9 +21963,9 @@
         "posX": 81.91212,
         "posY": 3.06734347,
         "posZ": -4.344756,
-        "rotX": -4.76695641E-06,
-        "rotY": 0.04484463,
-        "rotZ": 5.33471052E-07,
+        "rotX": -6.940487E-06,
+        "rotY": 0.0448166169,
+        "rotZ": -4.6696934E-07,
         "scaleX": 3.99999619,
         "scaleY": 3.99999619,
         "scaleZ": 3.99999619
@@ -22002,11 +22001,11 @@
       "Name": "go_game_piece_white",
       "Transform": {
         "posX": 67.64831,
-        "posY": 3.06734538,
+        "posY": 3.06734562,
         "posZ": 30.4693069,
-        "rotX": -2.028814E-06,
+        "rotX": -2.10564326E-06,
         "rotY": 359.9623,
-        "rotZ": -1.175107E-09,
+        "rotZ": -4.24527059E-07,
         "scaleX": 3.99999619,
         "scaleY": 3.99999619,
         "scaleZ": 3.99999619
@@ -22015,7 +22014,7 @@
       "Description": "",
       "GMNotes": "",
       "ColorDiffuse": {
-        "r": 0.118572496,
+        "r": 0.118572406,
         "g": 1.0,
         "b": 0.0
       },
@@ -22042,11 +22041,11 @@
       "Name": "Infinite_Bag",
       "Transform": {
         "posX": -94.99015,
-        "posY": 0.867678344,
+        "posY": 0.867678463,
         "posZ": 21.6325626,
-        "rotX": -3.38755217E-06,
+        "rotX": -3.7495995E-06,
         "rotY": 359.947174,
-        "rotZ": 2.00208578E-05,
+        "rotZ": 2.00273644E-05,
         "scaleX": 0.725000262,
         "scaleY": 0.725000262,
         "scaleZ": 0.725000262
@@ -22140,9 +22139,9 @@
         "posX": -94.99052,
         "posY": 0.8676784,
         "posZ": 19.7504978,
-        "rotX": -3.38276641E-06,
-        "rotY": -0.000855446851,
-        "rotZ": 1.9554891E-05,
+        "rotX": -3.30978037E-06,
+        "rotY": -0.000855533464,
+        "rotZ": 1.936612E-05,
         "scaleX": 0.725000262,
         "scaleY": 0.725000262,
         "scaleZ": 0.725000262
@@ -22236,9 +22235,9 @@
         "posX": -94.99052,
         "posY": 0.867678165,
         "posZ": 17.8695183,
-        "rotX": -3.38811151E-06,
+        "rotX": -3.446476E-06,
         "rotY": 359.973969,
-        "rotZ": 1.99492461E-05,
+        "rotZ": 1.97834142E-05,
         "scaleX": 0.725000262,
         "scaleY": 0.725000262,
         "scaleZ": 0.725000262
@@ -22328,11 +22327,11 @@
       "Name": "Infinite_Bag",
       "Transform": {
         "posX": -94.9905,
-        "posY": 0.8676781,
+        "posY": 0.867678046,
         "posZ": 15.9885015,
-        "rotX": -3.6930785E-06,
-        "rotY": 0.0286862049,
-        "rotZ": 1.99326823E-05,
+        "rotX": -3.68550059E-06,
+        "rotY": 0.0286861118,
+        "rotZ": 2.013873E-05,
         "scaleX": 0.725000262,
         "scaleY": 0.725000262,
         "scaleZ": 0.725000262
@@ -22434,9 +22433,9 @@
         "posX": 93.05967,
         "posY": 2.88434553,
         "posZ": -5.93697453,
-        "rotX": 1.99585344E-08,
+        "rotX": -7.251378E-06,
         "rotY": 359.985474,
-        "rotZ": -5.562844E-07,
+        "rotZ": -4.8528625E-07,
         "scaleX": 2.99999833,
         "scaleY": 2.99999833,
         "scaleZ": 2.99999833
@@ -22561,12 +22560,12 @@
       "GUID": "9c4d00",
       "Name": "Custom_Token",
       "Transform": {
-        "posX": -65.12296,
-        "posY": 1.10095966,
-        "posZ": 21.0285015,
-        "rotX": -0.000161395525,
-        "rotY": 179.976837,
-        "rotZ": 180.009644,
+        "posX": -65.12275,
+        "posY": 1.10081017,
+        "posZ": 21.0288582,
+        "rotX": 359.994049,
+        "rotY": 179.978821,
+        "rotZ": 180.019943,
         "scaleX": 0.61,
         "scaleY": 1.0,
         "scaleZ": 0.61
@@ -22629,7 +22628,7 @@
       "ColorDiffuse": {
         "r": 1.0,
         "g": 0.560566366,
-        "b": 0.305872351
+        "b": 0.305872262
       },
       "LayoutGroupSortIndex": 0,
       "Value": 0,
@@ -22704,11 +22703,11 @@
       "Name": "Infinite_Bag",
       "Transform": {
         "posX": -94.32453,
-        "posY": 0.8630038,
+        "posY": 0.86300385,
         "posZ": 26.5580177,
-        "rotX": -3.68913152E-06,
+        "rotX": -3.32514355E-06,
         "rotY": 359.942169,
-        "rotZ": 2.05053148E-05,
+        "rotZ": 2.0311867E-05,
         "scaleX": 1.0,
         "scaleY": 1.0,
         "scaleZ": 1.0
@@ -56602,10 +56601,10 @@
       "Name": "Custom_Dice",
       "Transform": {
         "posX": -23.6064,
-        "posY": 1.15020084,
+        "posY": 1.15021169,
         "posZ": 33.3377,
         "rotX": 90.0,
-        "rotY": 0.000942319,
+        "rotY": 0.0009541286,
         "rotZ": 0.0,
         "scaleX": 1.0,
         "scaleY": 1.0,
@@ -56863,9 +56862,9 @@
             "z": 1.97561359
           },
           "Rotation": {
-            "x": 0.000216873857,
+            "x": 0.0002168739,
             "y": 359.976868,
-            "z": 5.5958848E-05
+            "z": 5.59588661E-05
           }
         },
         {
@@ -56875,7 +56874,7 @@
             "z": 1.96346533
           },
           "Rotation": {
-            "x": 0.000213462656,
+            "x": 0.0002134627,
             "y": 359.975861,
             "z": 7.20330645E-05
           }
@@ -56911,7 +56910,7 @@
             "z": 2.71305776
           },
           "Rotation": {
-            "x": -0.000100741163,
+            "x": -0.000100741185,
             "y": 359.969818,
             "z": 2.17130855E-05
           }
@@ -56935,7 +56934,7 @@
             "z": 2.71154737
           },
           "Rotation": {
-            "x": -0.000118692973,
+            "x": -0.000118693009,
             "y": 359.973877,
             "z": -6.724213E-05
           }
@@ -56949,7 +56948,7 @@
           "Rotation": {
             "x": -0.000130601155,
             "y": 359.973938,
-            "z": 0.000114092087
+            "z": 0.000114092123
           }
         },
         {
@@ -57124,9 +57123,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430817157,
-        "g": 0.164626867,
-        "b": 0.4312892
+        "r": 0.0430816561,
+        "g": 0.164626777,
+        "b": 0.4312891
       },
       "Tags": [
         "Draw_Target",
@@ -57188,9 +57187,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430816934,
-        "g": 0.164626837,
-        "b": 0.431289166
+        "r": 0.0430816337,
+        "g": 0.164626747,
+        "b": 0.431289077
       },
       "Tags": [
         "Draw_Target",
@@ -57252,9 +57251,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430817157,
-        "g": 0.164626867,
-        "b": 0.4312892
+        "r": 0.0430816561,
+        "g": 0.164626777,
+        "b": 0.4312891
       },
       "Tags": [
         "Draw_Target",
@@ -57316,9 +57315,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.04308156,
-        "g": 0.164626658,
-        "b": 0.431288958
+        "r": 0.0430815,
+        "g": 0.164626569,
+        "b": 0.431288868
       },
       "Tags": [
         "Draw_Target",
@@ -57355,7 +57354,7 @@
             "z": -0.00351506122
           },
           "Rotation": {
-            "x": 1.3183233E-05,
+            "x": 1.31832358E-05,
             "y": 359.9346,
             "z": 180.0
           }
@@ -57380,9 +57379,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430817157,
-        "g": 0.164626867,
-        "b": 0.4312892
+        "r": 0.0430816561,
+        "g": 0.164626777,
+        "b": 0.4312891
       },
       "Tags": [
         "Draw_Target",
@@ -57444,9 +57443,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430817157,
-        "g": 0.164626867,
-        "b": 0.4312892
+        "r": 0.0430816561,
+        "g": 0.164626777,
+        "b": 0.4312891
       },
       "Tags": [
         "Draw_Target",
@@ -57508,9 +57507,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430817157,
-        "g": 0.164626867,
-        "b": 0.4312892
+        "r": 0.0430816561,
+        "g": 0.164626777,
+        "b": 0.4312891
       },
       "Tags": [
         "Draw_Target",
@@ -57547,8 +57546,8 @@
             "z": -7.14347159E-09
           },
           "Rotation": {
-            "x": 1.14100485E-05,
-            "y": 0.0310918279,
+            "x": 1.14100512E-05,
+            "y": 0.03109184,
             "z": 180.0
           }
         }
@@ -57572,9 +57571,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430816934,
-        "g": 0.164626837,
-        "b": 0.431289166
+        "r": 0.0430816337,
+        "g": 0.164626747,
+        "b": 0.431289077
       },
       "Tags": [
         "Draw_Target",
@@ -57636,9 +57635,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.043081753,
-        "g": 0.164626926,
-        "b": 0.431289256
+        "r": 0.0430816934,
+        "g": 0.164626837,
+        "b": 0.431289166
       },
       "Tags": [
         "Draw_Target",
@@ -57700,9 +57699,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.043081753,
-        "g": 0.164626926,
-        "b": 0.431289256
+        "r": 0.0430816934,
+        "g": 0.164626837,
+        "b": 0.431289166
       },
       "Tags": [
         "Draw_Target",
@@ -57764,9 +57763,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.0430818051,
-        "g": 0.164626986,
-        "b": 0.431289315
+        "r": 0.0430817381,
+        "g": 0.1646269,
+        "b": 0.431289226
       },
       "Tags": [
         "Draw_Target",
@@ -57828,9 +57827,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.043081753,
-        "g": 0.164626926,
-        "b": 0.431289256
+        "r": 0.0430816934,
+        "g": 0.164626837,
+        "b": 0.431289166
       },
       "Tags": [
         "Draw_Target",
@@ -57867,7 +57866,7 @@
             "z": 0.000347266236
           },
           "Rotation": {
-            "x": 1.70765979E-05,
+            "x": 1.70765888E-05,
             "y": 0.03452461,
             "z": 7.864218E-09
           }
@@ -57892,9 +57891,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.0430817828,
-        "g": 0.164626956,
-        "b": 0.4312893
+        "r": 0.0430817157,
+        "g": 0.164626867,
+        "b": 0.4312892
       },
       "Tags": [
         "Draw_Target",
@@ -57956,9 +57955,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.0430817828,
-        "g": 0.164626956,
-        "b": 0.4312893
+        "r": 0.0430817157,
+        "g": 0.164626867,
+        "b": 0.4312892
       },
       "Tags": [
         "Draw_Target",
@@ -58020,9 +58019,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.0430817828,
-        "g": 0.164626956,
-        "b": 0.4312893
+        "r": 0.0430817157,
+        "g": 0.164626867,
+        "b": 0.4312892
       },
       "Tags": [
         "Draw_Target",
@@ -58084,9 +58083,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.0430817828,
-        "g": 0.164626956,
-        "b": 0.4312893
+        "r": 0.0430817157,
+        "g": 0.164626867,
+        "b": 0.4312892
       },
       "Tags": [
         "Draw_Target",
@@ -58148,9 +58147,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.043081753,
-        "g": 0.164626926,
-        "b": 0.431289256
+        "r": 0.0430816934,
+        "g": 0.164626837,
+        "b": 0.431289166
       },
       "Tags": [
         "Draw_Target",
@@ -58212,9 +58211,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.043081753,
-        "g": 0.164626926,
-        "b": 0.431289256
+        "r": 0.0430816934,
+        "g": 0.164626837,
+        "b": 0.431289166
       },
       "Tags": [
         "Draw_Target",
@@ -58276,9 +58275,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "large",
       "ColorDiffuse": {
-        "r": 0.0430817157,
-        "g": 0.164626867,
-        "b": 0.4312892
+        "r": 0.0430816561,
+        "g": 0.164626777,
+        "b": 0.4312891
       },
       "Tags": [
         "Draw_Target",
@@ -58340,8 +58339,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.149013042,
-        "g": 0.07450483,
+        "r": 0.149012953,
+        "g": 0.07450477,
         "b": 0.0235294122
       },
       "Tags": [
@@ -58395,8 +58394,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.149013042,
-        "g": 0.07450483,
+        "r": 0.149012953,
+        "g": 0.07450477,
         "b": 0.0235294122
       },
       "Tags": [
@@ -58450,8 +58449,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.149013042,
-        "g": 0.07450483,
+        "r": 0.149012953,
+        "g": 0.07450477,
         "b": 0.0235294122
       },
       "Tags": [
@@ -58505,8 +58504,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.149013042,
-        "g": 0.07450483,
+        "r": 0.149012953,
+        "g": 0.07450477,
         "b": 0.0235294122
       },
       "Tags": [
@@ -58560,8 +58559,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.149013042,
-        "g": 0.07450483,
+        "r": 0.149012953,
+        "g": 0.07450477,
         "b": 0.0235294122
       },
       "Tags": [
@@ -58615,8 +58614,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.149013042,
-        "g": 0.07450483,
+        "r": 0.149012953,
+        "g": 0.07450477,
         "b": 0.0235294122
       },
       "Tags": [
@@ -58670,8 +58669,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.149013042,
-        "g": 0.07450483,
+        "r": 0.149012953,
+        "g": 0.07450477,
         "b": 0.0235294122
       },
       "Tags": [
@@ -58725,8 +58724,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.149013042,
-        "g": 0.07450483,
+        "r": 0.149012953,
+        "g": 0.07450477,
         "b": 0.0235294122
       },
       "Tags": [
@@ -58769,7 +58768,7 @@
         "posX": -72.19457,
         "posY": -0.00208260538,
         "posZ": 52.04165,
-        "rotX": 0.103204876,
+        "rotX": 0.103204921,
         "rotY": 179.9856,
         "rotZ": -2.994322E-05,
         "scaleX": 8.22,
@@ -58780,8 +58779,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.149013042,
-        "g": 0.07450483,
+        "r": 0.149012953,
+        "g": 0.07450477,
         "b": 0.0235294122
       },
       "Tags": [
@@ -58835,8 +58834,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.149013042,
-        "g": 0.07450483,
+        "r": 0.149012953,
+        "g": 0.07450477,
         "b": 0.0235294122
       },
       "Tags": [
@@ -58890,8 +58889,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.149013042,
-        "g": 0.07450483,
+        "r": 0.149012953,
+        "g": 0.07450477,
         "b": 0.0235294122
       },
       "Tags": [
@@ -58945,8 +58944,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.149013042,
-        "g": 0.07450483,
+        "r": 0.149012953,
+        "g": 0.07450477,
         "b": 0.0235294122
       },
       "Tags": [
@@ -59000,8 +58999,8 @@
       "Description": "Set",
       "GMNotes": "brown",
       "ColorDiffuse": {
-        "r": 0.149013042,
-        "g": 0.07450483,
+        "r": 0.149012953,
+        "g": 0.07450477,
         "b": 0.0235294122
       },
       "Tags": [
@@ -59055,9 +59054,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249993086,
-        "g": 0.249993086,
-        "b": 0.249993086
+        "r": 0.249993,
+        "g": 0.249993,
+        "b": 0.249993
       },
       "Tags": [
         "MegaFreeze"
@@ -59110,9 +59109,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249993086,
-        "g": 0.249993086,
-        "b": 0.249993086
+        "r": 0.249993,
+        "g": 0.249993,
+        "b": 0.249993
       },
       "Tags": [
         "MegaFreeze"
@@ -59165,9 +59164,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249993086,
-        "g": 0.249993086,
-        "b": 0.249993086
+        "r": 0.249993,
+        "g": 0.249993,
+        "b": 0.249993
       },
       "Tags": [
         "MegaFreeze"
@@ -59220,9 +59219,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249993086,
-        "g": 0.249993086,
-        "b": 0.249993086
+        "r": 0.249993,
+        "g": 0.249993,
+        "b": 0.249993
       },
       "Tags": [
         "MegaFreeze"
@@ -59275,9 +59274,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249993086,
-        "g": 0.249993086,
-        "b": 0.249993086
+        "r": 0.249993,
+        "g": 0.249993,
+        "b": 0.249993
       },
       "Tags": [
         "MegaFreeze"
@@ -59330,9 +59329,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249993086,
-        "g": 0.249993086,
-        "b": 0.249993086
+        "r": 0.249993,
+        "g": 0.249993,
+        "b": 0.249993
       },
       "Tags": [
         "MegaFreeze"
@@ -59385,9 +59384,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249993086,
-        "g": 0.249993086,
-        "b": 0.249993086
+        "r": 0.249993,
+        "g": 0.249993,
+        "b": 0.249993
       },
       "Tags": [
         "MegaFreeze"
@@ -59658,9 +59657,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249993086,
-        "g": 0.249993086,
-        "b": 0.249993086
+        "r": 0.249993,
+        "g": 0.249993,
+        "b": 0.249993
       },
       "Tags": [
         "MegaFreeze"
@@ -59702,7 +59701,7 @@
             "z": -0.441030085
           },
           "Rotation": {
-            "x": -1.67640655E-06,
+            "x": -1.6764069E-06,
             "y": 0.0160372835,
             "z": -1.07153388E-08
           }
@@ -59727,7 +59726,7 @@
           },
           "Rotation": {
             "x": -9.786796E-06,
-            "y": 0.0284145083,
+            "y": 0.0284145176,
             "z": -5.20418268E-07
           }
         },
@@ -59812,7 +59811,7 @@
           "Rotation": {
             "x": -1.02474394E-06,
             "y": 359.98526,
-            "z": -2.72822351E-08
+            "z": -2.72822458E-08
           }
         }
       ]
@@ -59824,7 +59823,7 @@
         "posX": -72.16457,
         "posY": 1.000004,
         "posZ": 52.04165,
-        "rotX": 0.1032049,
+        "rotX": 0.103204943,
         "rotY": 180.02005,
         "rotZ": 3.21593143E-05,
         "scaleX": 7.46,
@@ -59835,9 +59834,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249993086,
-        "g": 0.249993086,
-        "b": 0.249993086
+        "r": 0.249993,
+        "g": 0.249993,
+        "b": 0.249993
       },
       "Tags": [
         "MegaFreeze"
@@ -59891,7 +59890,7 @@
             "z": -0.441347778
           },
           "Rotation": {
-            "x": -3.56758937E-06,
+            "x": -3.56759074E-06,
             "y": 359.9729,
             "z": 1.50950882E-06
           }
@@ -59941,7 +59940,7 @@
           "Rotation": {
             "x": -5.669995E-06,
             "y": 0.0101496438,
-            "z": 2.06423081E-07
+            "z": 2.06423124E-07
           }
         }
       ]
@@ -59964,9 +59963,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249993086,
-        "g": 0.249993086,
-        "b": 0.249993086
+        "r": 0.249993,
+        "g": 0.249993,
+        "b": 0.249993
       },
       "Tags": [
         "MegaFreeze"
@@ -60010,7 +60009,7 @@
           "Rotation": {
             "x": 2.45910155E-06,
             "y": 0.0273480881,
-            "z": 1.68815325E-06
+            "z": 1.68815359E-06
           }
         },
         {
@@ -60045,7 +60044,7 @@
           },
           "Rotation": {
             "x": 1.85304125E-05,
-            "y": 0.0285100974,
+            "y": 0.0285101067,
             "z": 5.982497E-07
           }
         },
@@ -60081,9 +60080,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249993086,
-        "g": 0.249993086,
-        "b": 0.249993086
+        "r": 0.249993,
+        "g": 0.249993,
+        "b": 0.249993
       },
       "Tags": [
         "MegaFreeze"
@@ -60174,9 +60173,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249993086,
-        "g": 0.249993086,
-        "b": 0.249993086
+        "r": 0.249993,
+        "g": 0.249993,
+        "b": 0.249993
       },
       "Tags": [
         "MegaFreeze"
@@ -60279,9 +60278,9 @@
       "Description": "Set",
       "GMNotes": "black",
       "ColorDiffuse": {
-        "r": 0.249993086,
-        "g": 0.249993086,
-        "b": 0.249993086
+        "r": 0.249993,
+        "g": 0.249993,
+        "b": 0.249993
       },
       "Tags": [
         "MegaFreeze"
@@ -60359,7 +60358,7 @@
             "z": 0.444871366
           },
           "Rotation": {
-            "x": -1.28584925E-05,
+            "x": -1.28584952E-05,
             "y": 359.9674,
             "z": -8.94592045E-09
           }
@@ -60427,11 +60426,11 @@
       "Name": "Custom_Model",
       "Transform": {
         "posX": -86.74648,
-        "posY": 0.880006731,
+        "posY": 0.88000685,
         "posZ": 30.1031,
-        "rotX": 3.45334433E-06,
+        "rotX": 3.348114E-06,
         "rotY": 180.002151,
-        "rotZ": -1.975401E-05,
+        "rotZ": -1.98495636E-05,
         "scaleX": 1.1,
         "scaleY": 3.0,
         "scaleZ": 1.1
@@ -60483,75 +60482,15 @@
       "XmlUI": ""
     },
     {
-      "GUID": "9383ac",
-      "Name": "Custom_Model",
-      "Transform": {
-        "posX": -90.6586456,
-        "posY": 0.88000536,
-        "posZ": 30.09189,
-        "rotX": 3.37114625E-06,
-        "rotY": 179.921967,
-        "rotZ": -1.97653153E-05,
-        "scaleX": 1.1,
-        "scaleY": 3.0,
-        "scaleZ": 1.1
-      },
-      "Nickname": "Leng Spider_(Monster)_(D:Oblong)",
-      "Description": "",
-      "GMNotes": "[Discard_BagName]\n<specialCase>",
-      "ColorDiffuse": {
-        "r": 1.0,
-        "g": 1.0,
-        "b": 1.0
-      },
-      "LayoutGroupSortIndex": 0,
-      "Value": 0,
-      "Locked": false,
-      "Grid": false,
-      "Snap": false,
-      "IgnoreFoW": false,
-      "MeasureMovement": false,
-      "DragSelectable": true,
-      "Autoraise": true,
-      "Sticky": false,
-      "Tooltip": false,
-      "GridProjection": false,
-      "HideWhenFaceDown": false,
-      "Hands": false,
-      "CustomMesh": {
-        "MeshURL": "http://cloud-3.steamusercontent.com/ugc/771742135112134361/7F786B20F6082C3285B05712FAE0B4232D3044ED/",
-        "DiffuseURL": "http://cloud-3.steamusercontent.com/ugc/771742135112141987/AAC6092426D439BA96DF671CC48E52E3F2C23640/",
-        "NormalURL": "",
-        "ColliderURL": "",
-        "Convex": true,
-        "MaterialIndex": 3,
-        "TypeIndex": 0,
-        "CustomShader": {
-          "SpecularColor": {
-            "r": 1.0,
-            "g": 1.0,
-            "b": 1.0
-          },
-          "SpecularIntensity": 0.0,
-          "SpecularSharpness": 2.0,
-          "FresnelStrength": 0.0
-        },
-        "CastShadows": true
-      },
-      "LuaScript": "",
-      "LuaScriptState": "",
-      "XmlUI": ""
-    },
-    {
       "GUID": "de1951",
       "Name": "Custom_Model",
       "Transform": {
         "posX": -83.9706,
         "posY": 0.9851819,
         "posZ": 21.6443481,
-        "rotX": 3.32752461E-06,
+        "rotX": 3.50174423E-06,
         "rotY": 179.972839,
-        "rotZ": -1.96146466E-05,
+        "rotZ": -1.98246216E-05,
         "scaleX": 0.725001633,
         "scaleY": 1.75291157,
         "scaleZ": 0.725001633
@@ -60609,9 +60548,9 @@
         "posX": -84.821106,
         "posY": 0.8800071,
         "posZ": 24.4480114,
-        "rotX": 3.297773E-06,
+        "rotX": 3.235684E-06,
         "rotY": 180.019562,
-        "rotZ": -1.97512272E-05,
+        "rotZ": -1.96348828E-05,
         "scaleX": 0.6,
         "scaleY": 1.0,
         "scaleZ": 0.601098061
@@ -60620,7 +60559,7 @@
       "Description": "",
       "GMNotes": "[Delete]",
       "ColorDiffuse": {
-        "r": 0.09409732,
+        "r": 0.0940972343,
         "g": 0.5921568,
         "b": 0.8
       },
@@ -60835,12 +60774,12 @@
       "GUID": "b21114",
       "Name": "Custom_Token",
       "Transform": {
-        "posX": -68.0141449,
-        "posY": 1.0305078,
-        "posZ": 21.0463524,
-        "rotX": 0.007369611,
-        "rotY": 179.99733,
-        "rotZ": 179.996674,
+        "posX": -68.01417,
+        "posY": 1.030469,
+        "posZ": 21.0463371,
+        "rotX": 0.00360894878,
+        "rotY": 179.9954,
+        "rotZ": 179.997086,
         "scaleX": 0.61,
         "scaleY": 1.0,
         "scaleZ": 0.61
@@ -60888,11 +60827,11 @@
       "Name": "go_game_piece_white",
       "Transform": {
         "posX": -121.236549,
-        "posY": 1.25514054,
+        "posY": 1.25514042,
         "posZ": 16.6499462,
-        "rotX": -3.4170007E-06,
+        "rotX": -3.60563035E-06,
         "rotY": 359.979156,
-        "rotZ": 1.98958915E-05,
+        "rotZ": 1.99473034E-05,
         "scaleX": 2.04999876,
         "scaleY": 2.04999876,
         "scaleZ": 2.04999876
@@ -60920,19 +60859,18 @@
       "HideWhenFaceDown": false,
       "Hands": false,
       "LuaScript": "function onload()\r\n    hiddenTexture = 'http://cloud-3.steamusercontent.com/ugc/771734893749845381/3F74E429C36D51E1BF2F201D33D5734F1F8C69DC/'\r\n    visibleTexture = 'http://cloud-3.steamusercontent.com/ugc/771734893749836363/A9B68730371DBBF6B53D60A502CEB631833479BC/'\r\n\r\n    self.createButton({\r\n        label=\"Swap Hidden Textures\", click_function=\"TestTextures\", function_owner=self,\r\n        position={0,0.5,1}, rotation={0,180,0}, height=450, width=2500,\r\n        font_size=250,-- color={0,0,0}, font_color={1,1,1}\r\n    })\r\nend\r\n\r\nfunction TestTextures()\r\n    AllObjects = getAllObjects()\r\n    hiddenObjects = {}\r\n    visibleObjects = {}\r\n\r\n    for _, obj in pairs (AllObjects) do\r\n        if obj.getCustomObject().diffuse == hiddenTexture then\r\n            table.insert(hiddenObjects, obj)\r\n        elseif obj.getCustomObject().diffuse == visibleTexture then\r\n            table.insert(visibleObjects, obj)\r\n        end\r\n    end\r\n\r\n    printToAll('\\nScene Contains', 'White')\r\n    printToAll('    '..#hiddenObjects..' : Hidden', 'White')\r\n    printToAll('    '..#visibleObjects..' : Visible', 'White')\r\n\r\n    if #hiddenObjects > 0 or #visibleObjects == 0 and #hiddenObjects != 0 and #visibleObjects > 0 or #visibleObjects != 0 and #hiddenObjects > 0 then\r\n        SwapTexture('Hidden2Visible')\r\n    else\r\n        SwapTexture('Visible2Hidden')\r\n    end\r\nend\r\n\r\nfunction SwapTexture(cmd)\r\n\r\n    if cmd == 'Hidden2Visible' then\r\n        newTexture = visibleTexture\r\n        objs2Change = hiddenObjects\r\n        str = 'OPAQUE Object set as Visible'\r\n    elseif cmd == 'Visible2Hidden' then\r\n        newTexture = hiddenTexture\r\n        objs2Change = visibleObjects\r\n        str = 'TRANSPARENT Object set as Hidden'\r\n    end\r\n\r\n    local PrintOutPut = {}\r\n\r\n    for _, obj in pairs (objs2Change) do\r\n\r\n        if obj.getName() ~= '' then\r\n            strMod = str..' ( '..obj.getName()..' )'\r\n        else strMod = str end\r\n        --strMod = str..' ( '..obj.getName()..' )'\r\n        table.insert(PrintOutPut, strMod)\r\n\r\n        local objPram = {}\r\n        objPram.diffuse = newTexture\r\n        obj.setCustomObject(objPram)\r\n        obj.reload()\r\n    end\r\n\r\n    print('\\n Swapping Textures')\r\n    for k, s in pairs (PrintOutPut) do\r\n        printToAll('    '..k..' : '..s, 'White')\r\n    end\r\nend\r\n\r\n\r\n--[[\r\n\r\nfunction swapper(newTexture)\r\n    local hidden = 'https://drive.google.com/uc?export=download&id=0Bxv7nhmMwdKtcUs3RXJQNm55NHM'\r\n    local coloured = 'https://drive.google.com/uc?export=download&id=1UhAhsKL88jF9eMb2BrAm1Fc3HZ4anwM0'\r\n    local count = {0,'nil'}\r\n\r\n    for _, obj in pairs (getAllObjects()) do\r\n        if obj.getCustomObject().diffuse == hidden or obj.getCustomObject().diffuse == coloured then\r\n            count[1] = count[1] + 1\r\n            if SetHidden then count[2] = 'OPAQUE' else count[2] = 'TRANSPARENT' end\r\n            local objPram = {}\r\n            objPram.diffuse = newTexture\r\n            obj.setCustomObject(objPram)\r\n            obj.reload()\r\n            if SetHidden then print('OPAQUE : '..obj.getName()) else print('TRANSPARENT : '..obj.getName()) end\r\n       end\r\n    end\r\n    if count[2] ~= 'nil' then print('--== Set '..count[1]..' objects : '..count[2]..' ==--')\r\n    else print('--== There are not valid objects found to texture swap ==--') end\r\nend\r\n]]\r\n--[[\r\nfunction revealHIDDEN()\r\n    local hidden = 'https://drive.google.com/uc?export=download&id=0Bxv7nhmMwdKtcUs3RXJQNm55NHM'\r\n    local coloured = 'https://drive.google.com/uc?export=download&id=1UhAhsKL88jF9eMb2BrAm1Fc3HZ4anwM0'\r\n    local count = {0,'nil'}\r\n    for _, obj in pairs (getAllObjects()) do\r\n        if obj.getCustomObject().diffuse == hidden then\r\n            count[1] = count[1] + 1\r\n            count[2] = 'OPAQUE'\r\n            local objPram = {}\r\n            objPram.diffuse = coloured\r\n            obj.setCustomObject(objPram)\r\n            obj.reload()\r\n            print('OPAQUE : '..obj.getName())\r\n         elseif obj.getCustomObject().diffuse == coloured then\r\n             count[1] = count[1] + 1\r\n             count[2] = 'TRANSPARENT'\r\n            local objPram = {}\r\n                objPram.diffuse = hidden\r\n            obj.setCustomObject(objPram)\r\n            obj.reload()\r\n            print('TRANSPARENT : '..obj.getName())\r\n        end\r\n    end\r\n    if count[2] ~= 'nil' then print('--== Set '..count[1]..' objects : '..count[2]..' ==--')\r\n    else print('--== There are not valid objects found to texture swap ==--') end\r\nend]]",
-      "LuaScriptState": "",
-      "XmlUI": ""
+      "LuaScriptState": ""
     },
     {
       "GUID": "b50333",
       "Name": "Bag",
       "Transform": {
         "posX": -100.004524,
-        "posY": 0.694968462,
+        "posY": 0.694968641,
         "posZ": 32.9502,
-        "rotX": -3.99058626E-06,
-        "rotY": 359.9917,
-        "rotZ": 2.0334106E-05,
+        "rotX": -3.308566E-06,
+        "rotY": 359.9918,
+        "rotZ": 2.05658416E-05,
         "scaleX": 1.0,
         "scaleY": 1.0,
         "scaleZ": 1.0
@@ -61148,9 +61086,9 @@
         "posX": -102.177971,
         "posY": 1.300897,
         "posZ": 25.3521767,
-        "rotX": -3.18363482E-06,
+        "rotX": -3.235874E-06,
         "rotY": 359.980133,
-        "rotZ": 1.987683E-05,
+        "rotZ": 1.97602421E-05,
         "scaleX": 2.299998,
         "scaleY": 2.299998,
         "scaleZ": 2.299998
@@ -61178,16 +61116,15 @@
       "HideWhenFaceDown": false,
       "Hands": false,
       "LuaScript": "-- Bundled by luabundle {\"version\":\"1.6.0\"}\nlocal __bundle_require, __bundle_loaded, __bundle_register, __bundle_modules = (function(superRequire)\n\tlocal loadingPlaceholder = {[{}] = true}\n\n\tlocal register\n\tlocal modules = {}\n\n\tlocal require\n\tlocal loaded = {}\n\n\tregister = function(name, body)\n\t\tif not modules[name] then\n\t\t\tmodules[name] = body\n\t\tend\n\tend\n\n\trequire = function(name)\n\t\tlocal loadedModule = loaded[name]\n\n\t\tif loadedModule then\n\t\t\tif loadedModule == loadingPlaceholder then\n\t\t\t\treturn nil\n\t\t\tend\n\t\telse\n\t\t\tif not modules[name] then\n\t\t\t\tif not superRequire then\n\t\t\t\t\tlocal identifier = type(name) == 'string' and '\\\"' .. name .. '\\\"' or tostring(name)\n\t\t\t\t\terror('Tried to require ' .. identifier .. ', but no such module has been registered')\n\t\t\t\telse\n\t\t\t\t\treturn superRequire(name)\n\t\t\t\tend\n\t\t\tend\n\n\t\t\tloaded[name] = loadingPlaceholder\n\t\t\tloadedModule = modules[name](require, loaded, register, modules)\n\t\t\tloaded[name] = loadedModule\n\t\tend\n\n\t\treturn loadedModule\n\tend\n\n\treturn require, loaded, register, modules\nend)(nil)\n__bundle_register(\"__root\", function(require, _LOADED, __bundle_register, __bundle_modules)\nfunction onload()\r\n    zprint = require(\"/_libs/debug\").zprint\r\n    tool = {}\r\n        tool.strings = require(\"/_libs/StringUtils\")\r\n    self.setScale({2.30,2.30,2.30})\r\n    setGlobalVariables()\r\n    makeButtons()\r\n\r\n    --addHotkey(\"dBug_PrintTags\",hot_PrintTags , false)\r\n\r\nend\r\n\r\n--[[function onObjectHover(player_color, object)\r\n    local target = object and object.guid or \"Nothing\"\r\n    print(player_color .. \" hovered over \" .. target)\r\nend]]\r\n\r\nfunction setGlobalVariables()\r\n    TopLabel = 'Top Button Name' -- Name of Top Button\r\n    BotLabel = 'Bottom Button Name' -- Name of Top Button\r\n    MinButtonLength = 2500\r\nend\r\n--local droptest=require(\"/_libs/SingleFunctions/waitDelay\")\r\n\r\n--------------------------------------------------------------------------------\r\n-- Place Demo Code in Here -----------------------------------------------------\r\n\r\n\r\n\r\nfunction Top_Left_Click(obj, color, alt_click)\r\n    local guidList = tool.strings.splitString(self.getDescription(), '_')\r\n    for _, guid in pairs(guidList) do\r\n        local zone = getObjectFromGUID(guid)\r\n        print(logString(zone.getTags(), '\\n'..zone.getName()))\r\n    end\r\n\r\nend\r\n\r\nfunction Bot_Left_Click(obj, color, alt_click)\r\n\r\nend\r\n--------------------------------------------------------------------------------\r\n-- Place Demo Code in Here -----------------------------------------------------\r\nfunction Top_Right_Click(obj, color, alt_click)\r\n    function ThisIsATest()\r\n        print('PASSED FUNCTION 02')\r\n    end\r\nend\r\n\r\nfunction Bot_Right_Click(obj, color, alt_click)\r\n    print('Bottom Function : Right Click')\r\nend\r\n\r\n--******************************************************************************\r\n--*** Ignore Below this line ***************************************************\r\n--******************************************************************************\r\nfunction f_Top(obj, color, alt_click)\r\n    if not alt_click then\r\n        Top_Left_Click(obj, color, alt_click)\r\n    else\r\n        Top_Right_Click(obj, color, alt_click)\r\n    end\r\nend\r\n\r\nfunction f_Bot(obj, color, alt_click)\r\n    if not alt_click then\r\n        Bot_Left_Click(obj, color, alt_click)\r\n    else\r\n        Bot_Right_Click(obj, color, alt_click)\r\n    end\r\nend\r\n--------------------------------------------------------------------------------\r\n--------------------------------------------------------------------------------\r\nfunction makeButtons()\r\n    local lable = nil\r\n    local ButtonList = {};\r\n            local button = {}\r\n                    button.click_function = 'f_Top'\r\n                    button.function_owner = self\r\n                    button.position = setDynamicButtonSizes_pos(TopLabel) --{0,0.5,1}\r\n                    button.rotation = {0,180,0}\r\n                    button.label =  TopLabel\r\n                    button.width = setDynamicButtonSizes_Width(TopLabel, MinButtonLength)\r\n                    button.height = setDynamicButtonSizes_Hight(TopLabel)\r\n                    button.font_size = 250\r\n            table.insert(ButtonList, button)\r\n            button = {}\r\n                    button.click_function = 'f_Bot'\r\n                    button.function_owner = self\r\n                    button.label = BotLabel\r\n                    button.position = setDynamicButtonSizes_pos(BotLabel) --{0,0.5,-1}\r\n                    button.rotation = {0,180,0}\r\n                    button.width = setDynamicButtonSizes_Width(BotLabel, MinButtonLength)\r\n                    button.height = setDynamicButtonSizes_Hight(BotLabel)\r\n                    button.font_size = 250\r\n            table.insert(ButtonList, button)\r\n\r\n    for k, b in pairs (ButtonList) do\r\n        self.createButton(b)\r\n    end\r\nend\r\n\r\nfunction setDynamicButtonSizes_pos(label)\r\n    local posVec = Vector(0,0.5,1)\r\n    local lines = {}\r\n    for line in label:gmatch(\"[^\\r\\n]+\") do\r\n        table.insert(lines, line)\r\n    end\r\n\r\n    adjustZ = 1 + 0.1*#lines\r\n    if label == TopLabel then\r\n        posVec:setAt('z', adjustZ)\r\n    elseif label == BotLabel then\r\n        posVec:setAt('z', -adjustZ)\r\n    end\r\n    --print(logString(lines, 'lines'))\r\n\r\n    return posVec\r\nend\r\n\r\nfunction setDynamicButtonSizes_Hight(lable)\r\n    local minHight = 450\r\n    local lines = {}\r\n    for line in lable:gmatch(\"[^\\r\\n]+\") do\r\n        table.insert(lines, line)\r\n    end\r\n\r\n    local count = #lines\r\n    local adjust_hight = 200\r\n    if count > 1 then\r\n        for i=1, count, 1 do\r\n            minHight = minHight + adjust_hight\r\n        end\r\n    end\r\n    return minHight\r\nend\r\n\r\nfunction setDynamicButtonSizes_Width(str, minWidth)\r\n    local lable = string.upper(str)--str:gsub(\"^%l\", string.upper)\r\n    local lableSize = #lable\r\n    --print(lable)\r\n    local adjust_Width = 100\r\n    local widthBorder = 600\r\n    local Width = 0\r\n\r\n    local lines = {}\r\n    for line in lable:gmatch(\"[^\\r\\n]+\") do\r\n        table.insert(lines, line)\r\n    end\r\n\r\n    local size = 0\r\n    if lines[2] ~= nil then\r\n        for _, line in pairs(lines) do\r\n            if size < #line then size = #line end\r\n        end\r\n        lableSize = size\r\n    end\r\n\r\n\r\n    for i=1, lableSize, 1 do\r\n        Width = Width + adjust_Width\r\n    end\r\n    Width = Width + widthBorder\r\n\r\n    if Width < minWidth then\r\n        Width = minWidth\r\n    end\r\n    return Width\r\nend\r\n\nend)\n__bundle_register(\"/_libs/StringUtils\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal StringUtils = {}\r\n\r\nfunction StringUtils.splitString(str, b1, b2)\r\n    local z = {}\r\n        if not str then\r\n            printToAll('splitString(str, sep, b1, b2) : Must Provide a string (at least)', 'Red')\r\n        else\r\n            -- split at NEW LINE\r\n            if not b1 and not b2 then\r\n                for s in str:gmatch(\"[^\\r\\n]+\") do\r\n                    table.insert(z, s)\r\n                end\r\n            else\r\n            -- split at SEPERATOR\r\n                if b1 and not b2 then\r\n                    if b1 == '' then b1 = ' ' end\r\n                    for s in string.gmatch(str, \"([^\"..'%'..b1..\"]+)\") do\r\n                        table.insert(z, s)\r\n                    end\r\n            -- split Between\r\n                elseif b1 and b2 then\r\n                    for s in string.gmatch(str, '%'..b1..'(.-)%'..b2) do\r\n                        table.insert(z, s)\r\n                    end\r\n                end\r\n            end\r\n        end\r\n    return z\r\nend\r\n\r\n--- Test Function\r\nfunction StringUtils.test()\r\n    printToAll('----=== StringUtils IS WORKING ===----', 'Green')\r\nend\r\n\r\n\r\nreturn StringUtils\r\n\nend)\n__bundle_register(\"/_libs/debug\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal debug = {}\r\n\r\nfunction debug.setDebugHotKeys()\r\n    addHotkey(\"dBug_PrintTags\",hot_PrintTags , false)\r\nend\r\n\r\nfunction hot_PrintTags(playerColor, object, pointerPosition, isKeyUp)\r\n    local objString = tostring(object)\r\n    local nameString = object.getName()\r\n    print('\\n'..objString)\r\n    if nameString == '' then\r\n        print(logString(object.getTags(), ' Tags : <No Name>'))\r\n    else\r\n        print(logString(object.getTags(), ' Tags : '..nameString))\r\n    end\r\nend\r\n\r\nfunction debug.zprint(var,title)\r\n    if (type(var) == \"table\") then\r\n        if title then\r\n            print(logString(var,'\\n-- '..title..' --'))\r\n        else\r\n            print(logString(var))\r\n        end\r\n    else\r\n        if title then print('-- '..title..' --') end\r\n        print(var)\r\n    end\r\nend\r\n\r\nfunction debug.zpDATA(table,key,title)\r\n    if title then\r\n        print('\\n-- '..title..' --')\r\n    end\r\n    for _, tbl in pairs(table) do\r\n        for k,v in pairs(tbl) do\r\n            if k == key then\r\n                print('  '..tostring(k)..' : '..v)\r\n            end\r\n        end\r\n    end\r\nend\r\n\r\nreturn debug\r\n\nend)\nreturn __bundle_require(\"__root\")",
-      "LuaScriptState": "",
-      "XmlUI": ""
+      "LuaScriptState": ""
     },
     {
       "GUID": "10c216",
       "Name": "Bag",
       "Transform": {
         "posX": -20.4243565,
-        "posY": 1.32920051,
-        "posZ": -1.22497237,
+        "posY": 1.32919478,
+        "posZ": -1.22497332,
         "rotX": 8.896553E-06,
         "rotY": 0.01811984,
         "rotZ": 8.649198E-06,
@@ -61224,19 +61161,18 @@
         "Order": 0
       },
       "LuaScript": "function onload()\r\n    makeButtons()\r\n    TagsTo_Add    = {'DiscardTarget'}\r\n    TagsTo_Remove = {'Tags'}\r\n    TagsToReplace_ScritpZone = {}\r\n    TagsToReplace_ScritpZone.guid = '8a96a3'\r\n    TagsToReplace_ScritpZone.tags = {'DiscardTarget', 'ID_SZDiscardPink'}\r\n\r\nend\r\n\r\nfunction setTagsToAdd()\r\n    local z = {}\r\n        local gm = splitString(self.getGMNotes())\r\n        local addTagsFoundinGMnotes = false\r\n\r\n        for k, str in pairs(gm) do\r\n            if string.find(string.lower(str), 'add:', 1, true) then\r\n                addTagsFoundinGMnotes = true\r\n                break\r\n            end\r\n        end\r\n\r\n        if addTagsFoundinGMnotes then\r\n            for k, str in pairs(gm) do\r\n                if string.find(string.lower(str), 'add:', 1, true) then\r\n                    local line = str:sub(5) --str:gsub(\"%remove:\", \"\")\r\n                    table.insert(z, line)\r\n                end\r\n            end\r\n        else\r\n            z = TagsTo_Remove\r\n        end\r\n\r\n    return z\r\nend\r\n\r\nfunction setTagsToRemove()\r\n    local z = {}\r\n        local gm = splitString(self.getGMNotes())\r\n        local removeTagsFoundinGMnotes = false\r\n\r\n        for k, str in pairs(gm) do\r\n            if string.find(string.lower(str), 'remove:', 1, true) then\r\n                removeTagsFoundinGMnotes = true\r\n                break\r\n            end\r\n        end\r\n\r\n        if removeTagsFoundinGMnotes then\r\n            for k, str in pairs(gm) do\r\n                if string.find(string.lower(str), 'remove:', 1, true) then\r\n                    local line = str:sub(8) --str:gsub(\"%remove:\", \"\")\r\n                    table.insert(z, line)\r\n                end\r\n            end\r\n        else\r\n            z = TagsTo_Remove\r\n        end\r\n\r\n    return z\r\nend\r\n\r\n--------------------------------------------------------------------------------\r\n--------------------------------------------------------------------------------\r\nfunction f_One(obj, color, alt_click)\r\n    local tAdd = setTagsToAdd()\r\n    if not alt_click then\r\n        Wait.frames(function() addTags_ADD(tAdd) end, 5)\r\n    else\r\n    end\r\nend\r\n\r\nfunction f_Two(obj, color, alt_click)\r\n    local tRemove = setTagsToRemove()\r\n    if not alt_click then\r\n        removeTags_ALL()\r\n    else\r\n        Wait.frames(function() removeTags_NAME(tRemove) end, 5)\r\n    end\r\nend\r\n\r\nfunction f_Three(obj, color, alt_click)\r\n    if not alt_click then\r\n        local zone = getObjectFromGUID(TagsToReplace_ScritpZone.guid)\r\n        printToAll(zone.getName(), 'Orange')\r\n        printToAll('   Clearing Tags', 'Red')\r\n        zone.setTags({})\r\n\r\n        for k,tag in ipairs(TagsToReplace_ScritpZone.tags) do\r\n            printToAll('   Adding : '..tag, 'Yellow')\r\n            zone.addTag(tag)\r\n        end\r\n        --removeTags_ALL()\r\n    else\r\n        print('SCRCLICK')\r\n        --Wait.frames(function() removeTags_NAME(tRemove) end, 5)\r\n    end\r\nend\r\n--------------------------------------------------------------------------------\r\n--------------------------------------------------------------------------------\r\nfunction addTags_ADD(tAdd)\r\n    local decks = {}\r\n    local allObjects = self.getData().ContainedObjects\r\n    for k,v in pairs(allObjects) do\r\n        local rot = Vector(v.Transform.rotX, v.Transform.rotY, v.Transform.rotZ)\r\n        local o = self.takeObject()\r\n        o.setLock(true)\r\n        o.setPosition(self.getPosition()+Vector(0,-10,0))\r\n        o.setRotation(rot)\r\n        if o.type == 'Deck' then\r\n            local deck = o\r\n            deck.setRotation({0, 180, 180})\r\n            for k,v in pairs(deck.getObjects()) do\r\n                local c = o.takeObject()\r\n                c.setLock(true)\r\n                c.setRotation(rot)\r\n                c.setPosition(self.getPosition()+Vector(0,-20,0))\r\n                Wait.frames(function()\r\n                    printToAll('CARD : '..c.getName(), 'Purple')\r\n                    for k, tag in pairs(tAdd) do\r\n                        printToAll('   Adding : '..tag, 'Yellow')\r\n                        c.addTag(tag)\r\n                    end\r\n                    c.setLock(false)\r\n                    c.setPosition(self.getPosition()+Vector(0,10,0))\r\n                end, 5)\r\n            end\r\n        else\r\n            Wait.frames(function()\r\n                printToAll(o.getName(), 'Orange')\r\n                for k, tag in pairs(tAdd) do\r\n                    printToAll('   Adding : '..tag, 'Yellow')\r\n                    o.addTag(tag)\r\n                end\r\n                o.setLock(false)\r\n                self.putObject(o)\r\n            end, 5)\r\n        end\r\n    end\r\nend\r\n\r\nfunction addTags_REPLACE(obj)\r\n    print('NOTE WRITTEN')\r\nend\r\n\r\nfunction removeTags_NAME(tRemove)\r\n    local decks = {}\r\n    local allObjects = self.getData().ContainedObjects\r\n    for k,v in pairs(allObjects) do\r\n        local rot = Vector(v.Transform.rotX, v.Transform.rotY, v.Transform.rotZ)\r\n        local o = self.takeObject()\r\n        o.setLock(true)\r\n        o.setPosition(self.getPosition()+Vector(0,-10,0))\r\n        o.setRotation(rot)\r\n        if o.type == 'Deck' then\r\n            local deck = o\r\n            deck.setRotation({0, 180, 180})\r\n            for k,v in pairs(deck.getObjects()) do\r\n                local c = o.takeObject()\r\n                c.setLock(true)\r\n                c.setRotation(rot)\r\n                c.setPosition(self.getPosition()+Vector(0,-20,0))\r\n                Wait.frames(function()\r\n                    printToAll('CARD : '..c.getName(), 'Purple')\r\n                    for k, tag in pairs(tRemove) do\r\n                        printToAll('   Removing : '..tag, 'Red')\r\n                        c.removeTag(tag)\r\n                    end\r\n                    c.setLock(false)\r\n                    c.setPosition(self.getPosition()+Vector(0,10,0))\r\n                end, 5)\r\n            end\r\n        else\r\n            Wait.frames(function()\r\n                printToAll(o.getName(), 'Orange')\r\n                for k, tag in pairs(tRemove) do\r\n                    printToAll('   Removing : '..tag, 'Red')\r\n                    o.removeTag(tag)\r\n                end\r\n                o.setLock(false)\r\n                self.putObject(o)\r\n            end, 5)\r\n        end\r\n    end\r\nend\r\n\r\nfunction removeTags_ALL()\r\n    local allObjects = self.getData().ContainedObjects\r\n    for k,v in pairs(allObjects) do\r\n        local rot = Vector(v.Transform.rotX, v.Transform.rotY, v.Transform.rotZ)\r\n        local o = self.takeObject()\r\n        o.setLock(true)\r\n        o.setPosition(self.getPosition()+Vector(0,-10,0))\r\n        o.setRotation(rot)\r\n        if o.type == 'Deck' then\r\n            local deck = o\r\n            deck.setRotation({0, 180, 180})\r\n            for k,v in pairs(deck.getObjects()) do\r\n                local c = o.takeObject()\r\n                c.setLock(true)\r\n                c.setRotation(rot)\r\n                c.setPosition(self.getPosition()+Vector(0,-20,0))\r\n                Wait.frames(function()\r\n                    printToAll('CARD : '..c.getName(), 'Purple')\r\n                    c.setTags({})\r\n                    printToAll('   Removing ALL Tags', 'Red')\r\n                    c.setLock(false)\r\n                    c.setPosition(self.getPosition()+Vector(0,10,0))\r\n                end, 5)\r\n            end\r\n        else\r\n            Wait.frames(function()\r\n                printToAll(o.getName(), 'Orange')\r\n                printToAll('   Removing ALL Tags', 'Red')\r\n                o.setTags({})\r\n                o.setLock(false)\r\n                self.putObject(o)\r\n            end, 5)\r\n        end\r\n    end\r\nend\r\n--------------------------------------------------------------------------------\r\n--------------------------------------------------------------------------------\r\nfunction splitString(str, b1, b2)\r\n    local z = {}\r\n        if not str then\r\n            printToAll('splitString(str, sep, b1, b2) : Must Provide a string (at least)', 'Red')\r\n        else\r\n            -- split at NEW LINE\r\n            if not b1 and not b2 then\r\n                for s in str:gmatch(\"[^\\r\\n]+\") do\r\n                    table.insert(z, s)\r\n                end\r\n            else\r\n            -- split at SEPERATOR\r\n                if b1 and not b2 then\r\n                    if b1 == '' then b1 = ' ' end\r\n                    for s in string.gmatch(str, \"([^\"..'%'..b1..\"]+)\") do\r\n                        table.insert(z, s)\r\n                    end\r\n            -- split Between\r\n                elseif b1 and b2 then\r\n                    for s in string.gmatch(str, '%'..b1..'(.-)%'..b2) do\r\n                        table.insert(z, s)\r\n                    end\r\n                end\r\n            end\r\n        end\r\n    return z\r\nend\r\n\r\nfunction zprint(var,title)\r\n    if (type(var) == \"table\") then\r\n        if title then\r\n            print(logString(var,'\\n-- '..title..' --'))\r\n        else\r\n            print(logString(var))\r\n        end\r\n    else\r\n        if title then print('-- '..title..' --') end\r\n        print(var)\r\n    end\r\nend\r\n--------------------------------------------------------------------------------\r\n--------------------------------------------------------------------------------\r\nfunction makeButtons()\r\n    local lable = nil\r\n    local ButtonList = {}; local lable = 'Add Tags\\n(Right Click : Replace All)'; local min = 2500\r\n            local button = {}\r\n                    button.click_function = 'f_One'\r\n                    button.function_owner = self\r\n                    button.position = {0,0.5,-2.2}\r\n                    button.rotation = {0,180,0}\r\n                    button.label =  lable\r\n                    button.width = setDynamicButtonSizes_Width(lable, min)\r\n                    button.height = setDynamicButtonSizes_Hight(lable)\r\n                    button.font_size = 250\r\n            table.insert(ButtonList, button)\r\n            button = {}; lable = 'Remove ALL Tags\\n(Right Click : Remove Named Tags)'\r\n                    button.click_function = 'f_Two'\r\n                    button.function_owner = self\r\n                    button.label = lable\r\n                    --button.tooltip = 'Blessing'\r\n                    button.position = {0,0.5,-3.7}\r\n                    button.rotation = {0,180,0}\r\n                    button.width = setDynamicButtonSizes_Width(lable, min) --2500\r\n                    button.height = setDynamicButtonSizes_Hight(lable)\r\n                    button.font_size = 250\r\n            table.insert(ButtonList, button)\r\n            button = {}; lable = 'ReplaceTags on ScriptZones\\n(OnlyUses Table in Code)'\r\n                    button.click_function = 'f_Three'\r\n                    button.function_owner = self\r\n                    button.label = lable\r\n                    --button.tooltip = 'Blessing'\r\n                    button.position = {5,0.5,0}\r\n                    button.rotation = {0,180,0}\r\n                    button.width = setDynamicButtonSizes_Width(lable, min) --2500\r\n                    button.height = setDynamicButtonSizes_Hight(lable)\r\n                    button.font_size = 250\r\n            table.insert(ButtonList, button)\r\n\r\n    for k, b in pairs (ButtonList) do\r\n        self.createButton(b)\r\n    end\r\nend\r\n\r\nfunction setDynamicButtonSizes_Hight(lable)\r\n    local minHight = 450\r\n    local lines = {}\r\n    for line in lable:gmatch(\"[^\\r\\n]+\") do\r\n        table.insert(lines, line)\r\n    end\r\n\r\n    local count = #lines\r\n    local adjust_hight = 126\r\n    if count > 1 then\r\n        for i=1, count, 1 do\r\n            minHight = minHight + adjust_hight\r\n        end\r\n    end\r\n    return minHight\r\nend\r\n\r\nfunction setDynamicButtonSizes_Width(str, minWidth)\r\n    local lable = string.upper(str)--str:gsub(\"^%l\", string.upper)\r\n    local lableSize = #lable\r\n    --print(lable)\r\n    local adjust_Width = 100\r\n    local widthBorder = 600\r\n    local Width = 0\r\n\r\n    local lines = {}\r\n    for line in lable:gmatch(\"[^\\r\\n]+\") do\r\n        table.insert(lines, line)\r\n    end\r\n\r\n    local size = 0\r\n    if lines[2] ~= nil then\r\n        for _, line in pairs(lines) do\r\n            if size < #line then size = #line end\r\n        end\r\n        lableSize = size\r\n    end\r\n\r\n\r\n    for i=1, lableSize, 1 do\r\n        Width = Width + adjust_Width\r\n    end\r\n    Width = Width + widthBorder\r\n\r\n    if Width < minWidth then\r\n        Width = minWidth\r\n    end\r\n    return Width\r\nend",
-      "LuaScriptState": "",
-      "XmlUI": ""
+      "LuaScriptState": ""
     },
     {
       "GUID": "aa5491",
       "Name": "Bag",
       "Transform": {
         "posX": -89.71089,
-        "posY": 0.6949722,
+        "posY": 0.694971263,
         "posZ": 27.2213268,
-        "rotX": -2.96356279E-06,
+        "rotX": -3.085277E-06,
         "rotY": 359.992279,
-        "rotZ": 1.932183E-05,
+        "rotZ": 1.95119374E-05,
         "scaleX": 1.0,
         "scaleY": 1.0,
         "scaleZ": 1.0
@@ -84254,7 +84190,7 @@
         "posX": -68.12282,
         "posY": 0.920199037,
         "posZ": 14.9989128,
-        "rotX": 3.285906E-06,
+        "rotX": 3.28526357E-06,
         "rotY": 179.999771,
         "rotZ": 179.999985,
         "scaleX": 2.24,
@@ -84546,7 +84482,7 @@
         "posX": -62.99374,
         "posY": 0.910572648,
         "posZ": 13.8338289,
-        "rotX": 3.31474735E-06,
+        "rotX": 3.275804E-06,
         "rotY": 179.999954,
         "rotZ": 179.999985,
         "scaleX": 2.24,
@@ -84722,7 +84658,7 @@
         "posX": -73.095665,
         "posY": 0.915383339,
         "posZ": 14.9456911,
-        "rotX": 3.26693976E-06,
+        "rotX": 3.27673433E-06,
         "rotY": 179.999237,
         "rotZ": 179.999985,
         "scaleX": 2.24,
@@ -84956,7 +84892,7 @@
         "posX": -45.3696136,
         "posY": 1.47069037,
         "posZ": 48.75061,
-        "rotX": -8.670131E-06,
+        "rotX": -8.964957E-06,
         "rotY": 180.027908,
         "rotZ": 179.999985,
         "scaleX": 1.85,
@@ -85944,7 +85880,7 @@
         "posX": -40.8692245,
         "posY": 1.43217957,
         "posZ": 48.75061,
-        "rotX": 1.32084742E-05,
+        "rotX": 1.25755987E-05,
         "rotY": 179.995956,
         "rotZ": 179.999985,
         "scaleX": 1.85,
@@ -86468,7 +86404,7 @@
         "posX": -49.870224,
         "posY": 1.5284574,
         "posZ": 48.75061,
-        "rotX": -1.40729153E-05,
+        "rotX": -1.55584039E-05,
         "rotY": 179.999985,
         "rotZ": 179.999985,
         "scaleX": 1.85,
@@ -88161,7 +88097,7 @@
         "posX": -54.3655052,
         "posY": 1.51882792,
         "posZ": 48.7501373,
-        "rotX": -8.758843E-06,
+        "rotX": -8.640395E-06,
         "rotY": 180.021347,
         "rotZ": 179.999985,
         "scaleX": 1.85,
@@ -89729,7 +89665,7 @@
         "posX": -58.8707771,
         "posY": 1.53326857,
         "posZ": 48.75061,
-        "rotX": 1.47640139E-05,
+        "rotX": 1.600102E-05,
         "rotY": 179.9997,
         "rotZ": 179.999985,
         "scaleX": 1.85,
@@ -91480,9 +91416,9 @@
         "posX": -40.84592,
         "posY": 1.38634086,
         "posZ": 55.2520943,
-        "rotX": 2.2360714E-06,
+        "rotX": 3.93694972E-06,
         "rotY": 179.999969,
-        "rotZ": -1.832627E-05,
+        "rotZ": -1.82824879E-05,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -91537,9 +91473,9 @@
         "posX": -45.346302,
         "posY": 1.40329325,
         "posZ": 55.2521133,
-        "rotX": -1.57753839E-05,
+        "rotX": -1.28008132E-05,
         "rotY": 180.000137,
-        "rotZ": -1.89638959E-05,
+        "rotZ": -1.830491E-05,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -91713,9 +91649,9 @@
         "posX": -49.8373947,
         "posY": 1.40329182,
         "posZ": 55.2520065,
-        "rotX": 1.2553952E-06,
+        "rotX": -3.182668E-06,
         "rotY": 180.005524,
-        "rotZ": -1.879106E-05,
+        "rotZ": -1.82653275E-05,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -91898,9 +91834,9 @@
         "posX": -54.3472137,
         "posY": 1.386337,
         "posZ": 55.2520065,
-        "rotX": 1.49732723E-05,
+        "rotX": 1.68469851E-05,
         "rotY": 179.999557,
-        "rotZ": -1.81907362E-05,
+        "rotZ": -1.82004242E-05,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -91952,12 +91888,12 @@
       "GUID": "f1c676",
       "Name": "Deck",
       "Transform": {
-        "posX": -74.19356,
-        "posY": 0.9621371,
-        "posZ": 29.2022686,
-        "rotX": 0.722310364,
-        "rotY": 180.016281,
-        "rotZ": 359.954468,
+        "posX": -74.19339,
+        "posY": 0.9615395,
+        "posZ": 29.20226,
+        "rotX": 0.7219194,
+        "rotY": 180.01825,
+        "rotZ": 359.9731,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -92337,12 +92273,12 @@
       "GUID": "ac2558",
       "Name": "Card",
       "Transform": {
-        "posX": -58.1032524,
-        "posY": 0.8853449,
-        "posZ": 36.47488,
-        "rotX": 359.980347,
-        "rotY": 180.098221,
-        "rotZ": 179.898178,
+        "posX": -58.1031265,
+        "posY": 0.8852962,
+        "posZ": 36.47498,
+        "rotX": 359.9816,
+        "rotY": 180.101791,
+        "rotZ": 179.898438,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -92394,12 +92330,12 @@
       "GUID": "c1af5f",
       "Name": "Card",
       "Transform": {
-        "posX": -49.58968,
-        "posY": 0.881949067,
-        "posZ": 35.918972,
-        "rotX": 0.0138270808,
-        "rotY": 179.723679,
-        "rotZ": 0.0170619935,
+        "posX": -49.58923,
+        "posY": 0.8823918,
+        "posZ": 35.91889,
+        "rotX": 0.0135090025,
+        "rotY": 179.7255,
+        "rotZ": 0.0183206461,
         "scaleX": 2.24,
         "scaleY": 1.0,
         "scaleZ": 2.24
@@ -92451,12 +92387,12 @@
       "GUID": "91afd2",
       "Name": "Card",
       "Transform": {
-        "posX": -51.9068,
-        "posY": 0.909801841,
-        "posZ": 35.4837837,
-        "rotX": 0.0116144978,
-        "rotY": 180.166779,
-        "rotZ": 359.990234,
+        "posX": -51.9064255,
+        "posY": 0.9102889,
+        "posZ": 35.48371,
+        "rotX": 0.0114807514,
+        "rotY": 180.167526,
+        "rotZ": 359.992371,
         "scaleX": 2.24,
         "scaleY": 1.0,
         "scaleZ": 2.24
@@ -92508,12 +92444,12 @@
       "GUID": "35f52f",
       "Name": "Card",
       "Transform": {
-        "posX": -77.85349,
-        "posY": 0.8935507,
-        "posZ": 36.582428,
-        "rotX": 359.974976,
-        "rotY": 179.999542,
-        "rotZ": 180.000076,
+        "posX": -77.8534851,
+        "posY": 0.893552244,
+        "posZ": 36.5824051,
+        "rotX": 359.975525,
+        "rotY": 179.999619,
+        "rotZ": 180.000061,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -92565,12 +92501,12 @@
       "GUID": "34c0e7",
       "Name": "Card",
       "Transform": {
-        "posX": -75.95762,
-        "posY": 0.915283442,
-        "posZ": 36.5162354,
-        "rotX": 0.0472516231,
-        "rotY": 179.978058,
-        "rotZ": 180.625534,
+        "posX": -75.95753,
+        "posY": 0.9150686,
+        "posZ": 36.5160255,
+        "rotX": 0.05410727,
+        "rotY": 179.977188,
+        "rotZ": 180.607681,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -92623,11 +92559,11 @@
       "Name": "Card",
       "Transform": {
         "posX": -73.69834,
-        "posY": 0.9317092,
-        "posZ": 33.41866,
-        "rotX": 0.7692914,
-        "rotY": 179.987534,
-        "rotZ": 179.998047,
+        "posY": 0.931540966,
+        "posZ": 33.41865,
+        "rotX": 0.765402734,
+        "rotY": 179.987518,
+        "rotZ": 179.997269,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -92679,12 +92615,12 @@
       "GUID": "28e165",
       "Name": "Card",
       "Transform": {
-        "posX": -75.7886,
-        "posY": 0.934994161,
-        "posZ": 31.8769569,
-        "rotX": 0.784474969,
-        "rotY": 180.019043,
-        "rotZ": 179.915848,
+        "posX": -75.7885,
+        "posY": 0.9347839,
+        "posZ": 31.87685,
+        "rotX": 0.788474441,
+        "rotY": 180.020523,
+        "rotZ": 179.929169,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -92736,12 +92672,12 @@
       "GUID": "afbac0",
       "Name": "Card",
       "Transform": {
-        "posX": -77.74254,
-        "posY": 0.946505,
-        "posZ": 31.0123234,
-        "rotX": 0.7810174,
-        "rotY": 179.993958,
-        "rotZ": 179.537872,
+        "posX": -77.74251,
+        "posY": 0.9468101,
+        "posZ": 31.0123253,
+        "rotX": 0.7833935,
+        "rotY": 179.994659,
+        "rotZ": 179.531815,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -92794,11 +92730,11 @@
       "Name": "Card",
       "Transform": {
         "posX": -57.2490654,
-        "posY": 1.21028757,
+        "posY": 1.21028078,
         "posZ": 20.3355885,
-        "rotX": 0.00063546974,
-        "rotY": 179.993591,
-        "rotZ": 180.00029,
+        "rotX": 0.0008058081,
+        "rotY": 179.993637,
+        "rotZ": 180.0003,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -92850,12 +92786,12 @@
       "GUID": "1e32e6",
       "Name": "Card",
       "Transform": {
-        "posX": -50.04493,
-        "posY": 0.8335913,
-        "posZ": 37.31647,
-        "rotX": 0.000251929217,
-        "rotY": 179.699966,
-        "rotZ": -2.842263E-05,
+        "posX": -50.0448952,
+        "posY": 0.833591044,
+        "posZ": 37.31645,
+        "rotX": 0.000259027,
+        "rotY": 179.700256,
+        "rotZ": -2.37412991E-07,
         "scaleX": 2.24,
         "scaleY": 1.0,
         "scaleZ": 2.24
@@ -92904,141 +92840,15 @@
       "XmlUI": ""
     },
     {
-      "GUID": "6363c3",
-      "Name": "Custom_Model",
-      "Transform": {
-        "posX": -66.05437,
-        "posY": 0.880013347,
-        "posZ": 23.453249,
-        "rotX": 3.48293474E-06,
-        "rotY": 180.012238,
-        "rotZ": -1.984946E-05,
-        "scaleX": 1.1,
-        "scaleY": 3.0,
-        "scaleZ": 1.1
-      },
-      "Nickname": "Cultist (Moon)",
-      "Description": "",
-      "GMNotes": "",
-      "ColorDiffuse": {
-        "r": 1.0,
-        "g": 1.0,
-        "b": 1.0
-      },
-      "Tags": [
-        "DiscardMe_SpecialCase"
-      ],
-      "LayoutGroupSortIndex": 0,
-      "Value": 0,
-      "Locked": false,
-      "Grid": false,
-      "Snap": false,
-      "IgnoreFoW": false,
-      "MeasureMovement": false,
-      "DragSelectable": true,
-      "Autoraise": true,
-      "Sticky": false,
-      "Tooltip": false,
-      "GridProjection": false,
-      "HideWhenFaceDown": false,
-      "Hands": false,
-      "CustomMesh": {
-        "MeshURL": "http://cloud-3.steamusercontent.com/ugc/771742135112134361/7F786B20F6082C3285B05712FAE0B4232D3044ED/",
-        "DiffuseURL": "http://cloud-3.steamusercontent.com/ugc/771742135112134807/97817C92F1C3525A40D4D9AA966C53AA2FBF9F20/",
-        "NormalURL": "",
-        "ColliderURL": "",
-        "Convex": true,
-        "MaterialIndex": 3,
-        "TypeIndex": 0,
-        "CustomShader": {
-          "SpecularColor": {
-            "r": 1.0,
-            "g": 1.0,
-            "b": 1.0
-          },
-          "SpecularIntensity": 0.0,
-          "SpecularSharpness": 2.0,
-          "FresnelStrength": 0.0
-        },
-        "CastShadows": true
-      },
-      "LuaScript": "",
-      "LuaScriptState": "",
-      "XmlUI": ""
-    },
-    {
-      "GUID": "0975ec",
-      "Name": "Custom_Model",
-      "Transform": {
-        "posX": -63.56927,
-        "posY": 0.8800142,
-        "posZ": 23.1079826,
-        "rotX": 3.383076E-06,
-        "rotY": 179.969223,
-        "rotZ": -1.96764E-05,
-        "scaleX": 1.1,
-        "scaleY": 3.0,
-        "scaleZ": 1.1
-      },
-      "Nickname": "Gug (Monster) (Oblong)",
-      "Description": "",
-      "GMNotes": "",
-      "ColorDiffuse": {
-        "r": 1.0,
-        "g": 1.0,
-        "b": 1.0
-      },
-      "Tags": [
-        "DiscardMe_SpecialCase"
-      ],
-      "LayoutGroupSortIndex": 0,
-      "Value": 0,
-      "Locked": false,
-      "Grid": false,
-      "Snap": false,
-      "IgnoreFoW": false,
-      "MeasureMovement": false,
-      "DragSelectable": true,
-      "Autoraise": true,
-      "Sticky": false,
-      "Tooltip": false,
-      "GridProjection": false,
-      "HideWhenFaceDown": false,
-      "Hands": false,
-      "CustomMesh": {
-        "MeshURL": "http://cloud-3.steamusercontent.com/ugc/771742135112134361/7F786B20F6082C3285B05712FAE0B4232D3044ED/",
-        "DiffuseURL": "http://cloud-3.steamusercontent.com/ugc/771742135112136269/97DA1A5343D25B749A916C43DE538A08A2851CCF/",
-        "NormalURL": "",
-        "ColliderURL": "",
-        "Convex": true,
-        "MaterialIndex": 3,
-        "TypeIndex": 0,
-        "CustomShader": {
-          "SpecularColor": {
-            "r": 1.0,
-            "g": 1.0,
-            "b": 1.0
-          },
-          "SpecularIntensity": 0.0,
-          "SpecularSharpness": 2.0,
-          "FresnelStrength": 0.0
-        },
-        "CastShadows": true
-      },
-      "LuaScript": "",
-      "LuaScriptState": "",
-      "XmlUI": ""
-    },
-    {
       "GUID": "4c5248",
       "Name": "Custom_Model",
       "Transform": {
-        "posX": -63.51565,
-        "posY": 0.8800145,
-        "posZ": 25.83876,
-        "rotX": 3.61018988E-06,
-        "rotY": 180.0,
-        "rotZ": -1.97128429E-05,
+        "posX": -63.5156975,
+        "posY": 0.8800192,
+        "posZ": 25.8384724,
+        "rotX": 0.001340164,
+        "rotY": 179.9968,
+        "rotZ": -0.00143438089,
         "scaleX": 1.1,
         "scaleY": 3.0,
         "scaleZ": 1.1
@@ -93100,9 +92910,9 @@
         "posX": -68.2370148,
         "posY": 0.8800127,
         "posZ": 23.5945187,
-        "rotX": 3.176665E-06,
-        "rotY": 180.024643,
-        "rotZ": -1.974591E-05,
+        "rotX": 3.30199055E-06,
+        "rotY": 180.024658,
+        "rotZ": -1.9607276E-05,
         "scaleX": 0.6,
         "scaleY": 1.0,
         "scaleZ": 0.6
@@ -93112,8 +92922,8 @@
       "GMNotes": "Delete\nCunt\nFuck\nWhat\nGoAway\nWhy",
       "ColorDiffuse": {
         "r": 1.0,
-        "g": 0.3432496,
-        "b": 0.188627511
+        "g": 0.3432495,
+        "b": 0.188627422
       },
       "Tags": [
         "DeleteMe"
@@ -93155,8 +92965,8 @@
         "posX": -70.1085,
         "posY": 0.9200121,
         "posZ": 23.44222,
-        "rotX": -3.17157446E-06,
-        "rotY": 0.018243866,
+        "rotX": -3.25600877E-06,
+        "rotY": 0.0182439741,
         "rotZ": 180.000015,
         "scaleX": 0.25,
         "scaleY": 0.4,
@@ -93219,9 +93029,9 @@
       "Description": "",
       "GMNotes": "Discard_Platform_Large",
       "ColorDiffuse": {
-        "r": 0.0430816337,
-        "g": 0.164626747,
-        "b": 0.431289077
+        "r": 0.04308156,
+        "g": 0.164626658,
+        "b": 0.431288958
       },
       "Tags": [
         "DiscardTarget",
@@ -93283,9 +93093,9 @@
       "Description": "",
       "GMNotes": "Discard_Platform_Large",
       "ColorDiffuse": {
-        "r": 0.04308168,
-        "g": 0.1646268,
-        "b": 0.431289136
+        "r": 0.0430816039,
+        "g": 0.164626718,
+        "b": 0.431289017
       },
       "Tags": [
         "DiscardTarget",
@@ -93347,9 +93157,9 @@
       "Description": "",
       "GMNotes": "Discard_Platform_Large",
       "ColorDiffuse": {
-        "r": 0.04308168,
-        "g": 0.1646268,
-        "b": 0.431289136
+        "r": 0.0430816039,
+        "g": 0.164626718,
+        "b": 0.431289017
       },
       "Tags": [
         "DiscardTarget",
@@ -93400,9 +93210,9 @@
         "posX": -39.05516,
         "posY": 1.1663332,
         "posZ": 15.9705076,
-        "rotX": -1.87508488E-06,
+        "rotX": -5.80767164E-06,
         "rotY": 179.99971,
-        "rotZ": -6.309241E-06,
+        "rotZ": -6.357675E-06,
         "scaleX": 2.24,
         "scaleY": 1.0,
         "scaleZ": 2.24
@@ -93457,9 +93267,9 @@
         "posX": -45.6792,
         "posY": 1.18328893,
         "posZ": 15.7639866,
-        "rotX": 8.723619E-06,
+        "rotX": 7.5809703E-06,
         "rotY": 179.99971,
-        "rotZ": -2.673492E-06,
+        "rotZ": -2.75337175E-06,
         "scaleX": 2.24,
         "scaleY": 1.0,
         "scaleZ": 2.24
@@ -93630,12 +93440,12 @@
       "GUID": "acffee",
       "Name": "Deck",
       "Transform": {
-        "posX": -45.46495,
-        "posY": 0.8939492,
-        "posZ": 34.9299278,
-        "rotX": -0.000405609928,
-        "rotY": 179.983444,
-        "rotZ": 181.03067,
+        "posX": -45.4650269,
+        "posY": 0.894185841,
+        "posZ": 34.9298935,
+        "rotX": -0.000407064945,
+        "rotY": 179.984024,
+        "rotZ": 181.036835,
         "scaleX": 2.24,
         "scaleY": 1.0,
         "scaleZ": 2.24
@@ -93881,12 +93691,12 @@
       "GUID": "a4e7bf",
       "Name": "Custom_Board",
       "Transform": {
-        "posX": 10.3188505,
-        "posY": 4.50095,
-        "posZ": 0.973922968,
-        "rotX": 0.2909751,
-        "rotY": 179.3958,
-        "rotZ": 0.116211772,
+        "posX": 10.3188152,
+        "posY": 4.5009,
+        "posZ": 0.973115742,
+        "rotX": 0.29006505,
+        "rotY": 179.3972,
+        "rotZ": 0.1135932,
         "scaleX": 0.16,
         "scaleY": 0.43,
         "scaleZ": 0.35
@@ -93895,9 +93705,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430816337,
-        "g": 0.164626747,
-        "b": 0.431289077
+        "r": 0.04308156,
+        "g": 0.164626658,
+        "b": 0.431288958
       },
       "Tags": [
         "DiscardTarget"
@@ -93944,12 +93754,12 @@
       "GUID": "384e24",
       "Name": "Custom_Board",
       "Transform": {
-        "posX": 10.3293743,
-        "posY": 4.22869539,
-        "posZ": 0.9286271,
-        "rotX": 0.286971271,
-        "rotY": 179.3867,
-        "rotZ": 0.115051188,
+        "posX": 10.3293514,
+        "posY": 4.22864628,
+        "posZ": 0.9278445,
+        "rotX": 0.286092639,
+        "rotY": 179.388077,
+        "rotZ": 0.112486623,
         "scaleX": 0.16,
         "scaleY": 0.43,
         "scaleZ": 0.35
@@ -93958,9 +93768,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430816039,
-        "g": 0.164626718,
-        "b": 0.431289017
+        "r": 0.0430815443,
+        "g": 0.164626628,
+        "b": 0.431288928
       },
       "Tags": [
         "DiscardTarget"
@@ -94007,12 +93817,12 @@
       "GUID": "aae8cd",
       "Name": "Custom_Board",
       "Transform": {
-        "posX": 10.2852545,
-        "posY": 1.79958808,
-        "posZ": 1.17839551,
-        "rotX": 0.02305356,
-        "rotY": 180.071854,
-        "rotZ": 0.0249999482,
+        "posX": 10.28523,
+        "posY": 1.79701209,
+        "posZ": 1.17833889,
+        "rotX": 0.0319024324,
+        "rotY": 180.0716,
+        "rotZ": 0.0262320936,
         "scaleX": 0.16,
         "scaleY": 0.43,
         "scaleZ": 0.35
@@ -94021,9 +93831,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430816561,
-        "g": 0.164626777,
-        "b": 0.4312891
+        "r": 0.04308158,
+        "g": 0.164626688,
+        "b": 0.431289
       },
       "Tags": [
         "DiscardTarget"
@@ -94061,7 +93871,7 @@
           "Rotation": {
             "x": 1.65742058E-05,
             "y": 359.986359,
-            "z": -2.4303281E-05
+            "z": -2.43032864E-05
           }
         }
       ]
@@ -94070,12 +93880,12 @@
       "GUID": "717efa",
       "Name": "Custom_Board",
       "Transform": {
-        "posX": 10.2894964,
-        "posY": 1.53113866,
-        "posZ": 1.20770144,
+        "posX": 10.2894936,
+        "posY": 1.53113961,
+        "posZ": 1.2076925,
         "rotX": 359.972656,
         "rotY": 180.042313,
-        "rotZ": 0.00821676,
+        "rotZ": 0.008217904,
         "scaleX": 0.16,
         "scaleY": 0.43,
         "scaleZ": 0.35
@@ -94084,9 +93894,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.04308168,
-        "g": 0.1646268,
-        "b": 0.431289136
+        "r": 0.0430816039,
+        "g": 0.164626718,
+        "b": 0.431289017
       },
       "Tags": [
         "DiscardTarget"
@@ -94133,12 +93943,12 @@
       "GUID": "7c8733",
       "Name": "Custom_Board",
       "Transform": {
-        "posX": 10.28881,
-        "posY": 2.06567764,
-        "posZ": 1.17130756,
-        "rotX": 0.07971169,
-        "rotY": 180.08075,
-        "rotZ": 0.0430682339,
+        "posX": 10.2888031,
+        "posY": 2.06821775,
+        "posZ": 1.17113507,
+        "rotX": 0.0706634149,
+        "rotY": 180.080688,
+        "rotZ": 0.0403669178,
         "scaleX": 0.16,
         "scaleY": 0.43,
         "scaleZ": 0.35
@@ -94147,9 +93957,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430816337,
-        "g": 0.164626747,
-        "b": 0.431289077
+        "r": 0.04308156,
+        "g": 0.164626658,
+        "b": 0.431288958
       },
       "Tags": [
         "DiscardTarget"
@@ -94182,12 +93992,12 @@
       "GUID": "1dcf97",
       "Name": "Custom_Board",
       "Transform": {
-        "posX": 10.2830353,
-        "posY": 2.33472538,
-        "posZ": 1.13014209,
-        "rotX": 0.122850023,
-        "rotY": 180.034088,
-        "rotZ": 0.0583658963,
+        "posX": 10.2830229,
+        "posY": 2.33469248,
+        "posZ": 1.1299386,
+        "rotX": 0.122363321,
+        "rotY": 180.0339,
+        "rotZ": 0.05671399,
         "scaleX": 0.16,
         "scaleY": 0.43,
         "scaleZ": 0.35
@@ -94196,9 +94006,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.04308168,
-        "g": 0.1646268,
-        "b": 0.431289136
+        "r": 0.0430816039,
+        "g": 0.164626718,
+        "b": 0.431289017
       },
       "Tags": [
         "DiscardTarget"
@@ -94246,11 +94056,11 @@
       "Name": "Custom_Board",
       "Transform": {
         "posX": 10.28156,
-        "posY": 2.605986,
-        "posZ": 1.07064772,
-        "rotX": 0.156633422,
-        "rotY": 180.165329,
-        "rotZ": 0.07148218,
+        "posY": 2.60594964,
+        "posZ": 1.07033694,
+        "rotX": 0.156236142,
+        "rotY": 180.165466,
+        "rotZ": 0.06987298,
         "scaleX": 0.16,
         "scaleY": 0.43,
         "scaleZ": 0.35
@@ -94259,9 +94069,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430816337,
-        "g": 0.164626747,
-        "b": 0.431289077
+        "r": 0.04308156,
+        "g": 0.164626658,
+        "b": 0.431288958
       },
       "Tags": [
         "DiscardTarget"
@@ -94294,12 +94104,12 @@
       "GUID": "e3672e",
       "Name": "Custom_Board",
       "Transform": {
-        "posX": 10.2802,
-        "posY": 2.87365556,
-        "posZ": 1.06583309,
-        "rotX": 0.194274217,
-        "rotY": 180.19783,
-        "rotZ": 0.08601828,
+        "posX": 10.2802086,
+        "posY": 2.87361169,
+        "posZ": 1.06542015,
+        "rotX": 0.193658084,
+        "rotY": 180.198059,
+        "rotZ": 0.08389972,
         "scaleX": 0.16,
         "scaleY": 0.43,
         "scaleZ": 0.35
@@ -94308,9 +94118,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.04308168,
-        "g": 0.1646268,
-        "b": 0.431289136
+        "r": 0.0430816039,
+        "g": 0.164626718,
+        "b": 0.431289017
       },
       "Tags": [
         "DiscardTarget"
@@ -94357,12 +94167,12 @@
       "GUID": "235397",
       "Name": "Custom_Board",
       "Transform": {
-        "posX": 10.3223639,
-        "posY": 3.414045,
-        "posZ": 0.98562634,
-        "rotX": 0.24568893,
-        "rotY": 179.786758,
-        "rotZ": 0.102362216,
+        "posX": 10.322381,
+        "posY": 3.413998,
+        "posZ": 0.9850114,
+        "rotX": 0.24492459,
+        "rotY": 179.787491,
+        "rotZ": 0.09995487,
         "scaleX": 0.16,
         "scaleY": 0.43,
         "scaleZ": 0.35
@@ -94371,9 +94181,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.04308168,
-        "g": 0.1646268,
-        "b": 0.431289136
+        "r": 0.0430816039,
+        "g": 0.164626718,
+        "b": 0.431289017
       },
       "Tags": [
         "DiscardTarget"
@@ -94409,7 +94219,7 @@
             "z": -0.00066336937
           },
           "Rotation": {
-            "x": 1.18156022E-05,
+            "x": 1.18156049E-05,
             "y": 359.975037,
             "z": -1.85686361E-06
           }
@@ -94420,12 +94230,12 @@
       "GUID": "79f499",
       "Name": "Custom_Board",
       "Transform": {
-        "posX": 10.2935162,
-        "posY": 3.14509153,
-        "posZ": 1.00200272,
-        "rotX": 0.22112821,
-        "rotY": 180.122574,
-        "rotZ": 0.09580463,
+        "posX": 10.2935286,
+        "posY": 3.14504528,
+        "posZ": 1.00148118,
+        "rotX": 0.2205549,
+        "rotY": 180.123169,
+        "rotZ": 0.09371082,
         "scaleX": 0.16,
         "scaleY": 0.43,
         "scaleZ": 0.35
@@ -94434,9 +94244,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430816337,
-        "g": 0.164626747,
-        "b": 0.431289077
+        "r": 0.04308156,
+        "g": 0.164626658,
+        "b": 0.431288958
       },
       "Tags": [
         "DiscardTarget"
@@ -94469,12 +94279,12 @@
       "GUID": "1d4a50",
       "Name": "Custom_Board",
       "Transform": {
-        "posX": 10.3102074,
-        "posY": 3.6859417,
-        "posZ": 0.9525246,
-        "rotX": 0.26408422,
-        "rotY": 179.719116,
-        "rotZ": 0.108741321,
+        "posX": 10.310214,
+        "posY": 3.68589234,
+        "posZ": 0.951831,
+        "rotX": 0.263339043,
+        "rotY": 179.720154,
+        "rotZ": 0.106345825,
         "scaleX": 0.16,
         "scaleY": 0.43,
         "scaleZ": 0.35
@@ -94483,9 +94293,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430816337,
-        "g": 0.164626747,
-        "b": 0.431289077
+        "r": 0.04308156,
+        "g": 0.164626658,
+        "b": 0.431288958
       },
       "Tags": [
         "DiscardTarget"
@@ -94518,12 +94328,12 @@
       "GUID": "d5a4cc",
       "Name": "Custom_Board",
       "Transform": {
-        "posX": 10.3028307,
-        "posY": 3.95642376,
-        "posZ": 0.9383009,
-        "rotX": 0.276857883,
-        "rotY": 179.79422,
-        "rotZ": 0.113718346,
+        "posX": 10.3028231,
+        "posY": 3.95637369,
+        "posZ": 0.937548637,
+        "rotX": 0.275993526,
+        "rotY": 179.79538,
+        "rotZ": 0.111143269,
         "scaleX": 0.16,
         "scaleY": 0.43,
         "scaleZ": 0.35
@@ -94532,9 +94342,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "small",
       "ColorDiffuse": {
-        "r": 0.0430816934,
-        "g": 0.164626837,
-        "b": 0.431289166
+        "r": 0.0430816337,
+        "g": 0.164626747,
+        "b": 0.431289077
       },
       "Tags": [
         "DiscardTarget"
@@ -94571,7 +94381,7 @@
           },
           "Rotation": {
             "x": 1.69245122E-05,
-            "y": 0.029883476,
+            "y": 0.0298834853,
             "z": -7.07923937E-06
           }
         }
@@ -94595,9 +94405,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "Discard_Platform_Large",
       "ColorDiffuse": {
-        "r": 0.0430816561,
-        "g": 0.164626777,
-        "b": 0.4312891
+        "r": 0.04308158,
+        "g": 0.164626688,
+        "b": 0.431289
       },
       "Tags": [
         "DiscardTarget",
@@ -94648,9 +94458,9 @@
         "posX": 60.1409874,
         "posY": 1.1180793,
         "posZ": 58.1824341,
-        "rotX": -1.186662E-05,
+        "rotX": -1.18666258E-05,
         "rotY": 180.028015,
-        "rotZ": -3.707099E-06,
+        "rotZ": -3.70709654E-06,
         "scaleX": 0.2,
         "scaleY": 0.43,
         "scaleZ": 0.44
@@ -94659,9 +94469,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "Discard_Platform_Large",
       "ColorDiffuse": {
-        "r": 0.04308168,
-        "g": 0.1646268,
-        "b": 0.431289136
+        "r": 0.0430816039,
+        "g": 0.164626718,
+        "b": 0.431289017
       },
       "Tags": [
         "DiscardTarget",
@@ -94723,9 +94533,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "Discard_Platform_Large",
       "ColorDiffuse": {
-        "r": 0.0430816561,
-        "g": 0.164626777,
-        "b": 0.4312891
+        "r": 0.04308158,
+        "g": 0.164626688,
+        "b": 0.431289
       },
       "Tags": [
         "DiscardTarget",
@@ -94787,9 +94597,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "Discard_Platform_Large",
       "ColorDiffuse": {
-        "r": 0.0430816561,
-        "g": 0.164626777,
-        "b": 0.4312891
+        "r": 0.04308158,
+        "g": 0.164626688,
+        "b": 0.431289
       },
       "Tags": [
         "DiscardTarget",
@@ -94851,9 +94661,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "Discard_Platform_Large",
       "ColorDiffuse": {
-        "r": 0.0430816337,
-        "g": 0.164626747,
-        "b": 0.431289077
+        "r": 0.04308156,
+        "g": 0.164626658,
+        "b": 0.431288958
       },
       "Tags": [
         "DiscardTarget",
@@ -94915,9 +94725,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "Discard_Platform_Large",
       "ColorDiffuse": {
-        "r": 0.0430816934,
-        "g": 0.164626837,
-        "b": 0.431289166
+        "r": 0.0430816337,
+        "g": 0.164626747,
+        "b": 0.431289077
       },
       "Tags": [
         "DiscardTarget",
@@ -94979,9 +94789,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "Discard_Platform_Large",
       "ColorDiffuse": {
-        "r": 0.0430816561,
-        "g": 0.164626777,
-        "b": 0.4312891
+        "r": 0.04308158,
+        "g": 0.164626688,
+        "b": 0.431289
       },
       "Tags": [
         "DiscardTarget",
@@ -95089,9 +94899,9 @@
       "Description": "",
       "GMNotes": "Discard_Platform_Small",
       "ColorDiffuse": {
-        "r": 0.0430814549,
-        "g": 0.164626509,
-        "b": 0.4312888
+        "r": 0.0430813953,
+        "g": 0.16462642,
+        "b": 0.431288719
       },
       "Tags": [
         "DiscardTarget",
@@ -95153,9 +94963,9 @@
       "Description": "Card Platform [large]",
       "GMNotes": "Discard_Platform_Large",
       "ColorDiffuse": {
-        "r": 0.0430816337,
-        "g": 0.164626747,
-        "b": 0.431289077
+        "r": 0.04308156,
+        "g": 0.164626658,
+        "b": 0.431288958
       },
       "Tags": [
         "DiscardTarget",
@@ -95217,9 +95027,9 @@
       "Description": "",
       "GMNotes": "Discard_Platform_Small",
       "ColorDiffuse": {
-        "r": 0.0430815,
-        "g": 0.164626569,
-        "b": 0.431288868
+        "r": 0.04308144,
+        "g": 0.164626479,
+        "b": 0.431288779
       },
       "Tags": [
         "DiscardTarget",
@@ -95281,9 +95091,9 @@
       "Description": "",
       "GMNotes": "Discard_Platform_Small",
       "ColorDiffuse": {
-        "r": 0.0430814847,
-        "g": 0.164626539,
-        "b": 0.431288838
+        "r": 0.0430814177,
+        "g": 0.164626449,
+        "b": 0.431288749
       },
       "Tags": [
         "DiscardTarget",
@@ -95345,9 +95155,9 @@
       "Description": "",
       "GMNotes": "Discard_Platform_Small",
       "ColorDiffuse": {
-        "r": 0.0430815,
-        "g": 0.164626569,
-        "b": 0.431288868
+        "r": 0.04308144,
+        "g": 0.164626479,
+        "b": 0.431288779
       },
       "Tags": [
         "DiscardTarget",
@@ -95409,9 +95219,9 @@
       "Description": "",
       "GMNotes": "Discard_Platform_Small",
       "ColorDiffuse": {
-        "r": 0.0430815,
-        "g": 0.164626569,
-        "b": 0.431288868
+        "r": 0.04308144,
+        "g": 0.164626479,
+        "b": 0.431288779
       },
       "Tags": [
         "DiscardTarget",
@@ -95473,9 +95283,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "Discard_Platform_Small",
       "ColorDiffuse": {
-        "r": 0.04308144,
-        "g": 0.164626479,
-        "b": 0.431288779
+        "r": 0.04308138,
+        "g": 0.16462639,
+        "b": 0.4312887
       },
       "Tags": [
         "DiscardTarget",
@@ -95512,7 +95322,7 @@
             "z": -0.00278994767
           },
           "Rotation": {
-            "x": 1.48471872E-05,
+            "x": 1.48471818E-05,
             "y": 359.963867,
             "z": 180.0
           }
@@ -95528,7 +95338,7 @@
         "posZ": 55.254715,
         "rotX": 0.1031921,
         "rotY": 180.0077,
-        "rotZ": 1.21301209E-05,
+        "rotZ": 1.21301309E-05,
         "scaleX": 0.16,
         "scaleY": 0.43,
         "scaleZ": 0.35
@@ -95537,9 +95347,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "Discard_Platform_Small",
       "ColorDiffuse": {
-        "r": 0.0430815,
-        "g": 0.164626569,
-        "b": 0.431288868
+        "r": 0.04308144,
+        "g": 0.164626479,
+        "b": 0.431288779
       },
       "Tags": [
         "DiscardTarget",
@@ -95576,9 +95386,9 @@
             "z": -0.000733109657
           },
           "Rotation": {
-            "x": -2.36245E-05,
+            "x": -2.3624505E-05,
             "y": 359.9488,
-            "z": -1.73037358E-06
+            "z": -1.730373E-06
           }
         }
       ]
@@ -95601,9 +95411,9 @@
       "Description": "Card Platform [small]",
       "GMNotes": "Discard_Platform_Small",
       "ColorDiffuse": {
-        "r": 0.043081522,
-        "g": 0.1646266,
-        "b": 0.4312889
+        "r": 0.0430814549,
+        "g": 0.164626509,
+        "b": 0.4312888
       },
       "Tags": [
         "DiscardTarget",
@@ -95652,11 +95462,11 @@
       "Name": "Card",
       "Transform": {
         "posX": -57.5431557,
-        "posY": 0.8337235,
-        "posZ": 34.413166,
-        "rotX": -0.0004991755,
-        "rotY": 179.997833,
-        "rotZ": 179.995331,
+        "posY": 0.8337199,
+        "posZ": 34.4131775,
+        "rotX": -0.000487388344,
+        "rotY": 179.997757,
+        "rotZ": 179.995468,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -95708,12 +95518,12 @@
       "GUID": "cd5e78",
       "Name": "Card",
       "Transform": {
-        "posX": -55.1281281,
-        "posY": 0.8949839,
+        "posX": -55.127903,
+        "posY": 0.895462453,
         "posZ": 36.8277321,
-        "rotX": 359.989838,
-        "rotY": 180.007614,
-        "rotZ": 180.713379,
+        "rotX": 359.992462,
+        "rotY": 180.009369,
+        "rotZ": 180.698441,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -95765,12 +95575,12 @@
       "GUID": "040f6c",
       "Name": "Card",
       "Transform": {
-        "posX": -55.04278,
-        "posY": 0.854301631,
-        "posZ": 33.5612869,
-        "rotX": 359.9562,
-        "rotY": 180.132187,
-        "rotZ": 180.231873,
+        "posX": -55.04268,
+        "posY": 0.8542946,
+        "posZ": 33.56129,
+        "rotX": 359.957825,
+        "rotY": 180.135025,
+        "rotZ": 180.2358,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -95822,12 +95632,12 @@
       "GUID": "9609e0",
       "Name": "Deck",
       "Transform": {
-        "posX": -76.31064,
-        "posY": 1.04784608,
-        "posZ": 34.3568649,
-        "rotX": 359.139771,
-        "rotY": 180.021469,
-        "rotZ": 179.5372,
+        "posX": -76.3104553,
+        "posY": 1.04768348,
+        "posZ": 34.35657,
+        "rotX": 359.134,
+        "rotY": 180.022247,
+        "rotZ": 179.533035,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -96175,8 +95985,8 @@
         "posX": -72.1385345,
         "posY": 1.38042319,
         "posZ": 48.7536774,
-        "rotX": 0.103192039,
-        "rotY": 179.998184,
+        "rotX": 0.103192545,
+        "rotY": 179.998,
         "rotZ": 180.0,
         "scaleX": 1.85,
         "scaleY": 1.0,
@@ -96232,8 +96042,8 @@
         "posX": -76.63114,
         "posY": 1.38042557,
         "posZ": 48.75499,
-        "rotX": 0.103201605,
-        "rotY": 179.99498,
+        "rotX": 0.103204481,
+        "rotY": 179.994812,
         "rotZ": 180.0,
         "scaleX": 1.85,
         "scaleY": 1.0,
@@ -96287,10 +96097,10 @@
       "Name": "Card",
       "Transform": {
         "posX": -67.6347,
-        "posY": 1.39213252,
-        "posZ": 55.25442,
-        "rotX": 0.103191696,
-        "rotY": 179.998276,
+        "posY": 1.39213264,
+        "posZ": 55.2544174,
+        "rotX": 0.103195533,
+        "rotY": 179.998123,
         "rotZ": 180.0,
         "scaleX": 1.85,
         "scaleY": 1.0,
@@ -96345,9 +96155,9 @@
       "Transform": {
         "posX": -72.1336746,
         "posY": 1.39213264,
-        "posZ": 55.25457,
-        "rotX": 0.103196733,
-        "rotY": 179.997849,
+        "posZ": 55.2545662,
+        "rotX": 0.103192896,
+        "rotY": 179.997711,
         "rotZ": 180.0,
         "scaleX": 1.85,
         "scaleY": 1.0,
@@ -96403,8 +96213,8 @@
         "posX": -76.63236,
         "posY": 1.39213359,
         "posZ": 55.2553177,
-        "rotX": 0.103224695,
-        "rotY": 179.997849,
+        "rotX": 0.103225991,
+        "rotY": 179.997681,
         "rotZ": 180.0,
         "scaleX": 1.85,
         "scaleY": 1.0,
@@ -96457,12 +96267,12 @@
       "GUID": "a30196",
       "Name": "Custom_Token",
       "Transform": {
-        "posX": -64.433815,
-        "posY": 1.47728777,
-        "posZ": 20.2731037,
-        "rotX": 5.9349246,
-        "rotY": 182.004364,
-        "rotZ": 22.6954784,
+        "posX": -64.43377,
+        "posY": 1.47701311,
+        "posZ": 20.2732849,
+        "rotX": 5.92146,
+        "rotY": 182.003265,
+        "rotZ": 22.6816578,
         "scaleX": 0.61,
         "scaleY": 1.0,
         "scaleZ": 0.61
@@ -96514,12 +96324,12 @@
       "GUID": "25b937",
       "Name": "Custom_Token",
       "Transform": {
-        "posX": -67.8689346,
-        "posY": 1.332768,
-        "posZ": 20.24839,
-        "rotX": 359.8961,
-        "rotY": 0.174834669,
-        "rotZ": 359.897766,
+        "posX": -67.869606,
+        "posY": 1.33241332,
+        "posZ": 20.2481136,
+        "rotX": 359.9557,
+        "rotY": 0.192347258,
+        "rotZ": 359.943359,
         "scaleX": 0.61,
         "scaleY": 1.0,
         "scaleZ": 0.61
@@ -96571,12 +96381,12 @@
       "GUID": "920d47",
       "Name": "Custom_Token",
       "Transform": {
-        "posX": -66.0658646,
-        "posY": 1.52845144,
-        "posZ": 20.1411381,
-        "rotX": 0.604618549,
-        "rotY": 179.872574,
-        "rotZ": 7.39920568,
+        "posX": -66.0664749,
+        "posY": 1.52870166,
+        "posZ": 20.1412544,
+        "rotX": 0.547947049,
+        "rotY": 179.849274,
+        "rotZ": 7.42872572,
         "scaleX": 0.61,
         "scaleY": 1.0,
         "scaleZ": 0.607863367
@@ -96629,12 +96439,12 @@
       "GUID": "e832df",
       "Name": "Card",
       "Transform": {
-        "posX": -57.81779,
-        "posY": 0.887303948,
-        "posZ": 31.0601482,
-        "rotX": 0.8228897,
-        "rotY": 179.987244,
-        "rotZ": 179.578568,
+        "posX": -57.81785,
+        "posY": 0.88699913,
+        "posZ": 31.0601559,
+        "rotX": 0.8080774,
+        "rotY": 179.986038,
+        "rotZ": 179.5648,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -96809,9 +96619,9 @@
         "posX": -65.9788361,
         "posY": 0.880013645,
         "posZ": 26.0728836,
-        "rotX": 3.59478577E-06,
+        "rotX": 3.25867563E-06,
         "rotY": 180.000229,
-        "rotZ": -1.98227935E-05,
+        "rotZ": -2.00387767E-05,
         "scaleX": 1.1,
         "scaleY": 3.0,
         "scaleZ": 1.1
@@ -96873,9 +96683,9 @@
         "posX": -70.5048447,
         "posY": 1.19110882,
         "posZ": 26.11394,
-        "rotX": -3.553172E-06,
-        "rotY": 0.010390358,
-        "rotZ": 2.03054842E-05,
+        "rotX": -3.26689974E-06,
+        "rotY": 0.0103903385,
+        "rotZ": 1.96090514E-05,
         "scaleX": 1.69999814,
         "scaleY": 1.69999814,
         "scaleZ": 1.69999814
@@ -96884,7 +96694,7 @@
       "Description": "",
       "GMNotes": "D.Zone_Test1",
       "ColorDiffuse": {
-        "r": 0.3322103,
+        "r": 0.3322102,
         "g": 1.0,
         "b": 0.0
       },
@@ -96914,12 +96724,12 @@
       "GUID": "ff7fe8",
       "Name": "Custom_Model",
       "Transform": {
-        "posX": -64.45904,
-        "posY": 0.9155242,
-        "posZ": 20.0029888,
-        "rotX": 0.004017028,
-        "rotY": 359.9784,
-        "rotZ": -0.00569664,
+        "posX": -64.45899,
+        "posY": 0.915538847,
+        "posZ": 20.0030041,
+        "rotX": 0.0044426457,
+        "rotY": 359.979584,
+        "rotZ": -0.00527282339,
         "scaleX": 0.475000054,
         "scaleY": 0.475000054,
         "scaleZ": 0.475000054
@@ -96967,9 +96777,9 @@
         "posX": -68.5208,
         "posY": 1.19110954,
         "posZ": 26.1318245,
-        "rotX": -3.45617127E-06,
-        "rotY": -0.003386954,
-        "rotZ": 2.00614541E-05,
+        "rotX": -2.57266174E-06,
+        "rotY": -0.00338693918,
+        "rotZ": 1.97231366E-05,
         "scaleX": 1.69999814,
         "scaleY": 1.69999814,
         "scaleZ": 1.69999814
@@ -97011,9 +96821,9 @@
         "posX": -11.15286,
         "posY": 1.770466,
         "posZ": -1.82552719,
-        "rotX": -5.66994731E-06,
-        "rotY": 0.00120803458,
-        "rotZ": 4.151691E-06,
+        "rotX": -1.57114187E-06,
+        "rotY": 0.00120799313,
+        "rotZ": 3.0452893E-06,
         "scaleX": 1.4,
         "scaleY": 1.4,
         "scaleZ": 1.4
@@ -97041,19 +96851,18 @@
       "HideWhenFaceDown": false,
       "Hands": false,
       "LuaScript": "-- Bundled by luabundle {\"version\":\"1.6.0\"}\nlocal __bundle_require, __bundle_loaded, __bundle_register, __bundle_modules = (function(superRequire)\n\tlocal loadingPlaceholder = {[{}] = true}\n\n\tlocal register\n\tlocal modules = {}\n\n\tlocal require\n\tlocal loaded = {}\n\n\tregister = function(name, body)\n\t\tif not modules[name] then\n\t\t\tmodules[name] = body\n\t\tend\n\tend\n\n\trequire = function(name)\n\t\tlocal loadedModule = loaded[name]\n\n\t\tif loadedModule then\n\t\t\tif loadedModule == loadingPlaceholder then\n\t\t\t\treturn nil\n\t\t\tend\n\t\telse\n\t\t\tif not modules[name] then\n\t\t\t\tif not superRequire then\n\t\t\t\t\tlocal identifier = type(name) == 'string' and '\\\"' .. name .. '\\\"' or tostring(name)\n\t\t\t\t\terror('Tried to require ' .. identifier .. ', but no such module has been registered')\n\t\t\t\telse\n\t\t\t\t\treturn superRequire(name)\n\t\t\t\tend\n\t\t\tend\n\n\t\t\tloaded[name] = loadingPlaceholder\n\t\t\tloadedModule = modules[name](require, loaded, register, modules)\n\t\t\tloaded[name] = loadedModule\n\t\tend\n\n\t\treturn loadedModule\n\tend\n\n\treturn require, loaded, register, modules\nend)(nil)\n__bundle_register(\"__root\", function(require, _LOADED, __bundle_register, __bundle_modules)\nfunction onload()\r\n    zprint = require(\"/_libs/debug\").zprint\r\n    tool = {}\r\n        tool.strings = require(\"/_libs/StringUtils\")\r\n    self.setScale({1.4,1.4,1.4})\r\n    setGlobalVariables()\r\n    makeButtons()\r\n\r\n    --addHotkey(\"dBug_PrintTags\",hot_PrintTags , false)\r\n\r\nend\r\n\r\n--[[function onObjectHover(player_color, object)\r\n    local target = object and object.guid or \"Nothing\"\r\n    print(player_color .. \" hovered over \" .. target)\r\nend]]\r\n\r\nfunction setGlobalVariables()\r\n    TopLabel = 'Print ScriptZone Tags' -- Name of Top Button\r\n    BotLabel = 'Bottom Button Name' -- Name of Top Button\r\n    MinButtonLength = 2500\r\nend\r\n--local droptest=require(\"/_libs/SingleFunctions/waitDelay\")\r\n\r\n--------------------------------------------------------------------------------\r\n-- Place Demo Code in Here -----------------------------------------------------\r\n\r\n\r\n\r\nfunction Top_Left_Click(obj, color, alt_click)\r\n    local guidList = tool.strings.splitString(self.getDescription(), '_')\r\n    for _, guid in pairs(guidList) do\r\n        local zone = getObjectFromGUID(guid)\r\n        print(logString(zone.getTags(), '\\n'..zone.getName()))\r\n    end\r\n\r\nend\r\n\r\nfunction Bot_Left_Click(obj, color, alt_click)\r\n\r\nend\r\n--------------------------------------------------------------------------------\r\n-- Place Demo Code in Here -----------------------------------------------------\r\nfunction Top_Right_Click(obj, color, alt_click)\r\n    function ThisIsATest()\r\n        print('PASSED FUNCTION 02')\r\n    end\r\nend\r\n\r\nfunction Bot_Right_Click(obj, color, alt_click)\r\n    print('Bottom Function : Right Click')\r\nend\r\n\r\n--******************************************************************************\r\n--*** Ignore Below this line ***************************************************\r\n--******************************************************************************\r\nfunction f_Top(obj, color, alt_click)\r\n    if not alt_click then\r\n        Top_Left_Click(obj, color, alt_click)\r\n    else\r\n        Top_Right_Click(obj, color, alt_click)\r\n    end\r\nend\r\n\r\nfunction f_Bot(obj, color, alt_click)\r\n    if not alt_click then\r\n        Bot_Left_Click(obj, color, alt_click)\r\n    else\r\n        Bot_Right_Click(obj, color, alt_click)\r\n    end\r\nend\r\n--------------------------------------------------------------------------------\r\n--------------------------------------------------------------------------------\r\nfunction makeButtons()\r\n    local lable = nil\r\n    local ButtonList = {};\r\n            local button = {}\r\n                    button.click_function = 'f_Top'\r\n                    button.function_owner = self\r\n                    button.position = setDynamicButtonSizes_pos(TopLabel) --{0,0.5,1}\r\n                    button.rotation = {0,180,0}\r\n                    button.label =  TopLabel\r\n                    button.width = setDynamicButtonSizes_Width(TopLabel, MinButtonLength)\r\n                    button.height = setDynamicButtonSizes_Hight(TopLabel)\r\n                    button.font_size = 250\r\n            table.insert(ButtonList, button)\r\n            button = {}\r\n                    button.click_function = 'f_Bot'\r\n                    button.function_owner = self\r\n                    button.label = BotLabel\r\n                    button.position = setDynamicButtonSizes_pos(BotLabel) --{0,0.5,-1}\r\n                    button.rotation = {0,180,0}\r\n                    button.width = setDynamicButtonSizes_Width(BotLabel, MinButtonLength)\r\n                    button.height = setDynamicButtonSizes_Hight(BotLabel)\r\n                    button.font_size = 250\r\n            table.insert(ButtonList, button)\r\n\r\n    for k, b in pairs (ButtonList) do\r\n        self.createButton(b)\r\n    end\r\nend\r\n\r\nfunction setDynamicButtonSizes_pos(label)\r\n    local posVec = Vector(0,0.5,1)\r\n    local lines = {}\r\n    for line in label:gmatch(\"[^\\r\\n]+\") do\r\n        table.insert(lines, line)\r\n    end\r\n\r\n    adjustZ = 1 + 0.1*#lines\r\n    if label == TopLabel then\r\n        posVec:setAt('z', adjustZ)\r\n    elseif label == BotLabel then\r\n        posVec:setAt('z', -adjustZ)\r\n    end\r\n    --print(logString(lines, 'lines'))\r\n\r\n    return posVec\r\nend\r\n\r\nfunction setDynamicButtonSizes_Hight(lable)\r\n    local minHight = 450\r\n    local lines = {}\r\n    for line in lable:gmatch(\"[^\\r\\n]+\") do\r\n        table.insert(lines, line)\r\n    end\r\n\r\n    local count = #lines\r\n    local adjust_hight = 200\r\n    if count > 1 then\r\n        for i=1, count, 1 do\r\n            minHight = minHight + adjust_hight\r\n        end\r\n    end\r\n    return minHight\r\nend\r\n\r\nfunction setDynamicButtonSizes_Width(str, minWidth)\r\n    local lable = string.upper(str)--str:gsub(\"^%l\", string.upper)\r\n    local lableSize = #lable\r\n    --print(lable)\r\n    local adjust_Width = 100\r\n    local widthBorder = 600\r\n    local Width = 0\r\n\r\n    local lines = {}\r\n    for line in lable:gmatch(\"[^\\r\\n]+\") do\r\n        table.insert(lines, line)\r\n    end\r\n\r\n    local size = 0\r\n    if lines[2] ~= nil then\r\n        for _, line in pairs(lines) do\r\n            if size < #line then size = #line end\r\n        end\r\n        lableSize = size\r\n    end\r\n\r\n\r\n    for i=1, lableSize, 1 do\r\n        Width = Width + adjust_Width\r\n    end\r\n    Width = Width + widthBorder\r\n\r\n    if Width < minWidth then\r\n        Width = minWidth\r\n    end\r\n    return Width\r\nend\r\n\nend)\n__bundle_register(\"/_libs/StringUtils\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal StringUtils = {}\r\n\r\nfunction StringUtils.splitString(str, b1, b2)\r\n    local z = {}\r\n        if not str then\r\n            printToAll('splitString(str, sep, b1, b2) : Must Provide a string (at least)', 'Red')\r\n        else\r\n            -- split at NEW LINE\r\n            if not b1 and not b2 then\r\n                for s in str:gmatch(\"[^\\r\\n]+\") do\r\n                    table.insert(z, s)\r\n                end\r\n            else\r\n            -- split at SEPERATOR\r\n                if b1 and not b2 then\r\n                    if b1 == '' then b1 = ' ' end\r\n                    for s in string.gmatch(str, \"([^\"..'%'..b1..\"]+)\") do\r\n                        table.insert(z, s)\r\n                    end\r\n            -- split Between\r\n                elseif b1 and b2 then\r\n                    for s in string.gmatch(str, '%'..b1..'(.-)%'..b2) do\r\n                        table.insert(z, s)\r\n                    end\r\n                end\r\n            end\r\n        end\r\n    return z\r\nend\r\n\r\n--- Test Function\r\nfunction StringUtils.test()\r\n    printToAll('----=== StringUtils IS WORKING ===----', 'Green')\r\nend\r\n\r\n\r\nreturn StringUtils\r\n\nend)\n__bundle_register(\"/_libs/debug\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal debug = {}\r\n\r\nfunction debug.setDebugHotKeys()\r\n    addHotkey(\"dBug_PrintTags\",hot_PrintTags , false)\r\nend\r\n\r\nfunction hot_PrintTags(playerColor, object, pointerPosition, isKeyUp)\r\n    local objString = tostring(object)\r\n    local nameString = object.getName()\r\n    print('\\n'..objString)\r\n    if nameString == '' then\r\n        print(logString(object.getTags(), ' Tags : <No Name>'))\r\n    else\r\n        print(logString(object.getTags(), ' Tags : '..nameString))\r\n    end\r\nend\r\n\r\nfunction debug.zprint(var,title)\r\n    if (type(var) == \"table\") then\r\n        if title then\r\n            print(logString(var,'\\n-- '..title..' --'))\r\n        else\r\n            print(logString(var))\r\n        end\r\n    else\r\n        if title then print('-- '..title..' --') end\r\n        print(var)\r\n    end\r\nend\r\n\r\nfunction debug.zpDATA(table,key,title)\r\n    if title then\r\n        print('\\n-- '..title..' --')\r\n    end\r\n    for _, tbl in pairs(table) do\r\n        for k,v in pairs(tbl) do\r\n            if k == key then\r\n                print('  '..tostring(k)..' : '..v)\r\n            end\r\n        end\r\n    end\r\nend\r\n\r\nreturn debug\r\n\nend)\nreturn __bundle_require(\"__root\")",
-      "LuaScriptState": "",
-      "XmlUI": ""
+      "LuaScriptState": ""
     },
     {
       "GUID": "481a69",
       "Name": "Card",
       "Transform": {
         "posX": -51.59919,
-        "posY": 1.21028471,
-        "posZ": 20.9181,
-        "rotX": 0.0002145382,
-        "rotY": 179.999481,
-        "rotZ": 179.9985,
+        "posY": 1.21028948,
+        "posZ": 20.9181023,
+        "rotX": 0.000157382136,
+        "rotY": 179.999359,
+        "rotZ": 179.998825,
         "scaleX": 2.24,
         "scaleY": 1.0,
         "scaleZ": 2.24
@@ -97105,12 +96914,12 @@
       "GUID": "268ae0",
       "Name": "Card",
       "Transform": {
-        "posX": -54.4892426,
-        "posY": 1.23654,
-        "posZ": 18.36219,
-        "rotX": 0.0157065559,
-        "rotY": 179.999741,
-        "rotZ": 180.001022,
+        "posX": -54.48923,
+        "posY": 1.23626029,
+        "posZ": 18.3621864,
+        "rotX": 0.0200095288,
+        "rotY": 179.9997,
+        "rotZ": 179.979752,
         "scaleX": 2.24,
         "scaleY": 1.0,
         "scaleZ": 2.24
@@ -97163,11 +96972,11 @@
       "Name": "Card",
       "Transform": {
         "posX": -56.9431572,
-        "posY": 1.26205361,
+        "posY": 1.26216877,
         "posZ": 17.3725452,
-        "rotX": 0.0206306018,
-        "rotY": 180.000031,
-        "rotZ": 179.953232,
+        "rotX": 0.0178237632,
+        "rotY": 180.000122,
+        "rotZ": 179.952011,
         "scaleX": 2.24,
         "scaleY": 1.0,
         "scaleZ": 2.24
@@ -97219,12 +97028,12 @@
       "GUID": "48a950",
       "Name": "Card",
       "Transform": {
-        "posX": -53.4540863,
-        "posY": 1.27704859,
-        "posZ": 20.8918667,
-        "rotX": 0.02256245,
+        "posX": -53.4540749,
+        "posY": 1.27682018,
+        "posZ": 20.89187,
+        "rotX": 0.02759649,
         "rotY": 180.021515,
-        "rotZ": 180.657745,
+        "rotZ": 180.667145,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -97276,12 +97085,12 @@
       "GUID": "a93254",
       "Name": "Card",
       "Transform": {
-        "posX": -50.7620926,
-        "posY": 1.25554812,
-        "posZ": 17.0304279,
-        "rotX": 0.5809968,
-        "rotY": 179.983582,
-        "rotZ": 181.004044,
+        "posX": -50.76207,
+        "posY": 1.25580931,
+        "posZ": 17.03043,
+        "rotX": 0.5619734,
+        "rotY": 179.983109,
+        "rotZ": 181.005417,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -97334,10 +97143,10 @@
       "Name": "Deck",
       "Transform": {
         "posX": -67.63655,
-        "posY": 1.41181755,
-        "posZ": 48.75257,
-        "rotX": 0.103202626,
-        "rotY": 180.021713,
+        "posY": 1.41181779,
+        "posZ": 48.7526741,
+        "rotX": 0.103201114,
+        "rotY": 180.02153,
         "rotZ": 180.000031,
         "scaleX": 1.85,
         "scaleY": 1.0,
@@ -97683,12 +97492,12 @@
       "GUID": "dd7939",
       "Name": "Deck",
       "Transform": {
-        "posX": -45.0263634,
-        "posY": 0.966099262,
-        "posZ": 35.5316849,
-        "rotX": 0.00160642131,
-        "rotY": 179.968079,
-        "rotZ": 1.02509391,
+        "posX": -45.02636,
+        "posY": 0.966287553,
+        "posZ": 35.5316734,
+        "rotX": 0.00161208154,
+        "rotY": 179.968445,
+        "rotZ": 1.03129315,
         "scaleX": 1.85,
         "scaleY": 1.0,
         "scaleZ": 1.85
@@ -98037,6 +97846,195 @@
           "XmlUI": ""
         }
       ]
+    },
+    {
+      "GUID": "6363c3",
+      "Name": "Custom_Model",
+      "Transform": {
+        "posX": -66.24662,
+        "posY": 0.8801881,
+        "posZ": 23.7450638,
+        "rotX": 359.9763,
+        "rotY": 179.014648,
+        "rotZ": -0.0009469342,
+        "scaleX": 1.1,
+        "scaleY": 3.0,
+        "scaleZ": 1.1
+      },
+      "Nickname": "NameTest",
+      "Description": "",
+      "GMNotes": "23123213",
+      "ColorDiffuse": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0
+      },
+      "Tags": [
+        "DiscardMe_SpecialCase"
+      ],
+      "LayoutGroupSortIndex": 0,
+      "Value": 0,
+      "Locked": false,
+      "Grid": false,
+      "Snap": false,
+      "IgnoreFoW": false,
+      "MeasureMovement": false,
+      "DragSelectable": true,
+      "Autoraise": true,
+      "Sticky": false,
+      "Tooltip": false,
+      "GridProjection": false,
+      "HideWhenFaceDown": false,
+      "Hands": false,
+      "CustomMesh": {
+        "MeshURL": "http://cloud-3.steamusercontent.com/ugc/771742135112134361/7F786B20F6082C3285B05712FAE0B4232D3044ED/",
+        "DiffuseURL": "http://cloud-3.steamusercontent.com/ugc/771742135112134807/97817C92F1C3525A40D4D9AA966C53AA2FBF9F20/",
+        "NormalURL": "",
+        "ColliderURL": "",
+        "Convex": true,
+        "MaterialIndex": 3,
+        "TypeIndex": 0,
+        "CustomShader": {
+          "SpecularColor": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 1.0
+          },
+          "SpecularIntensity": 0.0,
+          "SpecularSharpness": 2.0,
+          "FresnelStrength": 0.0
+        },
+        "CastShadows": true
+      },
+      "LuaScript": "",
+      "LuaScriptState": "",
+      "XmlUI": ""
+    },
+    {
+      "GUID": "0975ec",
+      "Name": "Custom_Model",
+      "Transform": {
+        "posX": -63.2075653,
+        "posY": 1.19063246,
+        "posZ": 23.7476521,
+        "rotX": 16.4280529,
+        "rotY": 180.372665,
+        "rotZ": -0.00537642837,
+        "scaleX": 1.1,
+        "scaleY": 3.0,
+        "scaleZ": 1.1
+      },
+      "Nickname": "Gug (Monster) (Oblong)",
+      "Description": "",
+      "GMNotes": "GMTest",
+      "ColorDiffuse": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0
+      },
+      "Tags": [
+        "DiscardMe_SpecialCase"
+      ],
+      "LayoutGroupSortIndex": 0,
+      "Value": 0,
+      "Locked": false,
+      "Grid": false,
+      "Snap": false,
+      "IgnoreFoW": false,
+      "MeasureMovement": false,
+      "DragSelectable": true,
+      "Autoraise": true,
+      "Sticky": false,
+      "Tooltip": false,
+      "GridProjection": false,
+      "HideWhenFaceDown": false,
+      "Hands": false,
+      "CustomMesh": {
+        "MeshURL": "http://cloud-3.steamusercontent.com/ugc/771742135112134361/7F786B20F6082C3285B05712FAE0B4232D3044ED/",
+        "DiffuseURL": "http://cloud-3.steamusercontent.com/ugc/771742135112136269/97DA1A5343D25B749A916C43DE538A08A2851CCF/",
+        "NormalURL": "",
+        "ColliderURL": "",
+        "Convex": true,
+        "MaterialIndex": 3,
+        "TypeIndex": 0,
+        "CustomShader": {
+          "SpecularColor": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 1.0
+          },
+          "SpecularIntensity": 0.0,
+          "SpecularSharpness": 2.0,
+          "FresnelStrength": 0.0
+        },
+        "CastShadows": true
+      },
+      "LuaScript": "",
+      "LuaScriptState": "",
+      "XmlUI": ""
+    },
+    {
+      "GUID": "9383ac",
+      "Name": "Custom_Model",
+      "Transform": {
+        "posX": -64.73452,
+        "posY": 1.64168668,
+        "posZ": 23.1735458,
+        "rotX": 16.4327736,
+        "rotY": 180.3167,
+        "rotZ": 359.702271,
+        "scaleX": 1.1,
+        "scaleY": 3.0,
+        "scaleZ": 1.1
+      },
+      "Nickname": "Leng Spider_(Monster)_(D:Oblong)",
+      "Description": "DescTest",
+      "GMNotes": "???SDSDSDS?",
+      "ColorDiffuse": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0
+      },
+      "Tags": [
+        "DiscardMe_SpecialCase"
+      ],
+      "LayoutGroupSortIndex": 0,
+      "Value": 0,
+      "Locked": false,
+      "Grid": false,
+      "Snap": false,
+      "IgnoreFoW": false,
+      "MeasureMovement": false,
+      "DragSelectable": true,
+      "Autoraise": true,
+      "Sticky": false,
+      "Tooltip": false,
+      "GridProjection": false,
+      "HideWhenFaceDown": false,
+      "Hands": false,
+      "CustomMesh": {
+        "MeshURL": "http://cloud-3.steamusercontent.com/ugc/771742135112134361/7F786B20F6082C3285B05712FAE0B4232D3044ED/",
+        "DiffuseURL": "http://cloud-3.steamusercontent.com/ugc/771742135112141987/AAC6092426D439BA96DF671CC48E52E3F2C23640/",
+        "NormalURL": "",
+        "ColliderURL": "",
+        "Convex": true,
+        "MaterialIndex": 3,
+        "TypeIndex": 0,
+        "CustomShader": {
+          "SpecularColor": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 1.0
+          },
+          "SpecularIntensity": 0.0,
+          "SpecularSharpness": 2.0,
+          "FresnelStrength": 0.0
+        },
+        "CastShadows": true
+      },
+      "LuaScript": "",
+      "LuaScriptState": "",
+      "XmlUI": ""
     }
   ]
 }
