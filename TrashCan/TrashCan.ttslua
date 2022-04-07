@@ -23,32 +23,26 @@ end
 --------------------------------------------------------------------------------
 function ProcessBag(TrashBag, removedDeckList)
     local uniqueCast = UniqueCastLocations(TrashBag, removedDeckList)
-    for _, kind in pairs(KIND) do
-        if kind ~= 'Deck' then
-            uniqueCast = ProcessKind(TrashBag, kind, uniqueCast, removedDeckList)
-        end
-    end
+    ProcessKind(TrashBag, uniqueCast, removedDeckList)
 end
 --- ProcessKind(TrashBag, Kind, uniqueCast, removedDeckList) -------------------
-function ProcessKind(TrashBag, Kind, uniqueCast, removedDeckList)
+function ProcessKind(TrashBag, uniqueCast, removedDeckList)
+ -- Process the remaining contents of TrashBag (remeber all decks have been removed)
     local TrashContents = TrashBag.getObjects()
     local idex = tool.takeObjects_reverseIndex(TrashContents)
     for k,dex in ipairs(idex) do
         local obj = TrashContents[dex+1]
         if obj.tags[1] then
             local id = tool.setIDs(obj.tags)
+            --zprint(id,'ID++++')
             if id.discard then
-                if id.kind == Kind then
-                    if id.kind == KIND.SpecialCase then
-                        moveSpecialCase(TrashBag.takeObject({index = dex}), TrashBag)
-                    elseif id.kind == KIND.ScriptZone then
-                        moveScriptZone(TrashBag.takeObject({index = dex}), TrashBag, uniqueCast[id.id])
-                    else
-                        for q,w in pairs(uniqueCast) do
-                            if q == id.id then
-                                moveObject(TrashBag.takeObject({index = dex}), TrashBag, uniqueCast[id.id], id)
-                                break
-                            end
+                if id.kind == KIND.SpecialCase then
+                    moveSpecialCase(TrashBag.takeObject({index = dex}), TrashBag)
+                else
+                    for q,w in pairs(uniqueCast) do
+                        if q == id.id then
+                            moveObject(TrashBag.takeObject({index = dex}), TrashBag, uniqueCast[id.id], id)
+                            break
                         end
                     end
                 end
@@ -59,30 +53,33 @@ function ProcessKind(TrashBag, Kind, uniqueCast, removedDeckList)
             end
         end
     end
-
-    if (Kind == 'Small' or Kind == 'Large') then
-        for _, deck in ipairs(removedDeckList) do
-            TrashContents = deck.getObjects()
-            idex = tool.takeObjects_reverseIndex(TrashContents)
-            for k,dex in ipairs(idex) do
-                local obj = TrashContents[dex+1]
-                if obj.tags[1] then
-                    local id = tool.setIDs(obj.tags)
-                    if id.discard then
-                        if id.kind == Kind then
-                            for q,w in pairs(uniqueCast) do
-                                if q == id.id then
-                                    moveObject(deck.takeObject({index = dex}), TrashBag, uniqueCast[id.id], id)
-                                    break
-                                end
+ -- Process remaing removed Decks
+    for _, deck in ipairs(removedDeckList) do
+        TrashContents = deck.getObjects()
+        idex = tool.takeObjects_reverseIndex(TrashContents)
+        for k,dex in ipairs(idex) do
+            local obj = TrashContents[dex+1]
+            if obj.tags[1] then
+                local id = tool.setIDs(obj.tags)
+                if id.discard then
+                    if id.kind == KIND.SpecialCase then
+                        moveSpecialCase(TrashBag.takeObject({index = dex}), TrashBag)
+                    else
+                        for q,w in pairs(uniqueCast) do
+                            if q == id.id then
+                                moveObject(deck.takeObject({index = dex}), TrashBag, uniqueCast[id.id], id)
+                                break
                             end
                         end
+                    end
+                else
+                    if id.delete then
+                        destroyObject(TrashBag.takeObject({index = dex}))
                     end
                 end
             end
         end
     end
-    return uniqueCast
 end
 
 function moveSpecialCase(obj, TrashBag)
@@ -99,6 +96,10 @@ function moveScriptZone(obj, TrashBag, uniqueCastID)
 end
 
 function moveObject(obj, TrashBag, uniqueCastID, id)
+    --zprint(uniqueCastID,'uniqueCastID')
+    --if uniqueCastID.targetSource.type == 'Scripting' then
+        --If I ever need more advanced control when sending to script zones.. I can put stuff in here and move the rest of ths block into ELSE
+    --end
     Wait.frames(function()
         obj.setPosition(tool.placeTopOrBot_ofObject(TrashBag,'top')+Vector(0,0.2,0))
         obj.setPositionSmooth(tool.placeTopOrBot_ofObject(uniqueCastID.targetSource,'top')+Vector(0,uniqueCastID.Y,0)) --uniqueCastID.targetSource.getPosition()
@@ -130,6 +131,7 @@ function UniqueCastLocations(TrashBag, removedDeckList)
         for k,obj in ipairs(TrashBag.getObjects()) do
             if obj.tags[1] then
                 local id = tool.setIDs(obj.tags)
+                --zprint(id,'OBJ TEST')
                 if id.discard then
                     if id.kind ~= KIND.SpecialCase then
                         z[id.id] = id.kind
@@ -142,13 +144,17 @@ function UniqueCastLocations(TrashBag, removedDeckList)
             for _, card in ipairs(deck.getObjects()) do
                 if card.tags[1] then
                     local id = tool.setIDs(card.tags)
+                    --zprint(id,'TEST IN DECK')
                     if id.discard then
-                        z[id.id] = id.kind
+                        if id.kind ~= KIND.SpecialCase then
+                            z[id.id] = id.kind
+                        end
                     end
                 end
             end
         end
 
+        --zprint(z,'z >>>')
         z = tool.cast.findContainer(z)
     return z
 end
@@ -156,9 +162,10 @@ end
 --- removeDecksFormTrash(TrashBag) ---------------------------------------------
 function removeDecksFormTrash(TrashBag, TrashBag_ContentData)
     local z = {}
-        local indexesToRemove = tool.takeObjects_reverseIndex(TrashBag_ContentData, {Name='Deck'})
-        for _,indexToRemove in ipairs (indexesToRemove) do
+        local indexesToRemove = tool.reverseIndexbyTag(TrashBag_ContentData, {tags={'DiscardObject'}, search=false}, {Name='Deck'})
+        for i,indexToRemove in ipairs (indexesToRemove) do
             local o = TrashBag.takeObject({ index = indexToRemove })
+            --o.setPosition(tool.placeTopOrBot_ofObject(TrashBag,'top')+Vector(0,0,-8))
             o.setPosition(tool.placeTopOrBot_ofObject(TrashBag,'top')+Vector(0,-70,0))
             o.setRotation(Vector(0,180,0))
             o.setLock(true)

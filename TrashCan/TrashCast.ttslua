@@ -1,11 +1,12 @@
 local TrashCast = {}
 --------------------------------------------------------------------------------
 -- Global Variabels
-local ShowCast = false -- cast debug visial
+local ShowCast = true -- cast debug visial
 local zprint = require("/_libs/debug").zprint
 local DiscardPlatforms = nil
 local YOffset = 1
 --local ustring = require("/_libs/StringUtils")
+--[[
 function setVariables()
     if not DiscardPlatforms then
         DiscardPlatforms = {}
@@ -15,11 +16,12 @@ function setVariables()
         DiscardPlatforms.DiscardType_Large = {size=Vector(3,1,5),   posOffset=Vector(0, 0, 0)}--, platforms=getObjectsWithTag('Discard_Platform_Large')}
     end
 end
-
+]]
 --------------------------------------------------------------------------------
 --- Main Function to Call ------------------------------------------------------
 function TrashCast.findContainer(data)
-    setVariables()
+    --setVariables()
+    --print('+++ Inside Cast +++')
     return CastByString(data)
 end
 --------------------------------------------------------------------------------
@@ -28,29 +30,30 @@ function CastByString(TrashIDList)
     for id,kind in pairs(TrashIDList) do
         local target = getObjectsWithAllTags({'DiscardTarget', id})
         if target[1] then target=target[1] end
-        TrashIDList[id] = cast(target, DiscardPlatforms['DiscardType_'..kind], kind)
+        TrashIDList[id] = cast(target,id, kind)
     end
     return TrashIDList
 end
 
-function cast(target, platformType, kind)
+function cast(target, id, kind)
+    local platform = {size=Vector(2,2,2), posOffset=Vector(0, 0, 0)}
     local size = Vector(0,0,0)
-        if string.lower(kind) == 'zone' then
+        if target.type == 'Scripting' then
             size = target.getScale()
         else
-            size = platformType.size
+            size = platform.size
         end
 
-    local zone = Physics.cast({ origin=target.getPosition() + platformType.posOffset,
+    local zone = Physics.cast({ origin=target.getPosition() + platform.posOffset,
                                 direction={0,1,0},
                                 type=3,
                                 max_distance=0,
                                 size=size,
                                 debug=ShowCast})
-    return ProcessCast(target, zone, kind)
+    return ProcessCast(target, zone, id, kind)
 end
 
-function ProcessCast(target, zone, kind)
+function ProcessCast(target, zone, id, kind)
     local z = {}
     local noCDB = true -- no card, deck or bag at cast location
         if not zone[1] then
@@ -66,12 +69,13 @@ function ProcessCast(target, zone, kind)
                 if obj == target then
                     z.targetSource = obj
                 end
-                if target.type == "Scripting" then -- if string.find(tostring(target), 'ScriptingTrigger', 1, true) then
+                if target.type == "Scripting" then
                     z.targetSource = target
                 end
             end
         end
-        z.Y=YOffset
+        z.Y=YOffset -- Global Value at top of script.
+        z.id=id
         z.kind=kind
     return z
 end

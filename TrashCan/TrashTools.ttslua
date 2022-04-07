@@ -6,8 +6,12 @@ local zprint = debug.zprint
 function TrashTools.setIDs(tagList)
     local id = {}
     for k,tag in pairs(tagList) do
-        if string.find(tag, 'DiscardMe_', 1, true) then
-            id.kind = tag:gsub('DiscardMe_', '')
+        if string.find(tag, 'DiscardObject', 1, true) then
+            if string.find(tag, 'SpecialCase', 1, true) then
+                id.kind = 'SpecialCase'
+            else
+                id.kind = 'DiscardObject'
+            end
             id.discard = true
         elseif string.find(tag, 'DeleteMe', 1, true) then
             id.delete = true
@@ -17,14 +21,6 @@ function TrashTools.setIDs(tagList)
     end
     return id
 end
---[[
---- setTrashIDs ----------------------------------------------------------------
-function TrashTools.setTrashIDs(tagList, kind)
-    local id = {}
-        id.tag = TrashTools.findTagString(tagList, 'DiscardMe_'..kind):gsub('DiscardMe_', '')
-    return id
-end
-]]
 
 --- posFromObject(obj,switch) - 'top', 'bot'------------------------------------
 function TrashTools.placeTopOrBot_ofObject(obj,switch)
@@ -60,6 +56,33 @@ function TrashTools.takeObjects_reverseIndex(ContainedObjects, switch)
         end
     return z
 end
+--- ReverseIndex Only Valid Tag -----------------------------------------------
+--local indexesToRemove = tool.reverseIndexbyTag(TrashBag_ContentData, {tag='DiscardMe_', search=true}, {Name='Deck'})
+function TrashTools.reverseIndexbyTag(ContainedObjects, tag, switch)
+    local z = {}
+        local getdata = false; if ContainedObjects[1].Nickname ~= nil then getdata = true end
+
+        for i, obj in ipairs(ContainedObjects) do
+            local index = i; if getdata then index = index-1 else index = obj.index end -- change value for getObjects / getData
+            local objtags; if getdata then objtags = obj.Tags else objtags = obj.tags end -- change value for getObjects / getData
+            if (tag.tags and objtags) then
+                if TrashTools.tagFound(objtags, tag.tags, tag.search) then
+                    if switch then
+                        for key,find in pairs(switch) do
+                            if obj[key] == find then
+                                table.insert(z, index)
+                            end
+                        end
+                    else
+                        table.insert(z, index)
+                    end
+                end
+            end
+        end
+
+    table.sort(z, function(a,b) return a>b end)
+    return z
+end
 --- TagFound --- ---------------------------------------------------------------
 function TrashTools.tagFound(tags, keys, useFind) -- useFind BOOL : use == or use string.find()
     if useFind then
@@ -72,7 +95,7 @@ function TrashTools.tagFound(tags, keys, useFind) -- useFind BOOL : use == or us
         end
     else
         for _, tag in pairs(tags) do
-            for _, key in pairs(keys) do
+            for _   , key in pairs(keys) do
                 if string.lower(tag) == string.lower(key) then
                     return true
                 end
