@@ -1,0 +1,65 @@
+local TrashSpecialCase = {}
+local tool      = require("/ArkhamHorror/Scripts/TrashCan/TrashTools")
+local resetY = 3
+local Cases = {}
+      Cases['NameTest'] = {Y=resetY}
+      Cases['DescTest'] = {Y=resetY}
+      Cases['GMTest']   = {Y=resetY}
+--------------------------------------------------------------------------------
+function TrashSpecialCase.Process(obj,TrashBag)
+    for key, v in pairs(Cases) do
+        if key == obj.getName() or key == obj.getDescription() or key == obj.getGMNotes() then
+            Cases[key].Process(obj,TrashBag,key)
+        end
+    end
+    for key, v in pairs(Cases) do
+        if key == obj.getName() or key == obj.getDescription() or key == obj.getGMNotes() then
+            Cases[key].Y = resetY
+        end
+    end
+end
+
+function getSizeofObj(obj)
+    local size = obj.getBoundsNormalized().size
+    return size
+end
+--******************************************************************************
+-- UNIQUE SPECALA CASE FUNCTIONS START HERE! ***********************************
+--******************************************************************************
+function Cases.NameTest.Process(obj,TrashBag,key)
+    local pos = Vector(-53.54, 1.42, 28.22)
+    local rot = Vector(0,0,180)
+    Wait.frames(function()
+        obj.setPosition(tool.placeTopOrBot_ofObject(TrashBag,'top')+Vector(0,0.2,0))
+        obj.setPositionSmooth(pos+Vector(0,Cases[key].Y,0))
+        obj.setRotationSmooth(rot)
+        Cases[key].Y = Cases[key].Y + getSizeofObj(obj).y + 0.2
+    end,1)
+    --uniqueCastID.Y = uniqueCastID.Y + getSizeofObj(obj).y+0.2
+end
+
+function Cases.DescTest.Process(obj,TrashBag,key)
+    local pos = Vector(-50.30, 0.82, 28.35)
+    local rot = Vector(0,90,0)
+    Wait.frames(function()
+        obj.setPosition(tool.placeTopOrBot_ofObject(TrashBag,'top')+Vector(0,0.2,0))
+        obj.setPositionSmooth(pos+Vector(0,Cases[key].Y,0))
+        obj.setRotationSmooth(rot)
+        Cases[key].Y = Cases[key].Y + getSizeofObj(obj).y + 0.2
+    end,1)
+end
+
+function Cases.GMTest.Process(obj,TrashBag,key)
+    local pos = Vector(-46.53, 1.68, 28.36)
+    local rot = Vector(0,180,180)
+    local scale = Vector(1.58, 4.30, 1.58)
+    Wait.frames(function()
+        obj.setPosition(tool.placeTopOrBot_ofObject(TrashBag,'top')+Vector(0,0.2,0))
+        obj.setPositionSmooth(pos+Vector(0,Cases[key].Y,0))
+        obj.setRotationSmooth(rot)
+        obj.setScale(scale)
+        Cases[key].Y = Cases[key].Y + getSizeofObj(obj).y + 0.2
+    end,1)
+end
+
+return TrashSpecialCase

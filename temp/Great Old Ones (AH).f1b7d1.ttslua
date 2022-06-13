@@ -1,0 +1,9 @@
+function onCollisionEnter(info)
+    if info.collision_object.getDescription() == "Goo" then
+        self.shuffle()
+    end
+end
+
+function onLoad(save_state)
+    self.shuffle()
+end

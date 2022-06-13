@@ -67,6 +67,8 @@ function f_One(obj, color, alt_click)
     if not alt_click then
         Wait.frames(function() addTags_ADD(tAdd) end, 5)
     else
+        removeTags_ALL()
+        Wait.frames(function() addTags_ADD(tAdd) end, 5)
     end
 end
 

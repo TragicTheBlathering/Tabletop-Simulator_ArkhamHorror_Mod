@@ -1,6 +1,6 @@
 local tool = {}
       tool.waitFor=require("/_libs/WaitUtils")
-      tool.processTrash=require("/ArkhamHorror/TrashCan/TrashCan").process
+      tool.processTrash=require("/ArkhamHorror/Scripts/TrashCan/TrashCan").process
 
 local dropTimer = 0.8
 
