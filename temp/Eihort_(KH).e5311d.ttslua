@@ -1,0 +1,79 @@
+function onLoad(save_state)
+    --setGlobalsVars()
+end
+
+function setGlobalsVars()
+    spawnPositions = {}
+    spawnPositions[1] = {p={4.03, 12.35, 7.23}}
+
+    spawnZonePositions = {}
+    spawnZonePositions[1] = {p={4.03, 14, 7.23}}
+
+    GooMaxSpawnCount = 1
+
+end
+
+function UniqueGooSetUp()
+    Wait.time(ProcessSetUp, 4)
+end
+
+function ProcessSetUp()
+
+    setGlobalsVars()
+
+    local VariableStorage = Global.getVar('VariableStorage')
+    local spawnTokenScriptGUIDs = VariableStorage.getTable('SpawnTokenScriptGUIDs')
+
+    local SpawnTokenZones = setSpawnTokenZones(spawnTokenScriptGUIDs)
+
+    local SpawnBag = Global.call('returnSetUpObj', 'GooSpecial_'..self.getName())
+        local prams = setPrams(spawnPositions[1],0)
+        local o = SpawnBag.takeObject(prams)
+        o.setLock(true)
+        o.setPosition(PosAbove())
+        o.setPositionSmooth(prams.position)
+
+    for i=1, #SpawnTokenZones, 1 do
+        local prams = setPrams(spawnZonePositions[i], 0)
+        SpawnTokenZones[i].setPosition(prams.position)
+    end
+
+end
+
+function setSpawnTokenZones(spawnTokenScriptGUIDs)
+    local z = {}
+    for i=1, GooMaxSpawnCount, 1 do
+        table.insert(z, getObjectFromGUID(spawnTokenScriptGUIDs[i]))
+    end
+
+    --remove unwated zones
+    if GooMaxSpawnCount < #spawnTokenScriptGUIDs then
+        for i=GooMaxSpawnCount+1, #spawnTokenScriptGUIDs, 1 do
+            destroyObject(getObjectFromGUID(spawnTokenScriptGUIDs[i]))
+        end
+    end
+
+    return z
+end
+
+function PosAbove()
+    p = {self.getPosition().x, self.getPosition().y+8, self.getPosition().z}
+    return p
+end
+
+function setPrams(data, num)
+    local p = {}
+    local Y = self.getPosition().y
+    if num > 0 then
+        p.rotation = {14, 180, 0}
+        Y = Y + num
+    else
+        p.rotation = {14, 180, 0}
+        Y = data.p[2]
+    end
+    p.position = {self.getPosition().x + data.p[1],
+                  Y,
+                  self.getPosition().z + data.p[3]}
+    --if guid ~= nil then p.guid = guid end
+    return p
+end

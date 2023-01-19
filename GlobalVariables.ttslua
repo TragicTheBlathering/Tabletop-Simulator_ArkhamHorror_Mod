@@ -1,0 +1,23 @@
+local GlobalVariables = {}
+
+GlobalVariables.BagStackBaseScale = {}
+GlobalVariables.BagStackBaseScale['Gate Pile'] = 1.55
+
+
+return GlobalVariables
+
+
+--[[
+--testing OBJ
+    local test = Global.getTable('GlobalVariables')
+    print(GlobalVariables.testMe)
+
+    GlobalVariables.testFunc('this is a big test')
+    print(GlobalVariables.testMe)
+
+
+function GlobalVariables.testFunc(s)
+    print('???')
+    GlobalVariables.testMe = s
+end
+]]

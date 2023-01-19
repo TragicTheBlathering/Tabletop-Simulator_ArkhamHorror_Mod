@@ -1,0 +1,45 @@
+local tool = {}
+      tool.waitForLastDropIntoBox=require("/_libs/WaitUtils/WaitUtils").DropIntoBox
+      tool.shuffleBag=require("/_libs/shuffleUtils/shuffleContainer").container
+      tool.scaleBag=require("/_libs/scaleBags/scaleBags").fromContents
+      --tool.processTrash=require("/ArkhamHorror/Scripts/TrashCan/TrashCan").process
+
+local dropTimer = 0.8
+
+local GlobalEvents = {}
+--------------------------------------------------------------------------------
+--- onObjectEnter : CONTAINER --------------------------------------------------
+function onObjectEnterContainer(bag, obj)
+
+    if bag.hasTag('ShuffleBag') or bag.hasTag('ShuffleBagRestricted') then
+        tool.waitForLastDropIntoBox(bag, obj, tool.shuffleBag, dropTimer)
+
+    elseif bag.hasTag('ScaleBag') then
+        tool.waitForLastDropIntoBox(bag, obj, tool.scaleBag, dropTimer)
+    end
+
+        --[[
+    elseif string.find(string.lower(bag.getGMNotes()), 'trashcan', 1, true) then
+        tool.waitFor.DropIntoBox(bag, obj, TrashFunction, dropTimer)
+    end]]
+end
+--------------------------------------------------------------------------------
+--- onObjectLeave : CONTAINER --------------------------------------------------
+function onObjectLeaveContainer(bag, obj)
+    if bag.hasTag('ScaleBag') then
+        tool.waitForLastDropIntoBox(bag, obj, tool.scaleBag, dropTimer)
+
+    elseif bag.hasTag('ShuffleBagExit') then
+        tool.waitForLastDropIntoBox(bag, obj, tool.shuffleBag, dropTimer)
+    end
+end
+
+--------------------------------------------------------------------------------
+--- TRASH FUNCTION -------------------------------------------------------------
+function TrashFunction(TrashBag)
+    tool.processTrash(TrashBag)
+end
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+return GlobalEvents
