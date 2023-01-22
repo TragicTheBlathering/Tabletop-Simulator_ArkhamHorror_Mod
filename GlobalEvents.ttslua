@@ -2,7 +2,7 @@ local tool = {}
       tool.waitForLastDropIntoBox=require("/_libs/WaitUtils/WaitUtils").DropIntoBox
       tool.shuffleBag=require("/_libs/shuffleUtils/shuffleContainer").container
       tool.scaleBag=require("/_libs/scaleBags/scaleBags").fromContents
-      --tool.processTrash=require("/ArkhamHorror/Scripts/TrashCan/TrashCan").process
+      tool.processTrash=require("/_libs/trashCan/trashCan").process
 
 local dropTimer = 0.8
 
@@ -16,12 +16,10 @@ function onObjectEnterContainer(bag, obj)
 
     elseif bag.hasTag('ScaleBag') then
         tool.waitForLastDropIntoBox(bag, obj, tool.scaleBag, dropTimer)
+    --elseif string.find(string.lower(bag.getGMNotes()), 'trashcan', 1, true) then
+    elseif bag.hasTag('TrashCan') then
+        tool.waitForLastDropIntoBox(bag, obj, tool.processTrash, dropTimer)
     end
-
-        --[[
-    elseif string.find(string.lower(bag.getGMNotes()), 'trashcan', 1, true) then
-        tool.waitFor.DropIntoBox(bag, obj, TrashFunction, dropTimer)
-    end]]
 end
 --------------------------------------------------------------------------------
 --- onObjectLeave : CONTAINER --------------------------------------------------
