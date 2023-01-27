@@ -1,0 +1,4 @@
+function onLoad(save_state)
+    self.interactable = false
+    self.setLock(true)
+end

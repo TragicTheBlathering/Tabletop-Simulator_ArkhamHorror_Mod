@@ -13,9 +13,6 @@ end
 
 function setGlobalVariables()
     GlobalVariables=require("/ArkhamHorror/GlobalVariables")
-    --print(GlobalVariables.testMe)
-    --GlobalVariables.testFunc('changed')
-    --print(GlobalVariables.testMe)
 end
 
 function onUpdate()end

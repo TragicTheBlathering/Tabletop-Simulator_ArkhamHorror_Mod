@@ -1,5 +1,5 @@
 local tool = {}
-      tool.waitForLastDropIntoBox=require("/_libs/WaitUtils/WaitUtils").DropIntoBox
+      tool.waitForLastDropIntoBox=require("/_libs/WaitUtils/waitUtils").dropIntoBox
       tool.shuffleBag=require("/_libs/shuffleUtils/shuffleContainer").container
       tool.scaleBag=require("/_libs/scaleBags/scaleBags").fromContents
       tool.processTrash=require("/_libs/trashCan/trashCan").process
@@ -10,34 +10,31 @@ local GlobalEvents = {}
 --------------------------------------------------------------------------------
 --- onObjectEnter : CONTAINER --------------------------------------------------
 function onObjectEnterContainer(bag, obj)
-
-    if bag.hasTag('ShuffleBag') or bag.hasTag('ShuffleBagRestricted') then
-        tool.waitForLastDropIntoBox(bag, obj, tool.shuffleBag, dropTimer)
-
-    elseif bag.hasTag('ScaleBag') then
-        tool.waitForLastDropIntoBox(bag, obj, tool.scaleBag, dropTimer)
-    --elseif string.find(string.lower(bag.getGMNotes()), 'trashcan', 1, true) then
-    elseif bag.hasTag('TrashCan') then
+    -- Run Trash code, skip everythign else.
+    if bag.hasTag('TrashCan') then
         tool.waitForLastDropIntoBox(bag, obj, tool.processTrash, dropTimer)
+    else -- Run onObjectEnterExitContainer_Stack()... every Enter Event in this will be test for and run
+        tool.waitForLastDropIntoBox(bag, obj, onObjectEnterExitContainer_Stack, dropTimer)
     end
 end
+--------------------------------------------------------------------------------
+--- onObjectEnterExitContainer_Stack : CONTAINER -------------------------------
+-- This will run a bunch of event tests after a SINLGE Droptest.
+function onObjectEnterExitContainer_Stack(bag, obj)
+    if bag.hasTag('ScaleBag') then
+        tool.scaleBag(bag)
+    end
+
+    if bag.hasTag('ShuffleBag') or bag.hasTag('ShuffleBagRestricted') then
+        tool.shuffleBag(bag)
+    end
+end
+--******************************************************************************
 --------------------------------------------------------------------------------
 --- onObjectLeave : CONTAINER --------------------------------------------------
 function onObjectLeaveContainer(bag, obj)
-    if bag.hasTag('ScaleBag') then
-        tool.waitForLastDropIntoBox(bag, obj, tool.scaleBag, dropTimer)
-
-    elseif bag.hasTag('ShuffleBagExit') then
-        tool.waitForLastDropIntoBox(bag, obj, tool.shuffleBag, dropTimer)
-    end
+    tool.waitForLastDropIntoBox(bag, obj, onObjectEnterExitContainer_Stack, dropTimer)
 end
-
---------------------------------------------------------------------------------
---- TRASH FUNCTION -------------------------------------------------------------
-function TrashFunction(TrashBag)
-    tool.processTrash(TrashBag)
-end
-
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 return GlobalEvents
