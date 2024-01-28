@@ -2,7 +2,7 @@ local tool = {}
       tool.waitForLastDropIntoBox=require("/_libs/WaitUtils/waitUtils").dropIntoBox
       tool.runAfterSmoothMove=require("/_libs/WaitUtils/waitUtils").runAfterSmoothMove
       tool.shuffleBag=require("/_libs/shuffleUtils/shuffleContainer").container
-      tool.scaleBag=require("/_libs/scaleBags/scaleBags").fromContents
+      tool.scaleBag=require("/_libs/bagTools/scaleBags").fromContents
       tool.processTrash=require("/_libs/trashCan/trashCan").process
 
 local dropTimer = 0.8
