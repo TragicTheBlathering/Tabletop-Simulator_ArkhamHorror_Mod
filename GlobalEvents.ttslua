@@ -1,5 +1,6 @@
 local tool = {}
       tool.waitForLastDropIntoBox=require("/_libs/WaitUtils/waitUtils").dropIntoBox
+      tool.runAfterSmoothMove=require("/_libs/WaitUtils/waitUtils").runAfterSmoothMove
       tool.shuffleBag=require("/_libs/shuffleUtils/shuffleContainer").container
       tool.scaleBag=require("/_libs/scaleBags/scaleBags").fromContents
       tool.processTrash=require("/_libs/trashCan/trashCan").process
@@ -18,6 +19,38 @@ function onObjectEnterContainer(bag, obj)
     end
 end
 --------------------------------------------------------------------------------
+--- onObjectLeave : CONTAINER --------------------------------------------------
+function onObjectLeaveContainer(bag, obj)
+    tool.waitForLastDropIntoBox(bag, obj, onObjectEnterExitContainer_Stack, dropTimer)
+end
+--------------------------------------------------------------------------------
+--- ???
+function onPlayerAction(player, action, targets)
+    if action == Player.Action.FlipOver
+        or action == Player.Action.FlipIncrementalLeft
+        or action == Player.Action.FlipIncrementalRight
+    then
+        for k,obj in pairs(targets) do
+            if obj.hasTag('ID_Gator') then
+                rot = obj.getRotation()
+                pos = obj.getPosition()
+                if math.abs( rot.z - 180) <= 0.5 then
+                    print('READY')
+                    obj.setPositionSmooth(pos+Vector(0,0.6,0))
+                    obj.setRotationSmooth(Vector(0,180,0))
+                    return false
+                elseif math.abs( rot.z - 0) <= 0.5 then
+                    print('DELAY')
+                    obj.setPositionSmooth(pos+Vector(0,1.4,0))
+                    obj.setRotationSmooth(Vector(0,0,180))
+                    return false
+                end
+            end
+        end
+    end
+    return true
+end
+--*****************************************************************************************************
 --- onObjectEnterExitContainer_Stack : CONTAINER -------------------------------
 -- This will run a bunch of event tests after a SINLGE Droptest.
 function onObjectEnterExitContainer_Stack(bag, obj)
@@ -30,11 +63,4 @@ function onObjectEnterExitContainer_Stack(bag, obj)
     end
 end
 --******************************************************************************
---------------------------------------------------------------------------------
---- onObjectLeave : CONTAINER --------------------------------------------------
-function onObjectLeaveContainer(bag, obj)
-    tool.waitForLastDropIntoBox(bag, obj, onObjectEnterExitContainer_Stack, dropTimer)
-end
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
 return GlobalEvents

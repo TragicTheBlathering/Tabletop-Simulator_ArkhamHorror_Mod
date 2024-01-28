@@ -1,0 +1,46 @@
+local UITools=require("/_libs/UITools/UITools")
+
+local OldBook = {inputValue = 'Card Search',
+                 GatorColour = {231/255, 229/255, 217/255},
+                 sanity_value = 3,  sanity_maxVal = 3, sanity_fontCol = 'Black', sanity_ButCol = 'Red',
+                 health_value = 7,  health_maxVal = 7, health_fontCol = 'Black', health_ButCol = 'Red',
+                }
+
+function SetVariables()
+    for v, tag in pairs(self.getTags()) do
+        if isStringEqual_lower(tag, 'OldBook_Left') then
+            OldBook.side = 'Left'
+        elseif testStrings(tag, 'OldBook_Left') then
+            OldBook.side = 'Right'
+        end
+    end
+    OldBook.sanity_ButCol = OldBook.GatorColour
+    OldBook.health_ButCol = OldBook.GatorColour
+end
+
+
+function onLoad(save_state)
+    SetVariables()
+end
+--******************************************************************************
+--**** Health and Sanity *******************************************************
+--******************************************************************************
+
+function xmlButton_Sanity(player, RightClick, id)
+    if RightClick == "-2" then
+        print('Right Click')
+    else
+        print('Left Click')
+    end
+end
+
+--******************************************************************************
+--**** TOOLS *******************************************************************
+--******************************************************************************
+function isStringEqual_lower(str1, str2)
+    if string.lower(str1) == string.lower(str2) then
+        return true
+    else
+        return false
+    end
+end

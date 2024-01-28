@@ -1,0 +1,49 @@
+--This File goes in root of your Project Dir and is called by the TrrashCan Code.
+--Put any GAME SPESIFIC code in here!
+local Trash_GameSpesific = {}
+
+--------------------------------------------------------------------------------
+-- This is where you place any Discard Pile Name Fixes
+-- The KEY is the name taken from the ID_Name
+-- The Value is the new Name of the Trash Discard Pile
+-- Discarded newNames (make sure it is pulral!)
+function Trash_GameSpesific.DiscardNameFix(trashID)
+    local nameFix = {
+        BlessCurse = 'Blessings and Curses',
+        DeputyOA = 'Deputy of Arkham ID and Equipment',
+        MemberSheldon = 'Sheldon Gang Memberships',
+        MemberSilver = 'Silver Twilight Lodge Memberships',
+        Member1000Cult = 'One of a Thousand\" Cult Memberships',
+        Retainer='Retainers',
+        BankLoad='Bank Loans',
+        Ally = 'Discarded Allies',
+        Injury = 'Discard Injuries',
+        Madness = 'Discarded Madness',
+        StoryTask = 'Personal Stories',
+        StoryConclusion = 'Personal Story Conslusions',
+        Condition = 'Condistions',
+        InnerBeast = 'Magical Effects: Inner Beasts',
+        ThirdEye = 'Magical Effects: Third Eye',
+        AzureFlame ='Magical Effects: Azure Flame',
+        Relationship = 'Relationships',
+        Captian = 'The White Ship',
+        GreatSeal = 'The Great Seal',
+    }
+    --print(nameFix.Ally..' : '..trashID)
+    local z = {found = false, newName = ''}
+    for k, v in pairs(nameFix) do
+        if k == trashID then
+            z.found = true
+            z.newName = v
+        end
+    end
+    return z
+end
+
+--------------------------------------------------------------------------------
+-- This is where you place any special Case effects that occour when you process a object in the Trash. ID_SpecialCase
+function Trash_GameSpesific.specialCase(obj,TrashBag)
+    print('WE ARE INSIDE THE SPECIAL CASE CODE... NOTHING HERE YET!!')
+end
+
+return Trash_GameSpesific
